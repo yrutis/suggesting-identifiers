@@ -1,0 +1,59 @@
+name: suggesting_identifiers
+channels:
+  - defaults
+dependencies:
+  - ca-certificates=2019.1.23=0
+  - certifi=2019.3.9=py37_0
+  - libedit=3.1.20181209=hc058e9b_0
+  - libffi=3.2.1=hd88cf55_4
+  - libgcc-ng=8.2.0=hdf63c60_1
+  - libstdcxx-ng=8.2.0=hdf63c60_1
+  - ncurses=6.1=he6710b0_1
+  - openssl=1.1.1b=h7b6447c_1
+  - pip=19.0.3=py37_0
+  - python=3.7.2=h0371630_0
+  - readline=7.0=h7b6447c_5
+  - setuptools=40.8.0=py37_0
+  - sqlite=3.27.2=h7b6447c_0
+  - tk=8.6.8=hbc83047_0
+  - wheel=0.33.1=py37_0
+  - xz=5.2.4=h14c3975_4
+  - zlib=1.2.11=h7b6447c_3
+  - pip:
+    - alabaster==0.7.12
+    - awscli==1.16.132
+    - babel==2.6.0
+    - botocore==1.12.122
+    - chardet==3.0.4
+    - click==7.0
+    - colorama==0.3.9
+    - coverage==4.5.3
+    - docutils==0.14
+    - entrypoints==0.3
+    - flake8==3.7.7
+    - idna==2.8
+    - imagesize==1.1.0
+    - jinja2==2.10
+    - jmespath==0.9.4
+    - markupsafe==1.1.1
+    - mccabe==0.6.1
+    - packaging==19.0
+    - pyasn1==0.4.5
+    - pycodestyle==2.5.0
+    - pyflakes==2.1.1
+    - pygments==2.3.1
+    - pyparsing==2.3.1
+    - python-dateutil==2.8.0
+    - python-dotenv==0.10.1
+    - pytz==2018.9
+    - pyyaml==3.13
+    - requests==2.21.0
+    - rsa==3.4.2
+    - s3transfer==0.2.0
+    - six==1.12.0
+    - snowballstemmer==1.2.1
+    - sphinx==1.8.5
+    - sphinxcontrib-websupport==1.1.0
+    - urllib3==1.24.1
+prefix: /home/yvesrut/anaconda3/envs/suggesting_identifiers
+
