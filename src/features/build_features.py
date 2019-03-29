@@ -20,9 +20,6 @@ def main(filename):
         encoded data ready to be analyzed (saved in ../processed).
     """
 
-
-
-    # TODO fix customTokenizer func to receive df and return df
     def customTokenizer(tokenIndex, df):
         """
         transforms words (x and y) to tokens
@@ -36,10 +33,7 @@ def main(filename):
         for index, row in df.iterrows():
             currentEncoded = []
             x = ast.literal_eval(row['x']) #convert to list
-            print("first x {}" .format(x[0]))
             for idx, word in enumerate(x):
-                print("current word {}" .format(word))
-                # print("current word: {}" .format(word))
                 if word not in tokenIndex:
                     tokenIndex[word] = len(tokenIndex) + 1
                 currentEncoded.append(tokenIndex[word])
@@ -59,11 +53,9 @@ def main(filename):
         encodedFeatures = []
 
         print("Encoding features...")
-        #TODO fix here
         for index, row in df.iterrows():
             currentFeatureSetEncoded = []
             featureSet = ast.literal_eval(row['features'])  # convert to list
-            print("length of featureSet ".format(len(featureSet)))
             for feature in featureSet:
                 if feature not in tokenIndex:
                     tokenIndex[feature] = len(tokenIndex) + 1
