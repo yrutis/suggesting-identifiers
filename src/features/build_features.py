@@ -9,85 +9,112 @@ from dotenv import find_dotenv, load_dotenv
 
 import pandas as pd
 import numpy as np
+import ast
 
-#@click.command()
-#@click.argument('input_filepath', type=click.Path(exists=True))
-#@click.argument('output_filepath', type=click.Path())
+
+# @click.command()
+# @click.argument('input_filepath', type=click.Path(exists=True))
+# @click.argument('output_filepath', type=click.Path())
 def main(filename):
-    """ Runs data processing scripts to turn raw data from (../raw) into
-        cleaned data ready to be analyzed (saved in ../processed).
+    """ Runs data processing scripts to turn decoded data from (../raw) into
+        encoded data ready to be analyzed (saved in ../processed).
     """
 
-    def getPredictand(df):
-        print("getting predictands...")
-        df = df.loc[:, ['boundVariables', 'codeTokens']]
-        y = []
+
+
+    # TODO fix customTokenizer func to receive df and return df
+    def customTokenizer(tokenIndex, df):
+        """
+        transforms words (x and y) to tokens
+        """
+        x = df.loc[:, 'x']
+        y = df.loc[:, 'y']
+        features = df.loc[:, 'features']
+
+        encodedX = []
+        print("Encoding X...")
         for index, row in df.iterrows():
-            for idx, val in enumerate(row['boundVariables']):
-                y.append(row['codeTokens'][val[0]])
-        y = np.asarray(y)
-        print("predictands loaded in y")
-        return y
+            currentEncoded = []
+            x = ast.literal_eval(row['x']) #convert to list
+            print("first x {}" .format(x[0]))
+            for idx, word in enumerate(x):
+                print("current word {}" .format(word))
+                # print("current word: {}" .format(word))
+                if word not in tokenIndex:
+                    tokenIndex[word] = len(tokenIndex) + 1
+                currentEncoded.append(tokenIndex[word])
 
-    def getPredictor(df, windowSize=2):
-        print("getting predictors...")
-        df = df.loc[:, ['boundVariableFeatures', 'boundVariables', 'codeTokens']]
-        x = []
+            encodedX.append(currentEncoded)
+        print("this is first encoded x {} ".format(encodedX[0]))
+
+        encodedY = []
+        print("Encoding Y...")
         for index, row in df.iterrows():
-            for idx, val in enumerate(row['boundVariables']):
-                currentX = []
-                j = -2
+            target = row['y']
+            print("first target {}" .format(target))
+            if target not in tokenIndex:
+                tokenIndex[target] = len(tokenIndex) + 1
+            encodedY.append(tokenIndex[target])
 
-                # add all context to currentX
-                # TODO check for index out of range
-                while j < windowSize - 1:
-                    if j != 0:
-                        currentX.append(((row['codeTokens'][val[0] + j])))  # adds context
-                    j += 1
+        encodedFeatures = []
 
-                # add currentX to x
-                x.append((currentX))
-
-        print("predictors loaded in x")
-        return x
-
-    def getFeatures(df):
-        print("getting features...")
-        features = df.loc[:, ['boundVariableFeatures', 'provenance']]
-        featuresList = []  # get all features (list of all features is in all elem)
+        print("Encoding features...")
+        #TODO fix here
         for index, row in df.iterrows():
-            for idx, val in enumerate(row['boundVariableFeatures']):
-                featuresList.append(features['boundVariableFeatures'][idx])
-        return featuresList
+            currentFeatureSetEncoded = []
+            featureSet = ast.literal_eval(row['features'])  # convert to list
+            print("length of featureSet ".format(len(featureSet)))
+            for feature in featureSet:
+                if feature not in tokenIndex:
+                    tokenIndex[feature] = len(tokenIndex) + 1
+                currentFeatureSetEncoded.append(tokenIndex[feature])
+
+            encodedFeatures.append(currentFeatureSetEncoded)
+
+
+        d = {'x': encodedX, 'y': encodedY, 'features': encodedFeatures}
+        encodedProcessedDf = pd.DataFrame(data=d)
+        return tokenIndex, encodedProcessedDf
 
     logger = logging.getLogger(__name__)
     logger.info('turning raw data in something useful')
 
-
-    full_path = "../../data/raw/json/" + filename +".json"
-    processed_full_path = '../../data/processed/' + filename + '.csv'
+    full_path = "../../data/raw/json/" + filename + ".json"
+    processed_encoded_full_path = '../../data/processed/encoded/' + filename + '.csv'
+    processed_decoded_full_path = '../../data/processed/decoded/' + filename + '.csv'
 
     if not os.path.exists(full_path):
         print("raw data does not exist!")
         return False
 
-    if not os.path.exists(processed_full_path):
-        print("processing data..")
 
-        df = pd.read_json(full_path, orient='columns')  # Dataset is now stored in a Pandas Dataframe
-        print('df <- {}'.format(filename))
-        print(df.head(5))
+    if not os.path.exists('../../data/processed/decoded'):  # check if path exists
+        print("creating decoded folder...")
+        os.mkdir('../../data/processed/decoded')
 
-        x = getPredictor(df)
-        y = getPredictand(df)
-        features = getFeatures(df)
+    if not os.path.exists(processed_decoded_full_path):
+        print("encoded file does not exist, exiting...")
+        return False
 
-        d = {'x': x, 'y': y, 'features': features}
-        processedDf = pd.DataFrame(data=d)
-        if not os.path.exists('../../data/processed'):  # check if path exists
-            print("creating processed folder...")
-            os.mkdir('../../data/processed')
-        processedDf.to_csv(processed_full_path)
+    else:
+        processedDf = pd.read_csv('../../data/processed/decoded/'+filename+'.csv')
+
+    if not os.path.exists(processed_encoded_full_path):
+
+        if not os.path.exists('../../data/processed/encoded'):  # check if path exists
+            print("creating encoded folder...")
+            os.mkdir('../../data/processed/encoded')
+
+
+        # tokenize data and make ready for model
+        print("init tokenizer...")
+        tokenIndex = {}
+
+        tokenIndex, encodedProcessedDf = customTokenizer(tokenIndex, processedDf)
+        encodedProcessedDf.to_csv(processed_encoded_full_path)
+
+        print('length of vocab size: {}'.format(len(tokenIndex) + 1))
+
 
 
 if __name__ == '__main__':
