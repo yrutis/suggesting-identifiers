@@ -7,6 +7,7 @@ import zipfile
 from pathlib import Path
 from dotenv import find_dotenv, load_dotenv
 
+import json
 import pandas as pd
 import numpy as np
 import ast
@@ -85,7 +86,7 @@ def main(filename):
         os.mkdir('../../data/processed/decoded')
 
     if not os.path.exists(processed_decoded_full_path):
-        print("encoded file does not exist, exiting...")
+        print("decoded file does not exist, exiting...")
         return False
 
     else:
@@ -104,10 +105,14 @@ def main(filename):
 
         tokenIndex, encodedProcessedDf = customTokenizer(tokenIndex, processedDf)
         encodedProcessedDf.to_csv(processed_encoded_full_path)
+        encodedProcessedDf.to_json('../../data/processed/encoded/' + filename + '.json')  # to save the dataframe
+
+        print("tokenIndex: {}".format(tokenIndex))
 
         print('length of vocab size: {}'.format(len(tokenIndex) + 1))
 
-
+        with open('../../data/processed/encoded/tokenizer.json', 'w') as fp:
+            json.dump(tokenIndex, fp)
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
