@@ -5,7 +5,7 @@ import os
 import json
 import zipfile
 from pathlib import Path
-from dotenv import find_dotenv, load_dotenv
+#from dotenv import find_dotenv, load_dotenv
 
 import json
 import pandas as pd
@@ -65,53 +65,49 @@ def main(filename):
             encodedFeatures.append(currentFeatureSetEncoded)
 
 
+
         d = {'x': encodedX, 'y': encodedY, 'features': encodedFeatures}
         encodedProcessedDf = pd.DataFrame(data=d)
         return tokenIndex, encodedProcessedDf
 
     logger = logging.getLogger(__name__)
-    logger.info('turning raw data in something useful')
+    logger.info('building encoded version...')
 
     full_path = "../../data/raw/json/" + filename + ".json"
-    processed_encoded_full_path = '../../data/processed/encoded/' + filename + '.csv'
     processed_decoded_full_path = '../../data/processed/decoded/' + filename + '.csv'
+    processed_encoded_full_path = '../../data/processed/encoded/' + filename + '.json'
 
     if not os.path.exists(full_path):
         print("raw data does not exist!")
         return False
 
-
-    if not os.path.exists('../../data/processed/decoded'):  # check if path exists
-        print("creating decoded folder...")
-        os.mkdir('../../data/processed/decoded')
-
     if not os.path.exists(processed_decoded_full_path):
-        print("decoded file does not exist, exiting...")
+        print("decoded file does not exist!")
         return False
 
     else:
-        processedDf = pd.read_csv('../../data/processed/decoded/'+filename+'.csv')
+        processedDf = pd.read_csv(processed_decoded_full_path)
 
+    #only encode if encoded file doesn't exist yet
     if not os.path.exists(processed_encoded_full_path):
 
-        if not os.path.exists('../../data/processed/encoded'):  # check if path exists
+        # check if encoded folder exists
+        if not os.path.exists('../../data/processed/encoded'):
             print("creating encoded folder...")
             os.mkdir('../../data/processed/encoded')
-
 
         # tokenize data and make ready for model
         print("init tokenizer...")
         tokenIndex = {}
-
         tokenIndex, encodedProcessedDf = customTokenizer(tokenIndex, processedDf)
-        encodedProcessedDf.to_csv(processed_encoded_full_path)
-        encodedProcessedDf.to_json('../../data/processed/encoded/' + filename + '.json')  # to save the dataframe
 
-        print("tokenIndex: {}".format(tokenIndex))
+        #save the encoded df to json
+        encodedProcessedDf.to_json('../../data/processed/encoded/' + filename + '.json')
 
         print('length of vocab size: {}'.format(len(tokenIndex) + 1))
 
-        with open('../../data/processed/encoded/tokenizer.json', 'w') as fp:
+        #save tokenizer
+        with open('../../data/processed/encoded/'+filename+'-tokenizer.json', 'w') as fp:
             json.dump(tokenIndex, fp)
 
 if __name__ == '__main__':
@@ -120,7 +116,7 @@ if __name__ == '__main__':
 
     # find .env automatically by walking up directories until it's found, then
     # load up the .env entries as environment variables
-    load_dotenv(find_dotenv())
+    #load_dotenv(find_dotenv())
 
     filename = 'Bukkit_types_test'
     main(filename)

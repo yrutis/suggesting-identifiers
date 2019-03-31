@@ -5,7 +5,7 @@ import os
 import json
 import zipfile
 from pathlib import Path
-from dotenv import find_dotenv, load_dotenv
+#from dotenv import find_dotenv, load_dotenv
 
 import pandas as pd
 import numpy as np
@@ -136,7 +136,7 @@ if __name__ == '__main__':
 
     # find .env automatically by walking up directories until it's found, then
     # load up the .env entries as environment variables
-    load_dotenv(find_dotenv())
+    #load_dotenv(find_dotenv())
 
     filename = 'Bukkit_types_test'
     main(filename)

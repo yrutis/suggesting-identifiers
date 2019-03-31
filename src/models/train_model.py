@@ -5,10 +5,9 @@ import os
 import json
 import zipfile
 from pathlib import Path
-from dotenv import find_dotenv, load_dotenv
+#from dotenv import find_dotenv, load_dotenv
 
 import numpy as np
-import ast
 
 import keras
 
@@ -67,7 +66,7 @@ def main(filename):
         return allContextList
 
 
-    with open('../../data/processed/encoded/tokenizer.json', 'r') as fp:
+    with open('../../data/processed/encoded/'+filename+'-tokenizer.json', 'r') as fp:
         tokenIndex = json.load(fp)
 
     with open('../../data/processed/encoded/'+filename+'.json', 'r') as fp:
@@ -75,17 +74,15 @@ def main(filename):
         trainX = list(data['x'].values()) #retrieve all x values as a list of list
         trainY = list(data['y'].values()) #retrieve all y values as a list of strings
 
+    #converting trainX and trainY to a numpy array
     trainX = np.array(trainX)
     trainY = np.array(trainY)
-
 
     # get total length of tokens
     vocabSize = len(tokenIndex) + 1
 
-    #print("X has the following shape: {}, only trainX.y: {}".format(trainX.shape, trainX.shape[1]))
-
-
     allContextList = createInputContext(trainX)
+    print(allContextList)
     tryingOnlyTensors, tryingTarget = createModel(trainX.shape[1])
 
     # one hot encode outputs
@@ -107,13 +104,19 @@ if __name__ == '__main__':
 
     # find .env automatically by walking up directories until it's found, then
     # load up the .env entries as environment variables
-    load_dotenv(find_dotenv())
+    #load_dotenv(find_dotenv())
 
-    filename = 'Bukkit_types_test'
+    filename = 'bigbluebutton_methoddeclarations_train'
 
+    #download data
     make_source.main()
+
+    #create dataset
     make_data.main(filename)
+
+    #create ready to feed into model file
     build_features.main(filename)
 
+    #run model
     main(filename)
 
