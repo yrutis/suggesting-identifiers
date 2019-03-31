@@ -23,9 +23,9 @@ from keras.models import Model
 from keras.utils import plot_model
 from keras.utils import to_categorical
 
-import src.source.make_source as make_source
-import src.data.make_dataset as make_data
-import src.features.build_features as build_features
+#import src.source.make_source as make_source
+#import src.data.make_dataset as make_data
+#import src.features.build_features as build_features
 
 # @click.command()
 # @click.argument('input_filepath', type=click.Path(exists=True))
@@ -109,13 +109,13 @@ if __name__ == '__main__':
     filename = 'bigbluebutton_methoddeclarations_train'
 
     #download data
-    make_source.main()
+    #make_source.main()
 
     #create dataset
-    make_data.main(filename)
+    #make_data.main(filename)
 
     #create ready to feed into model file
-    build_features.main(filename)
+    #build_features.main(filename)
 
     #run model
     main(filename)
