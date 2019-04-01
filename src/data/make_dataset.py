@@ -1,19 +1,9 @@
-# -*- coding: utf-8 -*-
-import click
-import logging
-import os
-import json
-import zipfile
-from pathlib import Path
-#from dotenv import find_dotenv, load_dotenv
-
 import pandas as pd
 import numpy as np
+import logging
+import os
 
 
-# @click.command()
-# @click.argument('input_filepath', type=click.Path(exists=True))
-# @click.argument('output_filepath', type=click.Path())
 def main(filename):
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).
@@ -34,7 +24,7 @@ def main(filename):
         print("predictands loaded in y")
         return y
 
-    def getPredictor(df, windowSize=2):
+    def getPredictor(df, windowSize=4):
         """
         load predictors from raw data (df)
         """
@@ -114,7 +104,7 @@ def main(filename):
 
         df = pd.read_json(full_path, orient='columns')  # Dataset is now stored in a Pandas Dataframe
         print('df <- {}'.format(filename))
-        print(df.head(5))
+        #print(df.head(5))
 
         x = getPredictor(df)
         y = getPredictand(df)
@@ -122,7 +112,9 @@ def main(filename):
 
         d = {'x': x, 'y': y, 'features': features}
         processedDf = pd.DataFrame(data=d)
-        processedDf = shuffleDf(rareIdentifiersToUnk(processedDf))
+        processedDf = rareIdentifiersToUnk(processedDf)
+        processedDf = shuffleDf(processedDf)
+        print(processedDf.head())
 
         print("saving decoded version of processed data...")
         processedDf.to_csv(processed_decoded_full_path)
@@ -138,5 +130,5 @@ if __name__ == '__main__':
     # load up the .env entries as environment variables
     #load_dotenv(find_dotenv())
 
-    filename = 'Bukkit_types_test'
+    filename = 'Android-Universal-Image-Loader_methoddeclarations_train'
     main(filename)

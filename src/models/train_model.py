@@ -1,99 +1,90 @@
 # -*- coding: utf-8 -*-
-import click
 import logging
-import os
-import json
-import zipfile
-from pathlib import Path
-#from dotenv import find_dotenv, load_dotenv
 
-import numpy as np
+from sklearn.preprocessing import LabelEncoder
 
-import keras
 
 from keras import Input
 from keras import layers
 
-from keras.callbacks import TensorBoard
-from keras.layers import Dense
-from keras.layers import Dropout
 from keras.layers import Embedding
 from keras.layers import Flatten
 from keras.models import Model
 from keras.utils import plot_model
 from keras.utils import to_categorical
 
-#import src.source.make_source as make_source
-#import src.data.make_dataset as make_data
-#import src.features.build_features as build_features
+import pandas as pd
+import numpy as np
+import ast
 
-# @click.command()
-# @click.argument('input_filepath', type=click.Path(exists=True))
-# @click.argument('output_filepath', type=click.Path())
+import keras
+from keras.preprocessing.text import Tokenizer
+
 def main(filename):
     """ runs model
     """
-    def createModel(windowSize):
-        print("creating model for window size: {}".format(windowSize))
+    processed_decoded_full_path = '../../data/processed/decoded/' + filename + '.csv'
 
-        onlyTensorList = []
-        buildModelList = []
-        # adding the amount of tensors to the list need and build model
-        i = 0
-        contextEmbedding = Embedding(output_dim=50, input_dim=vocabSize, input_length=1)
-        while i < windowSize:
-            tensor = Input(shape=(1,), dtype='int32', )
-            onlyTensorList.append(tensor)
-            c = contextEmbedding(tensor)
-            c = Flatten()(c)
-            c = keras.layers.Dense(vocabSize)(c)
-            buildModelList.append(c)
-            i += 1
+    processedDf = pd.read_csv(processed_decoded_full_path)
 
-        added = keras.layers.Add()(buildModelList)
-        added = Dropout(0.2)(added)
-        answer = layers.Dense(vocabSize, activation='softmax')(added)
-        return onlyTensorList, answer
+    context = []
+    for index, row in processedDf.iterrows():
+        x = ast.literal_eval(row['x'])  # convert string representation back to list
+        context.append(x)
 
-    def createInputContext(trainX):
-        allContextList = []
-        windowSize = trainX.shape[1]
-        # get all context and save in allContextList
-        i = 0
-        while i < windowSize:
-            allContextList.append(trainX[:, i])
-            i += 1
-        return allContextList
+    tokenizer = Tokenizer()  # init new tokenizer
+    tokenizer.fit_on_texts(context)
+    sequences = tokenizer.texts_to_sequences(context)
+    padded_sequences = keras.preprocessing.sequence.pad_sequences(sequences, maxlen=None,
+                                                                  value=0)  # make sure they are all same length
 
+    print(padded_sequences.shape)
+    print(padded_sequences[:, 0].shape)
+    print("first padded sequence: {}".format(padded_sequences[0]))
 
-    with open('../../data/processed/encoded/'+filename+'-tokenizer.json', 'r') as fp:
-        tokenIndex = json.load(fp)
+    w1 = padded_sequences[:, 0]
+    w2 = padded_sequences[:, 1]
 
-    with open('../../data/processed/encoded/'+filename+'.json', 'r') as fp:
-        data = json.load(fp)
-        trainX = list(data['x'].values()) #retrieve all x values as a list of list
-        trainY = list(data['y'].values()) #retrieve all y values as a list of strings
+    # load Y's
+    dataset = processedDf.values
+    Y = dataset[:, 3]
 
-    #converting trainX and trainY to a numpy array
-    trainX = np.array(trainX)
-    trainY = np.array(trainY)
+    # print("this is y {}" .format(Y))
 
-    # get total length of tokens
-    vocabSize = len(tokenIndex) + 1
+    contextVocabSize = len(tokenizer.word_index) + 1
+    print('Found %s unique tokens.' % contextVocabSize)
 
-    allContextList = createInputContext(trainX)
-    print(allContextList)
-    tryingOnlyTensors, tryingTarget = createModel(trainX.shape[1])
+    # encode class values as integers
+    encoder = LabelEncoder()
+    encoder.fit(Y)
+    encoded_Y = encoder.transform(Y)
 
-    # one hot encode outputs
-    y = to_categorical(trainY, num_classes=vocabSize)
+    lenY = len(np.unique(Y))  # amount of unique Y's
+    y = to_categorical(encoded_Y, num_classes=lenY)
 
-    model = Model(tryingOnlyTensors, tryingTarget)
+    print("this is the shape of Y {}".format(y.shape))
+
+    contextEmbedding = Embedding(output_dim=50, input_dim=contextVocabSize, input_length=1)
+
+    tensor1 = Input(shape=(1,), dtype='int32', )
+    c1 = contextEmbedding(tensor1)
+    c1 = Flatten()(c1)
+    c1 = keras.layers.Dense(contextVocabSize)(c1)
+
+    tensor2 = Input(shape=(1,), dtype='int32', )
+    c2 = contextEmbedding(tensor2)
+    c2 = Flatten()(c2)
+    c2 = keras.layers.Dense(contextVocabSize)(c2)
+
+    added = keras.layers.Add()([c1, c2])
+    answer = layers.Dense(lenY, activation='softmax')(added)
+
+    model = Model([tensor1, tensor2], answer)
     optimizer = keras.optimizers.Adam(lr=0.007)
     model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['acc'])
     print(model.summary())
 
-    history = model.fit(allContextList, y, epochs=3, batch_size=100, validation_split=0.1)
+    history = model.fit([w1, w2], y, epochs=10, batch_size=100, validation_split=0.1)
 
     plot_model(model, to_file='../../models/model.png')
 
@@ -102,21 +93,6 @@ if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
 
-    # find .env automatically by walking up directories until it's found, then
-    # load up the .env entries as environment variables
-    #load_dotenv(find_dotenv())
-
-    filename = 'Bukkit_types_test'
-
-    #download data
-    #make_source.main()
-
-    #create dataset
-    #make_data.main(filename)
-
-    #create ready to feed into model file
-    #build_features.main(filename)
-
-    #run model
+    filename = 'Android-Universal-Image-Loader_methoddeclarations_train'
     main(filename)
 
