@@ -1,24 +1,22 @@
 # -*- coding: utf-8 -*-
+import ast
 import logging
-
-from sklearn.preprocessing import LabelEncoder
-
-
+import os
+import keras
 from keras import Input
 from keras import layers
-
 from keras.layers import Embedding
 from keras.layers import Flatten
 from keras.models import Model
+from keras.preprocessing.text import Tokenizer
 from keras.utils import plot_model
 from keras.utils import to_categorical
-
 import pandas as pd
 import numpy as np
-import ast
+from sklearn.preprocessing import LabelEncoder
+from sklearn import metrics
+import pickle
 
-import keras
-from keras.preprocessing.text import Tokenizer
 
 def main(filename):
     """ runs model
@@ -27,10 +25,7 @@ def main(filename):
 
     processedDf = pd.read_csv(processed_decoded_full_path)
 
-    context = []
-    for index, row in processedDf.iterrows():
-        x = ast.literal_eval(row['x'])  # convert string representation back to list
-        context.append(x)
+    context = processedDf['x'].apply(ast.literal_eval) #saves all context x as list in list
 
     tokenizer = Tokenizer()  # init new tokenizer
     tokenizer.fit_on_texts(context)
@@ -38,21 +33,20 @@ def main(filename):
     padded_sequences = keras.preprocessing.sequence.pad_sequences(sequences, maxlen=None,
                                                                   value=0)  # make sure they are all same length
 
-    print(padded_sequences.shape)
-    print(padded_sequences[:, 0].shape)
-    print("first padded sequence: {}".format(padded_sequences[0]))
-
-    w1 = padded_sequences[:, 0]
-    w2 = padded_sequences[:, 1]
-
-    # load Y's
-    dataset = processedDf.values
-    Y = dataset[:, 3]
-
-    # print("this is y {}" .format(Y))
-
     contextVocabSize = len(tokenizer.word_index) + 1
     print('Found %s unique tokens.' % contextVocabSize)
+
+
+    trainW1 = padded_sequences[0: int(0.9 * padded_sequences.shape[0]), 0]
+    trainW2 = padded_sequences[0: int(0.9 * padded_sequences.shape[0]), 1]
+
+    print("trainW1 shape {}".format(trainW1.shape))
+
+    # load Y's
+    y = processedDf['y'] #get all Y
+    Y = y.values  # convert to numpy
+    #Y = y[:, 2]  # get Y values
+    print("first load y: {}".format(Y[0]))
 
     # encode class values as integers
     encoder = LabelEncoder()
@@ -60,9 +54,13 @@ def main(filename):
     encoded_Y = encoder.transform(Y)
 
     lenY = len(np.unique(Y))  # amount of unique Y's
-    y = to_categorical(encoded_Y, num_classes=lenY)
+    print("this is length of y {} and this of encoded Y {}".format(len(np.unique(Y)), len(np.unique(encoded_Y))))
 
-    print("this is the shape of Y {}".format(y.shape))
+    #select only 90% for training
+    trainYEnc = encoded_Y[0: int(0.9 * Y.shape[0])]
+    trainY = to_categorical(trainYEnc, num_classes=lenY)
+
+    print("this is the shape of trainY {}".format(trainY.shape))
 
     contextEmbedding = Embedding(output_dim=50, input_dim=contextVocabSize, input_length=1)
 
@@ -84,9 +82,28 @@ def main(filename):
     model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['acc'])
     print(model.summary())
 
-    history = model.fit([w1, w2], y, epochs=10, batch_size=100, validation_split=0.1)
+    model.fit([trainW1, trainW2], trainY,
+              validation_split=0.1,
+              epochs=10,
+              batch_size=100)
 
+
+    if not os.path.exists('../../models'):  # check if path exists
+        print("creating models folder...")
+        os.mkdir('../../models/')
     plot_model(model, to_file='../../models/model.png')
+
+    # serialize model to JSON
+    model_json = model.to_json()
+    with open("model.json", "w") as json_file:
+        json_file.write(model_json)
+    # serialize weights to HDF5
+    model.save_weights("model.h5")
+    print("Saved model to disk")
+
+    # saving tokenizer
+    with open('tokenizer.pickle', 'wb') as handle:
+        pickle.dump(tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 if __name__ == '__main__':
