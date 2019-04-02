@@ -55,23 +55,21 @@ def main(filename):
 
     lenY = len(np.unique(Y))  # amount of unique Y's
 
-    y = to_categorical(encoded_Y, num_classes=lenY)
-
-    print("this is length of y {} and this of encoded Y {}".format(len(np.unique(Y)), len(np.unique(encoded_Y))))
-
     valYEnc = encoded_Y[int(0.9 * Y.shape[0]): Y.shape[0]]
 
     valY = to_categorical(valYEnc, num_classes=lenY)
 
-    prediction1 = model.predict([valW1[1:2], valW2[1:2]])
+    prediction1 = model.predict([valW1[1:2], valW2[1:2]]) #predict for 1 pair
+    print("prediction1.shape {}".format(prediction1.shape)) #get numpy array with each prob
+    print(prediction1) #get a prob for each label
     # sorting the predictions in descending order
-    sorting = (-prediction1).argsort()
+    sorting = (-prediction1).argsort() #sorts by index
+    print("after sorting it is {}".format(sorting))
 
     # getting the top 5 predictions
     sorted_ = sorting[0][:5]
     sorted_ = sorted_.tolist()
     print("sorted is {}".format(sorted_))
-
     predicted_label = encoder.inverse_transform(sorted_)
     predicted_label = predicted_label.tolist() #convert numpy to list
 
