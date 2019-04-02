@@ -66,6 +66,19 @@ def main(filename):
     sorting = (-prediction1).argsort() #sorts by index
     print("after sorting it is {}".format(sorting))
 
+
+    print("just top5 suggestion (index) {}".format((-prediction1).argsort()[0][0:4]))
+    idx = (-prediction1).argsort()[0][0:4]
+    idx2 = idx.tolist()
+    pr2 = prediction1[0]
+    probs = np.take(pr2, idx2)
+    decoded = encoder.inverse_transform(idx)
+    print("just top5 suggestion (prob) {} ".format(probs))
+    print("decoded top5 suggestion {}".format(decoded))
+
+
+
+
     # getting the top 5 predictions
     sorted_ = sorting[0][:5]
     sorted_ = sorted_.tolist()
