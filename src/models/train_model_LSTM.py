@@ -19,6 +19,8 @@ import numpy as np
 from sklearn.preprocessing import LabelEncoder
 import pickle
 
+import matplotlib.pyplot as plt
+
 def main(filename):
     """ runs LSTM model
     """
@@ -85,9 +87,9 @@ def main(filename):
     model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['acc'])
     print(model.summary())
 
-    model.fit(trainX, trainY,
+    history = model.fit(trainX, trainY,
               validation_split=0.1,
-              epochs=1,
+              epochs=3,
               batch_size=100)
 
 
@@ -111,6 +113,26 @@ def main(filename):
     with open('tokenizer.pickle', 'wb') as handle:
         pickle.dump(tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
     logger.info("Saved model tokenizer to disk")
+
+
+
+    acc = history.history['acc']
+    val_acc = history.history['val_acc']
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+    epochs = range(1, len(acc) + 1)
+    plt.plot(epochs, acc, 'bo', label='Training acc')
+    plt.plot(epochs, val_acc, 'b', label='Validation acc')
+    plt.title('Training and validation accuracy')
+    plt.legend()
+    plt.savefig('acc.png')
+    plt.figure()
+    plt.plot(epochs, loss, 'bo', label='Training loss')
+    plt.plot(epochs, val_loss, 'b', label='Validation loss')
+    plt.title('Training and validation loss')
+    plt.legend()
+    plt.savefig('loss.png')
+
 
 
 if __name__ == '__main__':
