@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import ast
 import logging
+import os
 from keras import preprocessing
 from keras.utils import to_categorical
 from keras.models import model_from_json
@@ -19,8 +20,10 @@ def main(filename):
     # load weights into new model
     model.load_weights("model.h5")
     print("Loaded model from disk")
+    data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
+    processed_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'), 'decoded'),
+                                               filename + '.csv')  # get decoded path
 
-    processed_decoded_full_path = '../../data/processed/decoded/' + filename + '.csv'
     processedDf = pd.read_csv(processed_decoded_full_path)
 
     # loading
@@ -40,8 +43,7 @@ def main(filename):
     contextVocabSize = len(tokenizer.word_index) + 1
     print('Found %s unique tokens.' % contextVocabSize)
 
-    valW1 = padded_sequences[int(0.9 * padded_sequences.shape[0]): padded_sequences.shape[0], 0]
-    valW2 = padded_sequences[int(0.9 * padded_sequences.shape[0]): padded_sequences.shape[0], 1]
+    valX = padded_sequences[int(0.9 * padded_sequences.shape[0]): padded_sequences.shape[0]]
 
     # load Y's
     y = processedDf['y']  # get all Y
@@ -59,7 +61,8 @@ def main(filename):
 
     valY = to_categorical(valYEnc, num_classes=lenY)
 
-    prediction1 = model.predict([valW1[1:2], valW2[1:2]]) #predict for 1 pair
+
+    prediction1 = model.predict([valX[1:2]]) #predict for 1 pair
     print("prediction1.shape {}".format(prediction1.shape)) #get numpy array with each prob
     print(prediction1) #get a prob for each label
     # sorting the predictions in descending order
@@ -77,8 +80,6 @@ def main(filename):
     print("decoded top5 suggestion {}".format(decoded))
 
 
-
-
     # getting the top 5 predictions
     sorted_ = sorting[0][:5]
     sorted_ = sorted_.tolist()
@@ -92,7 +93,9 @@ def main(filename):
         prob = "%.2f" % round(prob, 2)
         print("Number {} prob is {} for {}".format(idx+1, prob, predicted_label[idx]))
 
-    predictions = model.predict([valW1, valW2])  # get all predictions
+
+
+    predictions = model.predict([valX])  # get all predictions
     predicted_classes = np.argmax(predictions, axis=1)
     predicted_prob = np.amax(predictions, axis=1)
     print(predicted_prob)
@@ -107,5 +110,5 @@ if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
 
-    filename = 'Android-Universal-Image-Loader_methoddeclarations_train'
+    filename = 'bigbluebutton_methoddeclarations_train'
     main(filename)

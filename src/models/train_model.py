@@ -21,7 +21,14 @@ import pickle
 def main(filename):
     """ runs model
     """
-    processed_decoded_full_path = '../../data/processed/decoded/' + filename + '.csv'
+
+    # get logger
+    logger = logging.getLogger(__name__)
+
+    data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
+    processed_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'), 'decoded'),
+                                               filename + '.csv')  # get decoded path
+    logger.info(processed_decoded_full_path)
 
     processedDf = pd.read_csv(processed_decoded_full_path)
 
@@ -64,12 +71,12 @@ def main(filename):
 
     contextEmbedding = Embedding(output_dim=50, input_dim=contextVocabSize, input_length=1)
 
-    tensor1 = Input(shape=(1,), dtype='int32', )
+    tensor1 = Input(shape=(1,))
     c1 = contextEmbedding(tensor1)
     c1 = Flatten()(c1)
     c1 = keras.layers.Dense(contextVocabSize)(c1)
 
-    tensor2 = Input(shape=(1,), dtype='int32', )
+    tensor2 = Input(shape=(1,))
     c2 = contextEmbedding(tensor2)
     c2 = Flatten()(c2)
     c2 = keras.layers.Dense(contextVocabSize)(c2)
@@ -84,14 +91,17 @@ def main(filename):
 
     model.fit([trainW1, trainW2], trainY,
               validation_split=0.1,
-              epochs=10,
+              epochs=1,
               batch_size=100)
 
+    model_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'models')
 
-    if not os.path.exists('../../models'):  # check if path exists
+    if not os.path.exists(model_folder):  # check if path exists
         print("creating models folder...")
-        os.mkdir('../../models/')
-    plot_model(model, to_file='../../models/model.png')
+        os.mkdir(model_folder)
+    plotted_model = os.path.join(model_folder, 'model.png')
+    plot_model(model, to_file=plotted_model)
+    logger.info("Saved model architecture to disk")
 
     # serialize model to JSON
     model_json = model.to_json()
@@ -110,6 +120,6 @@ if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
 
-    filename = 'all_methoddeclarations_train'
+    filename = 'bigbluebutton_methoddeclarations_train'
     main(filename)
 
