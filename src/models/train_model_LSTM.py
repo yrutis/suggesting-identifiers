@@ -2,6 +2,8 @@
 import ast
 import logging
 import os
+
+'''
 import keras
 from keras import Input
 from keras import layers
@@ -11,6 +13,8 @@ from keras.models import Model
 from keras.preprocessing.text import Tokenizer
 from keras.utils import plot_model
 from keras.utils import to_categorical
+
+'''
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
@@ -21,7 +25,13 @@ def main(filename):
     """ runs model
     """
     processed_decoded_full_path = '../../data/processed/decoded/' + filename + '.csv'
+    data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
+    processed_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'), 'decoded'), filename + '.csv') #get decoded path
+    print(processed_decoded_full_path)
 
+
+
+    '''
     processedDf = pd.read_csv(processed_decoded_full_path)
 
     context = processedDf['x'].apply(ast.literal_eval) #saves all context x as list in list
@@ -66,7 +76,7 @@ def main(filename):
 
     tensor1 = Input(shape=(4,))
     c1 = contextEmbedding(tensor1)
-    c1 = LSTM(100)(c1)
+    c1 = LSTM(50)(c1)
     c1 = keras.layers.Dense(contextVocabSize)(c1)
     answer = layers.Dense(lenY, activation='softmax')(c1)
 
@@ -81,7 +91,7 @@ def main(filename):
               batch_size=100)
 
 
-'''
+
     if not os.path.exists('../../models'):  # check if path exists
         print("creating models folder...")
         os.mkdir('../../models/')

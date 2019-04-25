@@ -2,25 +2,34 @@
 import logging
 import os
 import zipfile
+import urllib.request
+
 
 def main():
-    """ Runs data processing scripts to turn raw data from (../raw) into
-        cleaned data ready to be analyzed (saved in ../processed).
+    """ Downlaods Data from the internet.
     """
-    logger = logging.getLogger(__name__)
-    logger.info('downloading data from the internet')
-    if not os.path.exists('../../data'): #check if path exists
-        os.mkdir('../../data')
+    print('downloading data from the internet')
+
+    #retrieve data folder based on location of current file
+    data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
+    print(data_folder)
+
+
+    if not os.path.exists(data_folder): #check if path exists
+        os.mkdir(data_folder)
         print("data folder created")
 
-    download_path = os.path.join('../../data', 'evaldata.zip')
+
+    download_path = os.path.join(data_folder, 'evaldata.zip')
+
     if not os.path.exists(download_path):
         print('downloading data to %s ...' % download_path)
         source = 'http://groups.inf.ed.ac.uk/cup/naturalize/data/evaldata.zip'
-        os.system('wget -O %s %s' % (download_path, source))
+        urllib.request.urlretrieve(source, download_path)
         print('finished downloading')
 
-    unzip_path = os.path.join('../../data', 'raw')
+
+    unzip_path = os.path.join(data_folder, 'raw')
     if not os.path.exists(unzip_path):
         print('extracting data to %s ...' % unzip_path)
         archive = zipfile.ZipFile(download_path)
