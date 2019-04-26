@@ -6,10 +6,13 @@ import numpy as np
 class AbstractTrain(object):
     def __init__(self, model, data, encoder):
         self.model = model
-        self.data = data
         self.history = None
         self.type = None
         self.encoder = encoder
+        self.trainX = data[0]
+        self.trainY = data[1]
+        self.valX = data[2]
+        self.valY = data[3]
 
 
     def train(self):

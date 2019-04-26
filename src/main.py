@@ -17,6 +17,7 @@ def main(filename):
     """
 
     def runSimpleNN():
+
         print('Create the model...')
         model1 = SimpleNN(context_vocab_size=preprocessor.context_vocab_size,
                           length_Y=preprocessor.trainY.shape[1],
@@ -33,7 +34,15 @@ def main(filename):
 
         trainer1.predict(preprocessor.valX[1:2])
 
-        #TODO build trainX, trainY, valX, valY according to specific model
+        print("save evaluation to file")
+        evaluator1 = Evaluator(trainer1)
+        evaluator1.visualize()
+        evaluator1.evaluate()
+
+        #TODO save models weights, json in specific place
+        #ToDO save accs loss in specific place
+        #TODO create config file
+        #TODO make logging work
 
 
 
@@ -60,33 +69,19 @@ def main(filename):
 
 
 
-
     # get logger
     logger = logging.getLogger(__name__)
 
     window_size = 8
-
     preprocessor = Preprocessor(filename=filename)
     preprocessor.tokenize()
     preprocessor.reverse_tokenize(preprocessor.valX[1:2])
 
     data = [preprocessor.trainX, preprocessor.trainY, preprocessor.valX, preprocessor.valY]
 
+    runLSTM()
     runSimpleNN()
 
-
-
-
-    
-    
-
-   
-
-
-    
-
-
-    
 
 
 if __name__ == '__main__':

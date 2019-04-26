@@ -9,24 +9,28 @@ class Evaluator(object):
         self.__trained_model = trained_model
 
     def evaluate(self):
+        if not self.__trained_model.history:
+            raise Exception("You have to train the model first before evaluating")
 
-        valX = self.__trained_model.data[2]
-        valYEnc = self.__trained_model.data[3]
+        if not self.__trained_model.type:
+            raise Exception("You need to assign a type to the model")
 
-        predictions = self.__trained_model.model.predict([valX])  # get all predictions
+        predictions = self.__trained_model.model.predict(self.__trained_model.valX)  # get all predictions
         predicted_classes = np.argmax(predictions, axis=1)
         predicted_prob = np.amax(predictions, axis=1)
         print(predicted_prob)
         print(predicted_classes)
-        target_names = self.__trained_model.encoder.inverse_transform(np.unique(np.append(predicted_classes, valYEnc)))
+        target_names = self.__trained_model.encoder.inverse_transform(
+            np.unique(np.append(predicted_classes, self.__trained_model.valY))
+        )
 
-        report = metrics.classification_report(valYEnc, predicted_classes, target_names=target_names)
+        report = metrics.classification_report(self.__trained_model.valY, predicted_classes, target_names=target_names)
         print(report)
 
 
     def visualize(self):
         if not self.__trained_model.history:
-            raise Exception("You have to train the model first before evaluating")
+            raise Exception("You have to train the model first before visualizing")
 
         if not self.__trained_model.type:
             raise Exception("You need to assign a type to the model")

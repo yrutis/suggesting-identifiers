@@ -8,7 +8,7 @@ class LSTMTrainer(AbstractTrain):
 
     def train(self):
 
-        self.history = self.model.fit(self.data[0], self.data[1],
+        self.history = self.model.fit(self.trainX, self.trainY,
                   validation_split=0.1,
                   epochs=3,
                   batch_size=100)
