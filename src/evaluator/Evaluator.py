@@ -2,10 +2,12 @@ import os
 import matplotlib.pyplot as plt
 import logging
 import numpy as np
+import pandas as pd
 from sklearn import metrics
+from src.trainer.AbstractTrain import AbstractTrain
 
 class Evaluator(object):
-    def __init__(self, trained_model):
+    def __init__(self, trained_model:AbstractTrain):
         self.__trained_model = trained_model
 
     def evaluate(self):
@@ -24,8 +26,11 @@ class Evaluator(object):
             np.unique(np.append(predicted_classes, self.__trained_model.valY))
         )
 
-        report = metrics.classification_report(self.__trained_model.valY, predicted_classes, target_names=target_names)
-        print(report)
+        report = metrics.classification_report(self.__trained_model.valY, predicted_classes, target_names=target_names, output_dict=True)
+        logging.info(report)
+        df = pd.DataFrame(report).transpose()
+        df.to_csv("report-"+self.__trained_model.type+".csv")
+
 
 
     def visualize(self):
@@ -56,3 +61,4 @@ class Evaluator(object):
         plt.title('Training and validation loss')
         plt.legend()
         plt.savefig(loss_plot)
+

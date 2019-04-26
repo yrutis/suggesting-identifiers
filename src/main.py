@@ -41,6 +41,8 @@ def main(filename):
 
         #TODO save models weights, json in specific place
         #ToDO save accs loss in specific place
+        #TODO save sklearn report in specific place
+
         #TODO create config file
         #TODO make logging work
 
@@ -80,7 +82,7 @@ def main(filename):
     data = [preprocessor.trainX, preprocessor.trainY, preprocessor.valX, preprocessor.valY]
 
     runLSTM()
-    runSimpleNN()
+    #runSimpleNN()
 
 
 
