@@ -4,7 +4,7 @@ import logging
 import os
 
 
-def main(filename):
+def main(filename, window_size):
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).
     """
@@ -87,7 +87,6 @@ def main(filename):
     logger = logging.getLogger(__name__)
     logger.info('turning raw data in something useful')
 
-    #full_path = "../../data/raw/json/" + filename + ".json"
     data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
     full_path = os.path.join(os.path.join(os.path.join(data_folder, 'raw'), 'json'), filename + '.json') #get decoded path
     processed_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'), 'decoded'), filename + '.csv') #get decoded path
@@ -111,7 +110,7 @@ def main(filename):
         print('df <- {}'.format(filename))
         #print(df.head(5))
 
-        x = getPredictor(df)
+        x = getPredictor(df, windowSize=window_size)
         y = getPredictand(df)
         features = getFeatures(df)
 
@@ -136,4 +135,4 @@ if __name__ == '__main__':
     #load_dotenv(find_dotenv())
 
     filename = 'bigbluebutton_methoddeclarations_train'
-    main(filename)
+    main(filename, 8)
