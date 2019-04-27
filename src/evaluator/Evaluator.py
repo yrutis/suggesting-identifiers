@@ -21,8 +21,8 @@ class Evaluator(object):
         predictions = self.__trained_model.model.predict(self.__trained_model.valX)  # get all predictions
         predicted_classes = np.argmax(predictions, axis=1)
         predicted_prob = np.amax(predictions, axis=1)
-        print(predicted_prob)
-        print(predicted_classes)
+
+        #get all possible predictions and true values
         target_names = self.__trained_model.encoder.inverse_transform(
             np.unique(np.append(predicted_classes, self.__trained_model.valY))
         )
