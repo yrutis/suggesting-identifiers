@@ -31,7 +31,6 @@ class Evaluator(object):
         )
 
         report = metrics.classification_report(self.__trained_model.valY, predicted_classes, target_names=target_names, output_dict=True)
-        logger.info(report)
         df = pd.DataFrame(report).transpose()
 
         report_folder = path_file.report_folder
