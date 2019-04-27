@@ -9,19 +9,22 @@ def main(filename, window_size):
         cleaned data ready to be analyzed (saved in ../processed).
     """
 
+    # get logger
+    logger = logging.getLogger(__name__)
+
     def getPredictand(df):
         """
         load predictands from raw data (df)
         """
 
-        print("getting predictands...")
+        logger.info("getting predictands...")
         df = df.loc[:, ['boundVariables', 'codeTokens']]
         y = []
         for index, row in df.iterrows():
             for idx, val in enumerate(row['boundVariables']):
                 y.append(row['codeTokens'][val[0]])
         y = np.asarray(y)  # TODO check if needed
-        print("predictands loaded in y")
+        logger.info("predictands loaded in y")
         return y
 
     def getPredictor(df, windowSize=8):
@@ -29,7 +32,7 @@ def main(filename, window_size):
         load predictors from raw data (df)
         """
 
-        print("getting predictors...")
+        logger.info("getting predictors...")
         df = df.loc[:, ['boundVariableFeatures', 'boundVariables', 'codeTokens']]
         x = []
         for index, row in df.iterrows():
@@ -43,21 +46,21 @@ def main(filename, window_size):
                         try:
                             currentX.append(((row['codeTokens'][val[0] + j])))
                         except IndexError:
-                            print('There is an index error')
+                            logger.info('There is an index error')
                             currentX.append('IndexError')
                     j += 1
 
                 # add currentX to x
                 x.append((currentX))
 
-        print("predictors loaded in x")
+        logger.info("predictors loaded in x")
         return x
 
     def getFeatures(df):
         """
         load features from raw data
         """
-        print("getting features...")
+        logger.info("getting features...")
         features = df.loc[:, ['boundVariableFeatures', 'provenance']]
         featuresList = []  # get all features (list of all features is in all elem)
         for index, row in df.iterrows():
@@ -70,21 +73,20 @@ def main(filename, window_size):
         """
         transforms rare identifiers (y <= 2) to %UNK%
         """
-        print("substituting rare identifiers with %UNK%...")
+        logger.info("substituting rare identifiers with %UNK%...")
         cleanedDf = df.copy()
         cleanedDf.loc[cleanedDf.groupby('y').y.transform(len) <= 2, 'y'] = "%UNK%"
-        print("Check if still same lenght as before substituting: {}".format(len(df) == len(cleanedDf)))
-        print(
+        logger.info("Check if still same lenght as before substituting: {}".format(len(df) == len(cleanedDf)))
+        logger.info(
             "amount of unique y after substitution: {}, check this number with excel".format(len(cleanedDf.y.unique())))
         return cleanedDf
 
     def shuffleDf(df):
-        print("shuffling...")
+        logger.info("shuffling...")
         df = df.sample(frac=1)
         return df
 
 
-    logger = logging.getLogger(__name__)
     logger.info('turning raw data in something useful')
 
     data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
@@ -92,23 +94,22 @@ def main(filename, window_size):
     processed_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'), 'decoded'), filename + '.csv') #get decoded path
 
     if not os.path.exists(full_path):
-        print("raw data does not exist!")
+        logger.info("raw data does not exist!")
         return False
 
     if not os.path.exists(os.path.join(data_folder, 'processed')):  # check if path exists
-        print("creating processed folder...")
+        logger.info("creating processed folder...")
         os.mkdir(os.path.join(data_folder, 'processed'))
 
     if not os.path.exists(os.path.join(os.path.join(data_folder, 'processed'), 'decoded')):  # check if path exists
-        print("creating decoded folder...")
+        logger.info("creating decoded folder...")
         os.mkdir(os.path.join(os.path.join(data_folder, 'processed'), 'decoded'))
 
     if not os.path.exists(processed_decoded_full_path):
-        print("processing data..")
+        logger.info("processing data..")
 
         df = pd.read_json(full_path, orient='columns')  # Dataset is now stored in a Pandas Dataframe
-        print('df <- {}'.format(filename))
-        #print(df.head(5))
+        logger.info('df <- {}'.format(filename))
 
         x = getPredictor(df, windowSize=window_size)
         y = getPredictand(df)
@@ -118,9 +119,9 @@ def main(filename, window_size):
         processedDf = pd.DataFrame(data=d)
         processedDf = rareIdentifiersToUnk(processedDf)
         processedDf = shuffleDf(processedDf)
-        print(processedDf.head())
+        logger.info(processedDf.head())
 
-        print("saving decoded version of processed data...")
+        logger.info("saving decoded version of processed data...")
         processedDf.to_csv(processed_decoded_full_path)
 
 
@@ -129,10 +130,6 @@ def main(filename, window_size):
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
-
-    # find .env automatically by walking up directories until it's found, then
-    # load up the .env entries as environment variables
-    #load_dotenv(find_dotenv())
 
     filename = 'bigbluebutton_methoddeclarations_train'
     main(filename, 8)

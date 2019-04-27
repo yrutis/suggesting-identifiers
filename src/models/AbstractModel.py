@@ -20,16 +20,18 @@ class AbstractModel(object):
         if not self.type:
             raise Exception("The model needs to have a type")
 
+        logger = logging.getLogger(__name__)
 
         # path to model folder
         model_folder = path_file.model_folder
 
+
         # check if model folder exists
         if not os.path.exists(model_folder):
-            logging.info("creating models folder...")
+            logger.info("creating models folder...")
             os.mkdir(model_folder)
 
         # save model architecture to disk
         plotted_model = os.path.join(model_folder, 'model-' + self.type +'.png')
         plot_model(self.model, to_file=plotted_model)
-        logging.info("Saved model architecture to disk")
+        logger.info("Saved model architecture to disk")

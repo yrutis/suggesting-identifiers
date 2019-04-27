@@ -1,5 +1,7 @@
 from src.models.AbstractModel import AbstractModel
 
+import logging
+
 from keras import Input
 from keras import layers
 from keras.layers import Embedding
@@ -7,6 +9,7 @@ from keras.layers import Dense
 from keras.layers import LSTM
 from keras.models import Model
 from keras.optimizers import Adam
+
 
 class LSTMModel(AbstractModel):
     def __init__(self, context_vocab_size, windows_size, length_Y, config):
@@ -18,9 +21,9 @@ class LSTMModel(AbstractModel):
         self.build_model()
 
     def build_model(self):
+        logger = logging.getLogger(__name__)
 
-        print("building model...")
-        print("example embedding dim {}".format(self.config.model.embedding_dim))
+        logger.info("building model...")
 
         contextEmbedding = Embedding(output_dim=self.config.model.embedding_dim, input_dim=self.__context_vocab_size, input_length=self.__windows_size)
 

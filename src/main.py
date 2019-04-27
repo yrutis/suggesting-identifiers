@@ -24,45 +24,45 @@ def main():
 
     def runSimpleNN():
 
-        print('Create the model...')
+        logger.info('Create the model...')
         model1 = SimpleNN(context_vocab_size=preprocessor.context_vocab_size,
                           length_Y=preprocessor.trainY.shape[1],
                           windows_size=window_size,
                           config=simpleNN_config)
 
-        print("create trainer...")
+        logger.info("create trainer...")
         trainer1 = SimpleNNTrainer(model=model1.model, data=data, encoder=preprocessor.encoder, config=simpleNN_config)
 
-        print("start training...")
+        logger.info("start training...")
         trainer1.train()
 
         reversed_seq = preprocessor.reverse_tokenize(preprocessor.valX[1:2])
-        print("make a prediction for {}" .format(reversed_seq))
+        logger.info("make a prediction for {}" .format(reversed_seq))
         trainer1.predict(preprocessor.valX[1:2])
 
-        print("save evaluation to file")
+        logger.info("save evaluation to file")
         evaluator1 = Evaluator(trainer1)
         evaluator1.visualize()
         evaluator1.evaluate()
 
 
     def runLSTM():
-        print("create LSTM Model...")
+        logger.info("create LSTM Model...")
         model2 = LSTMModel(context_vocab_size=preprocessor.context_vocab_size,
                            length_Y=preprocessor.trainY.shape[1],
                            windows_size=window_size,
                            config=LSTM_config)
 
-        print("create trainer...")
+        logger.info("create trainer...")
         trainer2 = LSTMTrainer(model=model2.model, data=data, encoder=preprocessor.encoder, config=LSTM_config)
 
-        print("start LSTM training...")
+        logger.info("start LSTM training...")
         trainer2.train()
 
-        print("make a prediction...")
+        logger.info("make a prediction...")
         trainer2.predict(preprocessor.valX[1:2])
 
-        print("save evaluation to file")
+        logger.info("save evaluation to file")
         evaluator2 = Evaluator(trainer2)
         evaluator2.visualize()
         evaluator2.evaluate()

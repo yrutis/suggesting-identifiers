@@ -21,7 +21,6 @@ def get_config_from_json(json_file):
 def load_configs():
 
     simpleNN_config_path = path_file.simpleNN_config_path
-    print(simpleNN_config_path)
     simpleNN_config = get_config_from_json(simpleNN_config_path)
 
     LSTM_config_path = path_file.LSTM_config_path

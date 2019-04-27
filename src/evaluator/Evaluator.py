@@ -18,6 +18,9 @@ class Evaluator(object):
         if not self.__trained_model.type:
             raise Exception("You need to assign a type to the model")
 
+        # get logger
+        logger = logging.getLogger(__name__)
+
         predictions = self.__trained_model.model.predict(self.__trained_model.valX)  # get all predictions
         predicted_classes = np.argmax(predictions, axis=1)
         predicted_prob = np.amax(predictions, axis=1)
@@ -28,7 +31,7 @@ class Evaluator(object):
         )
 
         report = metrics.classification_report(self.__trained_model.valY, predicted_classes, target_names=target_names, output_dict=True)
-        logging.info(report)
+        logger.info(report)
         df = pd.DataFrame(report).transpose()
 
         report_folder = path_file.report_folder

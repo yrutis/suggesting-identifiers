@@ -4,7 +4,9 @@ import logging
 import numpy as np
 import src.utils.path as path_file
 
+
 class AbstractTrain(object):
+
     def __init__(self, model, data, encoder, config):
         self.model = model
         self.config = config
@@ -23,6 +25,10 @@ class AbstractTrain(object):
     def predict(self, x):
         if not self.history:
             raise Exception("You have to train the model first before making a prediction")
+
+        # get logger
+        logger = logging.getLogger(__name__)
+
 
         prediction1 = self.model.predict(x)  # predict for 1 pair
         # sorting the predictions in descending order
@@ -49,7 +55,7 @@ class AbstractTrain(object):
             # just some rounding steps
             prob = (prediction1[0][value]) * 100
             prob = "%.2f" % round(prob, 2)
-            logging.info("Number {} prob is {} % for {}".format(idx + 1, prob, predicted_label[idx]))
+            logger.info("Number {} prob is {} % for {}".format(idx + 1, prob, predicted_label[idx]))
 
 
 
@@ -59,6 +65,9 @@ class AbstractTrain(object):
 
         if not self.type:
             raise Exception("You need to assign a type to the model")
+
+        # get logger
+        logger = logging.getLogger(__name__)
 
         model_folder = path_file.model_folder
 
@@ -72,4 +81,4 @@ class AbstractTrain(object):
 
         # serialize weights to HDF5
         self.model.save_weights(model_weights)
-        logging.info("Saved model to disk")
+        logger.info("Saved model to disk")

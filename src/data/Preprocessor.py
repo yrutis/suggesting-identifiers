@@ -31,11 +31,13 @@ class Preprocessor(object):
 
 
     def tokenize(self):
+        logger = logging.getLogger(__name__)
+
         #move levels up to reach data folder
         data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
         processed_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'), 'decoded'),
                                                    self.__filename + '.csv')  # get decoded path
-        logging.info("Processed decoded full path {}".format(processed_decoded_full_path))
+        logger.info("Processed decoded full path {}".format(processed_decoded_full_path))
 
         processedDf = pd.read_csv(processed_decoded_full_path)
 
@@ -47,22 +49,22 @@ class Preprocessor(object):
         padded_sequences = pad_sequences(sequences, maxlen=None, value=0)  # make sure they are all same length
 
         self.context_vocab_size = len(self.tokenizer.word_index) + 1
-        print('Found %s unique tokens.' % self.context_vocab_size)
+        logger.info('Found %s unique tokens.' % self.context_vocab_size)
 
         self.trainX = padded_sequences[0: int(0.9 * padded_sequences.shape[0])]
 
         # load Y's
         y = processedDf['y']  # get all Y
         Y = y.values  # convert to numpy
-        print("first load y: {}".format(Y[0]))
+        logger.info("first load y: {}".format(Y[0]))
 
         # encode class values as integers
         self.encoder = LabelEncoder()
         self.encoder.fit(Y)
         encoded_Y = self.encoder.transform(Y)
 
-        lenY = len(np.unique(Y))  # amount of unique Y's
-        print("this is length of y {} and this of encoded Y {}".format(len(np.unique(Y)), len(np.unique(encoded_Y))))
+        # amount of unique Y's
+        lenY = len(np.unique(Y))
 
         # select only 90% for training
         trainYEnc = encoded_Y[0: int(0.9 * Y.shape[0])]
@@ -72,8 +74,8 @@ class Preprocessor(object):
         self.valX = padded_sequences[int(0.9 * padded_sequences.shape[0]): padded_sequences.shape[0]]
         self.valY = encoded_Y[int(0.9 * Y.shape[0]): Y.shape[0]]
 
-        logging.warning("This is trainYEnc {}, this is trainY to categorical {}, this is valY {}".format(trainYEnc, self.trainY, self.valY))
-        logging.info("this is lenY {} unique, this is shape of categorical Y {}" .format(lenY, self.trainY.shape[1]))
+        #logging.warning("This is trainYEnc {}, this is trainY to categorical {}, this is valY {}".format(trainYEnc, self.trainY, self.valY))
+        logger.info("this is lenY {} unique, this is shape of categorical Y {}" .format(lenY, self.trainY.shape[1]))
 
         # saving tokenizer
         #with open('tokenizer.pickle', 'wb') as handle:
