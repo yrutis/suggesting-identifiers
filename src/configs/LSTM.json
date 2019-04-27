@@ -1,6 +1,6 @@
 {
   "data_loader": {
-    "name": "blabla"
+    "name": "all_methoddeclarations_train"
   },
   "model":{
     "name": "model.SimpleNN",
