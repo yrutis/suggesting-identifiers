@@ -19,9 +19,6 @@ def main():
     """ runs model
     """
 
-    # TODO make logging work
-
-
     def runSimpleNN():
 
         logger.info('Create the model...')
@@ -74,7 +71,6 @@ def main():
 
     simpleNN_config, LSTM_config = config_loader.load_configs()
     filename = LSTM_config.data_loader.name
-    print(filename)
     window_size = 8
 
     #create decoded version of dataset
