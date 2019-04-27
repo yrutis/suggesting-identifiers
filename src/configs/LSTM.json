@@ -1,6 +1,6 @@
 {
   "data_loader": {
-    "name": "bigbluebutton_methoddeclarations_train"
+    "name": "all_methoddeclarations_train"
   },
   "model":{
     "name": "model.SimpleNN",
