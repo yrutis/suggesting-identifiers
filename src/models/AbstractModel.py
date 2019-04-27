@@ -1,12 +1,14 @@
 import os
 from keras.utils import plot_model
 import logging
+import src.utils.path as path_file
 
 class AbstractModel(object):
 
-    def __init__(self):
+    def __init__(self, config):
         self.model = None
         self.type = None
+        self.config = config
 
     def build_model(self):
         raise NotImplementedError
@@ -20,8 +22,7 @@ class AbstractModel(object):
 
 
         # path to model folder
-        model_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-                                    'models')
+        model_folder = path_file.model_folder
 
         # check if model folder exists
         if not os.path.exists(model_folder):

@@ -96,4 +96,4 @@ class Preprocessor(object):
         # Creating reversed text
         reversed_text = list(map(sequence_to_text, sequence))
 
-        print(reversed_text)
+        return reversed_text

@@ -2,6 +2,8 @@
 import logging
 import os
 
+import src.utils.config as config_loader
+from src.data.Preprocessor import Preprocessor
 from src.models.SimpleNN import SimpleNN
 from src.models.LSTMModel import LSTMModel
 
@@ -10,28 +12,28 @@ from src.trainer.LSTMTrainer import LSTMTrainer
 
 from src.evaluator.Evaluator import Evaluator
 
-from src.data.Preprocessor import Preprocessor
 
 def main(filename):
     """ runs model
     """
+
 
     def runSimpleNN():
 
         print('Create the model...')
         model1 = SimpleNN(context_vocab_size=preprocessor.context_vocab_size,
                           length_Y=preprocessor.trainY.shape[1],
-                          windows_size=window_size)
+                          windows_size=window_size,
+                          config=simpleNN_config)
 
         print("create trainer...")
-        trainer1 = SimpleNNTrainer(model=model1.model, data=data, encoder=preprocessor.encoder)
+        trainer1 = SimpleNNTrainer(model=model1.model, data=data, encoder=preprocessor.encoder, config=simpleNN_config)
 
         print("start training...")
         trainer1.train()
 
-        print("make a prediction...")
-        preprocessor.reverse_tokenize(preprocessor.valX[1:2]) #TODO change method
-
+        reversed_seq = preprocessor.reverse_tokenize(preprocessor.valX[1:2])
+        print("make a prediction for {}" .format(reversed_seq))
         trainer1.predict(preprocessor.valX[1:2])
 
         print("save evaluation to file")
@@ -43,7 +45,6 @@ def main(filename):
         #ToDO save accs loss in specific place
         #TODO save sklearn report in specific place
 
-        #TODO create config file
         #TODO make logging work
 
 
@@ -52,16 +53,16 @@ def main(filename):
         print("create LSTM Model...")
         model2 = LSTMModel(context_vocab_size=preprocessor.context_vocab_size,
                            length_Y=preprocessor.trainY.shape[1],
-                           windows_size=window_size)
+                           windows_size=window_size,
+                           config=LSTM_config)
 
         print("create trainer...")
-        trainer2 = LSTMTrainer(model=model2.model, data=data, encoder=preprocessor.encoder)
+        trainer2 = LSTMTrainer(model=model2.model, data=data, encoder=preprocessor.encoder, config=LSTM_config)
 
         print("start LSTM training...")
         trainer2.train()
 
         print("make a prediction...")
-
         trainer2.predict(preprocessor.valX[1:2])
 
         print("save evaluation to file")
@@ -81,8 +82,11 @@ def main(filename):
 
     data = [preprocessor.trainX, preprocessor.trainY, preprocessor.valX, preprocessor.valY]
 
+    simpleNN_config, LSTM_config = config_loader.load_configs()
     runLSTM()
     #runSimpleNN()
+
+
 
 
 

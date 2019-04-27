@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from sklearn import metrics
 from src.trainer.AbstractTrain import AbstractTrain
+import src.utils.path as path_file
 
 class Evaluator(object):
     def __init__(self, trained_model:AbstractTrain):
@@ -29,7 +30,10 @@ class Evaluator(object):
         report = metrics.classification_report(self.__trained_model.valY, predicted_classes, target_names=target_names, output_dict=True)
         logging.info(report)
         df = pd.DataFrame(report).transpose()
-        df.to_csv("report-"+self.__trained_model.type+".csv")
+
+        report_folder = path_file.report_folder
+        sklearn_report = os.path.join(report_folder, "report-"+self.__trained_model.type+".csv")
+        df.to_csv(sklearn_report)
 
 
 
@@ -40,10 +44,10 @@ class Evaluator(object):
         if not self.__trained_model.type:
             raise Exception("You need to assign a type to the model")
 
-        model_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-                                    'models')
-        acc_plot = os.path.join(model_folder, 'acc-' + self.__trained_model.type + '.png')
-        loss_plot = os.path.join(model_folder, 'loss-' + self.__trained_model.type + '.png')
+        report_folder = path_file.report_folder
+
+        acc_plot = os.path.join(report_folder, 'acc-' + self.__trained_model.type + '.png')
+        loss_plot = os.path.join(report_folder, 'loss-' + self.__trained_model.type + '.png')
 
         acc = self.__trained_model.history.history['acc']
         val_acc = self.__trained_model.history.history['val_acc']

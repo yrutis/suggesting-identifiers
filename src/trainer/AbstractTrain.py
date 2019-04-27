@@ -2,10 +2,12 @@ import matplotlib.pyplot as plt
 import os
 import logging
 import numpy as np
+import src.utils.path as path_file
 
 class AbstractTrain(object):
-    def __init__(self, model, data, encoder):
+    def __init__(self, model, data, encoder, config):
         self.model = model
+        self.config = config
         self.history = None
         self.type = None
         self.encoder = encoder
@@ -23,20 +25,17 @@ class AbstractTrain(object):
             raise Exception("You have to train the model first before making a prediction")
 
         prediction1 = self.model.predict(x)  # predict for 1 pair
-        #print("prediction1.shape {}".format(prediction1.shape))  # get numpy array with each prob
-        #print(prediction1)  # get a prob for each label
         # sorting the predictions in descending order
         sorting = (-prediction1).argsort()  # sorts by index
         #print("after sorting it is {}".format(sorting))
 
-        #print("just top5 suggestion (index) {}".format((-prediction1).argsort()[0][0:4]))
+        #just top5 suggestion
         idx = (-prediction1).argsort()[0][0:4]
         idx2 = idx.tolist()
         pr2 = prediction1[0]
         probs = np.take(pr2, idx2)
         decoded = self.encoder.inverse_transform(idx)
-        #print("just top5 suggestion (prob) {} ".format(probs))
-        #print("decoded top5 suggestion {}".format(decoded))
+
 
         # getting the top 5 predictions
         sorted_ = sorting[0][:5]
@@ -61,8 +60,7 @@ class AbstractTrain(object):
         if not self.type:
             raise Exception("You need to assign a type to the model")
 
-        model_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-                                    'models')
+        model_folder = path_file.model_folder
 
         model_weights = os.path.join(model_folder, "model-"+self.type+".h5")
         model_serialized = os.path.join(model_folder, "model-"+self.type+".json")

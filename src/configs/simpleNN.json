@@ -1,0 +1,18 @@
+{
+  "data_loader": {
+    "name": "blabla"
+  },
+  "model":{
+    "name": "model.SimpleNN",
+    "embedding_dim": 50,
+    "learning_rate": 0.001,
+    "loss": "categorical_crossentropy",
+    "metrics": ["acc"]
+  },
+  "trainer":{
+    "name": "trainer.SimpleNN",
+    "num_epochs": 2,
+    "batch_size": 100,
+    "validation_split":0.1
+  }
+}
