@@ -25,7 +25,6 @@ class Preprocessor(object):
         self.encoder = None
 
 
-
     def preprocess(self):
         pass
 
@@ -75,7 +74,7 @@ class Preprocessor(object):
         self.valY = encoded_Y[int(0.9 * Y.shape[0]): Y.shape[0]]
 
         #logging.warning("This is trainYEnc {}, this is trainY to categorical {}, this is valY {}".format(trainYEnc, self.trainY, self.valY))
-        logger.info("this is lenY {} unique, this is shape of categorical Y {}" .format(lenY, self.trainY.shape[1]))
+        logger.info("this is lenY {} unique, this is shape of categorical Y {}" .format(lenY, self.trainY.shape))
 
         # saving tokenizer
         #with open('tokenizer.pickle', 'wb') as handle:
