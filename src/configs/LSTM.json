@@ -14,7 +14,7 @@
   },
   "trainer":{
     "name": "trainer.SimpleNN",
-    "num_epochs": 2,
+    "num_epochs": 10,
     "batch_size": 100,
     "validation_split":0.1
   }
