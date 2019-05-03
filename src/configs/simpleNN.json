@@ -1,9 +1,9 @@
 {
   "data_loader": {
-    "name": "bigbluebutton_methoddeclarations_train",
+    "name": "all_methoddeclarations_train",
     "full_data": "all_methoddeclarations_train",
     "local_data": "bigbluebutton_methoddeclarations_train",
-    "window_size": 8
+    "window_size": 2
   },
   "model":{
     "name": "model.SimpleNN",
@@ -14,7 +14,7 @@
   },
   "trainer":{
     "name": "trainer.SimpleNN",
-    "num_epochs": 10,
+    "num_epochs": 3,
     "batch_size": 100,
     "validation_split":0.1
   }

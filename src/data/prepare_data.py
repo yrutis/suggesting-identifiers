@@ -3,14 +3,12 @@ import logging
 import os
 import re
 import ast
-
-
+import numpy as np
 
 
 def main(filename, window_size):
 
     logger = logging.getLogger(__name__)
-
 
 
     '''
@@ -112,6 +110,10 @@ def main(filename, window_size):
         logger.info("creating intermediate folder...")
         os.mkdir(os.path.join(os.path.join(data_folder, 'processed'), 'intermediate'))
 
+    if not os.path.exists(os.path.join(os.path.join(data_folder, 'processed'), 'decoded')):  # check if path exists
+        logger.info("creating decoded folder...")
+        os.mkdir(os.path.join(os.path.join(data_folder, 'processed'), 'decoded'))
+
     if not os.path.exists(intermediate_decoded_full_path):
         logger.info("preprocessing data..")
 
@@ -120,22 +122,33 @@ def main(filename, window_size):
         df_cleaned = getClearedList(df)
         df_filtered = getFilteredList(df_cleaned)
         df_filtered = rareIdentifiersToUnk(df_filtered)
-        print(df_cleaned.head())
-        print(df_filtered.head())
-
+        #print(df_cleaned.head())
+        #print(df_filtered.head())
         df_filtered.to_csv(intermediate_decoded_full_path)
 
-        #for window size
+    if not os.path.exists(processed_decoded_full_path):
+        logger.info("creating decoded version of data..")
+
         processedDf = pd.read_csv(intermediate_decoded_full_path)
         context = processedDf['x'].apply(ast.literal_eval)  # saves all context x as list in list
         f = lambda x: x[0:min(len(x), window_size)]
         r = context.apply(f)
-        data = context
         df = pd.DataFrame(columns=['x', 'y'])
         df['x'] = r
         df['y'] = processedDf['y']
         df.to_csv(processed_decoded_full_path)
 
+
+        '''
+        splitted = np.array_split(df, 3)
+        i = 0
+        print(splitted)
+        while i < len(splitted):
+            #save partition
+            splitted[i].to_csv("number-" + str(i) +".csv")
+            i += 1
+
+        '''
         #ToDo refactor!
 
 
@@ -143,7 +156,7 @@ if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
 
-    filename = 'all_methoddeclarations_train'
+    filename = 'bigbluebutton_methoddeclarations_train'
 
     window_size = 8
     main(filename, window_size)
