@@ -42,6 +42,7 @@ class Preprocessor(object):
 
         context = processedDf['x'].apply(ast.literal_eval)  # saves all context x as list in list
 
+
         self.tokenizer = Tokenizer()  # init new tokenizer
         self.tokenizer.fit_on_texts(context)
         sequences = self.tokenizer.texts_to_sequences(context)

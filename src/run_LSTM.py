@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
+from numpy.random import seed
+seed(1)
+from tensorflow import set_random_seed
+set_random_seed(2)
+
 import logging
 
 import src.utils.config as config_loader
 
 import src.data.make_dataset as make_dataset
+import src.data.prepare_data as prepare_data
 from src.data.Preprocessor import Preprocessor
 from src.models.LSTMModel import LSTMModel
-
 from src.trainer.LSTMTrainer import LSTMTrainer
-
 from src.evaluator.Evaluator import Evaluator
 
 
@@ -31,6 +35,9 @@ def main():
         trainer2.train()
 
         logger.info("make a prediction...")
+
+        logger.info("prediction for {}" .format(preprocessor.reverse_tokenize(preprocessor.valX[1:2])))
+        logger.info("correct Y is {}".format(preprocessor.encoder.inverse_transform(preprocessor.valY[1:2])))
         trainer2.predict(preprocessor.valX[1:2])
 
         logger.info("save evaluation to file")
@@ -48,7 +55,9 @@ def main():
     window_size = LSTM_config.data_loader.window_size
 
     #create decoded version of dataset
-    make_dataset.main(filename, window_size)
+    #make_dataset.main(filename, window_size)
+    prepare_data.main(filename, window_size)
+
 
     #encode inputs, outputs to make ready for model
     preprocessor = Preprocessor(filename=filename)

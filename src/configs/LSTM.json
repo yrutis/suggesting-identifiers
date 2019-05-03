@@ -3,7 +3,7 @@
     "name": "all_methoddeclarations_train",
     "full_data": "all_methoddeclarations_train",
     "local_data": "bigbluebutton_methoddeclarations_train",
-    "window_size": 6
+    "window_size": 8
   },
   "model":{
     "name": "model.SimpleNN",
@@ -13,7 +13,7 @@
     "metrics": ["acc"]
   },
   "trainer":{
-    "name": "trainer.SimpleNN",
+    "name": "trainer.LSTM",
     "num_epochs": 10,
     "batch_size": 100,
     "validation_split":0.1
