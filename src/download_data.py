@@ -6,22 +6,10 @@ set_random_seed(2)
 
 
 import logging
-import os
 
 import src.utils.config as config_loader
 
-import src.data.make_dataset as make_dataset
 import src.data.prepare_data as prepare_data
-
-
-from src.data.Preprocessor import Preprocessor
-from src.models.SimpleNN import SimpleNN
-from src.models.LSTMModel import LSTMModel
-
-from src.trainer.SimpleNNTrainer import SimpleNNTrainer
-from src.trainer.LSTMTrainer import LSTMTrainer
-
-from src.evaluator.Evaluator import Evaluator
 
 
 def main():

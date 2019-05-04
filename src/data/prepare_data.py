@@ -96,7 +96,7 @@ def main(filename, window_size):
     data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
     full_path = os.path.join(os.path.join(os.path.join(data_folder, 'raw'), 'json'), filename + '.json') #get decoded path
     intermediate_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'), 'intermediate'), filename + '.csv') #get decoded path
-    processed_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'), 'decoded'), filename + '.csv') #get decoded path
+    processed_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'), 'decoded'), filename +'-'+str(window_size)+ '.csv') #get decoded path
 
     if not os.path.exists(full_path):
         logger.info("raw data does not exist!")
@@ -150,6 +150,8 @@ def main(filename, window_size):
 
         '''
         #ToDo refactor!
+
+    logger.info("done preparing data")
 
 
 if __name__ == '__main__':

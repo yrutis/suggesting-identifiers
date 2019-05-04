@@ -54,6 +54,8 @@ def main():
     filename = LSTM_config.data_loader.name
     window_size = LSTM_config.data_loader.window_size
 
+    filename = filename + '-' + str(window_size)
+
     #create decoded version of dataset
     #make_dataset.main(filename, window_size)
     #prepare_data.main(filename, window_size)

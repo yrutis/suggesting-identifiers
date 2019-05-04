@@ -64,6 +64,8 @@ def main():
     filename = simpleNN_config.data_loader.name
     window_size = simpleNN_config.data_loader.window_size
 
+    filename = filename + '-' + str(window_size)
+
     #create decoded version of dataset
     #prepare_data.main(filename, window_size)
 
