@@ -1,7 +1,5 @@
 from dotmap import DotMap
 import os
-import src.utils.config as config_loader
-
 
 
 #------------------------------------------------------------------------------------------------------------------
@@ -12,6 +10,9 @@ simpleNN_config_path = os.path.join(os.path.join(os.path.dirname(os.path.dirname
 
 LSTM_config_path = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                                     'configs'), "LSTM.json")
+
+LSTMBid_config_path = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                    'configs'), "LSTMBid.json")
 
 seq2seq_config_path = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                                     'configs'), "seq2seq.json")
