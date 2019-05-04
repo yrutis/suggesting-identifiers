@@ -65,7 +65,7 @@ def main():
     window_size = simpleNN_config.data_loader.window_size
 
     #create decoded version of dataset
-    prepare_data.main(filename, window_size)
+    #prepare_data.main(filename, window_size)
 
     #encode inputs, outputs to make ready for model
     preprocessor = Preprocessor(filename=filename)

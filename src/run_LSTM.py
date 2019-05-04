@@ -56,7 +56,7 @@ def main():
 
     #create decoded version of dataset
     #make_dataset.main(filename, window_size)
-    prepare_data.main(filename, window_size)
+    #prepare_data.main(filename, window_size)
 
 
     #encode inputs, outputs to make ready for model
