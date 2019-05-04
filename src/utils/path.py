@@ -1,5 +1,6 @@
 from dotmap import DotMap
 import os
+import src.utils.config as config_loader
 
 
 
@@ -18,7 +19,6 @@ seq2seq_config_path = os.path.join(os.path.join(os.path.dirname(os.path.dirname(
 #------------------------------------------------------------------------------------------------------------------
 
 
-
 # path to model folder
 model_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                                     'models')
@@ -26,3 +26,4 @@ model_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.p
 # path to report folder
 report_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
                                     'reports')
+

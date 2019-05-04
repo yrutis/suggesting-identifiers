@@ -1,21 +1,25 @@
 {
-  "data_loader": {
-    "name": "all_methoddeclarations_train",
-    "full_data": "all_methoddeclarations_train",
-    "local_data": "bigbluebutton_methoddeclarations_train",
-    "window_size": 8
-  },
-  "model":{
-    "name": "model.SimpleNN",
-    "embedding_dim": 10,
-    "learning_rate": 0.001,
-    "loss": "categorical_crossentropy",
-    "metrics": ["acc"]
-  },
-  "trainer":{
-    "name": "trainer.LSTM",
-    "num_epochs": 2,
-    "batch_size": 8,
-    "validation_split":0.1
-  }
+    "name": "LSTM",
+    "data_loader": {
+        "name": "all_methoddeclarations_train",
+        "full_data": "all_methoddeclarations_train",
+        "local_data": "bigbluebutton_methoddeclarations_train",
+        "window_size": 8,
+        "counter": 1
+    },
+    "model": {
+        "name": "model.LSTM",
+        "embedding_dim": 10,
+        "learning_rate": 0.001,
+        "loss": "categorical_crossentropy",
+        "metrics": [
+            "acc"
+        ]
+    },
+    "trainer": {
+        "name": "trainer.LSTM",
+        "num_epochs": 15,
+        "batch_size": 64,
+        "validation_split": 0.1
+    }
 }

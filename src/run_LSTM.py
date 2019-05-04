@@ -18,8 +18,7 @@ from src.evaluator.Evaluator import Evaluator
 import tensorflow as tf
 import pandas as pd
 import os
-
-
+import json
 
 
 
@@ -45,25 +44,25 @@ def main():
         #generating some predictions...
         df_full = pd.DataFrame(columns=['X', 'Y', 'Predictions'])
         i = 1
-        while i < 10:
+        while i < 100:
 
-            logger.info("make a prediction...")
-            logger.info("prediction for {}" .format(preprocessor.reverse_tokenize(preprocessor.valX[i:i+1])))
-            logger.info("correct Y is {}".format(preprocessor.encoder.inverse_transform(preprocessor.valY[i:i+1])))
+            #logger.info("make a prediction...")
+            #logger.info("prediction for {}" .format(preprocessor.reverse_tokenize(preprocessor.valX[i:i+1])))
+            #logger.info("correct Y is {}".format(preprocessor.encoder.inverse_transform(preprocessor.valY[i:i+1])))
             x = preprocessor.reverse_tokenize(preprocessor.valX[i:i+1])
             y = preprocessor.encoder.inverse_transform(preprocessor.valY[i:i+1])
             predictions = trainer2.predict(preprocessor.valX[i:i+1])
-            logger.info(predictions)
+            #logger.info(predictions)
             df = {"X": x,
-                               "Y": y,
-                               "Predictions": [predictions]}
+                  "Y": y,
+                  "Predictions": [predictions]}
 
             df_full = df_full.append(df, ignore_index = True)
             i += 1
 
         logger.info(df_full.head())
 
-        predictions_report = os.path.join(path_file.report_folder, filename +"-predictions.csv")
+        predictions_report = os.path.join(report_folder_LSTM, filename +"-predictions.csv")
         df_full.to_csv(predictions_report)
 
         logger.info("save evaluation to file")
@@ -75,18 +74,30 @@ def main():
 
     # get logger
     logger = logging.getLogger(__name__)
+    simpleNN_config, LSTM_config = config_loader.load_configs()
+    filename = LSTM_config.data_loader.name
+
+
 
     FLAGS = tf.app.flags.FLAGS
-    tf.app.flags.DEFINE_integer('window_size', 8, 'must be between 2 - 8')
+    tf.app.flags.DEFINE_integer('window_size', LSTM_config.data_loader.window_size, 'must be between 2 - 8')
 
     logger.info("window size is {}".format(FLAGS.window_size))
 
-    simpleNN_config, LSTM_config = config_loader.load_configs()
-    filename = LSTM_config.data_loader.name
-    #window_size = LSTM_config.data_loader.window_size
+    LSTM_config.data_loader.window_size = FLAGS.window_size
     window_size = FLAGS.window_size
+    filename = filename + "-" + str(window_size)
 
-    filename = filename + '-' + str(window_size)
+
+    #create unique report folder
+    report_folder = path_file.report_folder
+    report_folder_LSTM = os.path.join(report_folder, 'reports-'+LSTM_config.name+'-'+str(LSTM_config.data_loader.counter))
+    os.mkdir(report_folder_LSTM)
+
+    # write in report folder
+    with open(os.path.join(report_folder_LSTM, 'LSTM.json'), 'w') as outfile:
+        json.dump(LSTM_config, outfile, indent=4)
+
 
     #create decoded version of dataset
     #make_dataset.main(filename, window_size)
@@ -101,7 +112,12 @@ def main():
 
     #run model
     runLSTM()
-    logger.info("window size is {}".format(FLAGS.window_size))
+    logger.info("window size is {}".format(window_size))
+
+    LSTM_config.data_loader.counter += 1
+    # overwrite
+    with open(path_file.LSTM_config_path, 'w') as outfile:
+        json.dump(LSTM_config, outfile, indent=4)
 
 
 if __name__ == '__main__':

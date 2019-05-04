@@ -34,6 +34,9 @@ class Evaluator(object):
         df = pd.DataFrame(report).transpose()
 
         report_folder = path_file.report_folder
+        report_folder = os.path.join(report_folder,
+                                     'reports-' + self.__trained_model.config.name + '-' + str(
+                                         self.__trained_model.config.data_loader.counter))
         sklearn_report = os.path.join(report_folder, "report-"+self.__trained_model.type+".csv")
         df.to_csv(sklearn_report)
 
@@ -47,6 +50,8 @@ class Evaluator(object):
             raise Exception("You need to assign a type to the model")
 
         report_folder = path_file.report_folder
+        report_folder= os.path.join(report_folder,
+                                          'reports-' + self.__trained_model.config.name + '-' + str(self.__trained_model.config.data_loader.counter))
 
         acc_plot = os.path.join(report_folder, 'acc-' + self.__trained_model.type + '.png')
         loss_plot = os.path.join(report_folder, 'loss-' + self.__trained_model.type + '.png')

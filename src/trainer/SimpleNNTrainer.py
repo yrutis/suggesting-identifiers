@@ -26,5 +26,5 @@ class SimpleNNTrainer(AbstractTrain):
 
     def predict(self, x):
         x = self.__convert_x(x)
-        super().predict(x)
+        return super().predict(x)
 
