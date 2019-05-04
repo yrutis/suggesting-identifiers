@@ -14,14 +14,14 @@ from sklearn.preprocessing import LabelEncoder
 
 
 class Preprocessor(object):
-    def __init__(self, filename):
+    def __init__(self, filename, max_words=None):
         self.__filename = filename
         self.trainX = None
         self.trainY = None
         self.valX = None
         self.valY = None
         self.tokenizer = None
-        self.context_vocab_size = None
+        self.max_context_vocab_size = max_words
         self.encoder = None
 
 
@@ -43,13 +43,17 @@ class Preprocessor(object):
         context = processedDf['x'].apply(ast.literal_eval)  # saves all context x as list in list
 
 
-        self.tokenizer = Tokenizer()  # init new tokenizer
+        self.tokenizer = Tokenizer(num_words=self.max_context_vocab_size)  # init new tokenizer
         self.tokenizer.fit_on_texts(context)
         sequences = self.tokenizer.texts_to_sequences(context)
         padded_sequences = pad_sequences(sequences, maxlen=None, value=0)  # make sure they are all same length
 
-        self.context_vocab_size = len(self.tokenizer.word_index) + 1
-        logger.info('Found %s unique tokens.' % self.context_vocab_size)
+        if not self.max_context_vocab_size:
+
+            self.max_context_vocab_size = len(self.tokenizer.word_index) + 1
+            logger.info('Found %s unique tokens.' % self.max_context_vocab_size)
+        else:
+            logger.info("only considering the topmost {} words" .format(self.max_context_vocab_size))
 
         self.trainX = padded_sequences[0: int(0.9 * padded_sequences.shape[0])]
 

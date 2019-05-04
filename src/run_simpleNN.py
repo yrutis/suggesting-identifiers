@@ -31,7 +31,7 @@ def main():
     def runSimpleNN():
 
         logger.info('Create the model...')
-        model1 = SimpleNN(context_vocab_size=preprocessor.context_vocab_size,
+        model1 = SimpleNN(context_vocab_size=preprocessor.max_context_vocab_size,
                           length_Y=preprocessor.trainY.shape[1],
                           windows_size=window_size,
                           config=simpleNN_config)

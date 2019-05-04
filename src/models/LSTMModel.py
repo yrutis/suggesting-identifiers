@@ -24,8 +24,9 @@ class LSTMModel(AbstractModel):
         logger = logging.getLogger(__name__)
 
         logger.info("building model...")
+        logger.info("Embedding of shape {}, {}, {}".format(self.__context_vocab_size, self.config.model.embedding_dim, self.__windows_size))
 
-        contextEmbedding = Embedding(output_dim=self.config.model.embedding_dim, input_dim=self.__context_vocab_size, input_length=self.__windows_size)
+        contextEmbedding = Embedding(input_dim=self.__context_vocab_size, output_dim=self.config.model.embedding_dim, input_length=self.__windows_size)
 
         tensor = Input(shape=(self.__windows_size,))
         c = contextEmbedding(tensor)

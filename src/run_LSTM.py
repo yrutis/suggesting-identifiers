@@ -30,7 +30,7 @@ def main():
 
     def runLSTM():
         logger.info("create LSTM Model...")
-        model2 = LSTMModel(context_vocab_size=preprocessor.context_vocab_size,
+        model2 = LSTMModel(context_vocab_size=preprocessor.max_context_vocab_size,
                            length_Y=preprocessor.trainY.shape[1],
                            windows_size=window_size,
                            config=LSTM_config)
@@ -94,7 +94,7 @@ def main():
 
 
     #encode inputs, outputs to make ready for model
-    preprocessor = Preprocessor(filename=filename)
+    preprocessor = Preprocessor(filename=filename, max_words=10000)
     preprocessor.tokenize()
     data = [preprocessor.trainX, preprocessor.trainY, preprocessor.valX, preprocessor.valY]
 
