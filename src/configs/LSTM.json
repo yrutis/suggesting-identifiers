@@ -15,7 +15,7 @@
   "trainer":{
     "name": "trainer.LSTM",
     "num_epochs": 3,
-    "batch_size": 100,
+    "batch_size": 64,
     "validation_split":0.1
   }
 }

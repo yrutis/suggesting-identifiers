@@ -38,8 +38,8 @@ def main():
         logger.info("start LSTM training...")
         trainer2.train()
 
-        logger.info("make a prediction...")
 
+        logger.info("make a prediction...")
         logger.info("prediction for {}" .format(preprocessor.reverse_tokenize(preprocessor.valX[1:2])))
         logger.info("correct Y is {}".format(preprocessor.encoder.inverse_transform(preprocessor.valY[1:2])))
         trainer2.predict(preprocessor.valX[1:2])
