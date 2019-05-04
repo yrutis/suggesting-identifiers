@@ -7,6 +7,7 @@ set_random_seed(2)
 import logging
 
 import src.utils.config as config_loader
+import src.utils.path as path_file
 
 import src.data.make_dataset as make_dataset
 import src.data.prepare_data as prepare_data
@@ -15,6 +16,8 @@ from src.models.LSTMModel import LSTMModel
 from src.trainer.LSTMTrainer import LSTMTrainer
 from src.evaluator.Evaluator import Evaluator
 import tensorflow as tf
+import pandas as pd
+import os
 
 
 
@@ -39,10 +42,29 @@ def main():
         trainer2.train()
 
 
-        logger.info("make a prediction...")
-        logger.info("prediction for {}" .format(preprocessor.reverse_tokenize(preprocessor.valX[1:2])))
-        logger.info("correct Y is {}".format(preprocessor.encoder.inverse_transform(preprocessor.valY[1:2])))
-        trainer2.predict(preprocessor.valX[1:2])
+        #generating some predictions...
+        df_full = pd.DataFrame(columns=['X', 'Y', 'Predictions'])
+        i = 1
+        while i < 10:
+
+            logger.info("make a prediction...")
+            logger.info("prediction for {}" .format(preprocessor.reverse_tokenize(preprocessor.valX[i:i+1])))
+            logger.info("correct Y is {}".format(preprocessor.encoder.inverse_transform(preprocessor.valY[i:i+1])))
+            x = preprocessor.reverse_tokenize(preprocessor.valX[i:i+1])
+            y = preprocessor.encoder.inverse_transform(preprocessor.valY[i:i+1])
+            predictions = trainer2.predict(preprocessor.valX[i:i+1])
+            logger.info(predictions)
+            df = {"X": x,
+                               "Y": y,
+                               "Predictions": [predictions]}
+
+            df_full = df_full.append(df, ignore_index = True)
+            i += 1
+
+        logger.info(df_full.head())
+
+        predictions_report = os.path.join(path_file.report_folder, filename +"-predictions.csv")
+        df_full.to_csv(predictions_report)
 
         logger.info("save evaluation to file")
         evaluator2 = Evaluator(trainer2)
@@ -55,7 +77,7 @@ def main():
     logger = logging.getLogger(__name__)
 
     FLAGS = tf.app.flags.FLAGS
-    tf.app.flags.DEFINE_integer('window_size', 3, 'must be between 2 - 8')
+    tf.app.flags.DEFINE_integer('window_size', 8, 'must be between 2 - 8')
 
     logger.info("window size is {}".format(FLAGS.window_size))
 

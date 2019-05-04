@@ -7,15 +7,15 @@
   },
   "model":{
     "name": "model.SimpleNN",
-    "embedding_dim": 50,
+    "embedding_dim": 10,
     "learning_rate": 0.001,
     "loss": "categorical_crossentropy",
     "metrics": ["acc"]
   },
   "trainer":{
     "name": "trainer.LSTM",
-    "num_epochs": 3,
-    "batch_size": 64,
+    "num_epochs": 2,
+    "batch_size": 8,
     "validation_split":0.1
   }
 }

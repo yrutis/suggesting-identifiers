@@ -36,11 +36,11 @@ class AbstractTrain(object):
         #print("after sorting it is {}".format(sorting))
 
         #just top5 suggestion
-        idx = (-prediction1).argsort()[0][0:4]
-        idx2 = idx.tolist()
-        pr2 = prediction1[0]
-        probs = np.take(pr2, idx2)
-        decoded = self.encoder.inverse_transform(idx)
+        #idx = (-prediction1).argsort()[0][0:4]
+        #idx2 = idx.tolist()
+        #pr2 = prediction1[0]
+        #probs = np.take(pr2, idx2)
+        #decoded = self.encoder.inverse_transform(idx)
 
 
         # getting the top 5 predictions
@@ -50,13 +50,19 @@ class AbstractTrain(object):
         predicted_label = self.encoder.inverse_transform(sorted_)
         predicted_label = predicted_label.tolist()  # convert numpy to list
 
+        predictions = []
+
         for idx, value in enumerate(sorted_):
-            dict = {}
+            current_dict = {}
             # just some rounding steps
             prob = (prediction1[0][value]) * 100
             prob = "%.2f" % round(prob, 2)
+            current_dict['prob'] = prob
+            current_dict['name'] = predicted_label[idx]
+            predictions.append(current_dict)
             logger.info("Number {} prob is {} % for {}".format(idx + 1, prob, predicted_label[idx]))
 
+        return predictions
 
 
     def save(self):
