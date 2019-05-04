@@ -14,6 +14,10 @@ from src.data.Preprocessor import Preprocessor
 from src.models.LSTMModel import LSTMModel
 from src.trainer.LSTMTrainer import LSTMTrainer
 from src.evaluator.Evaluator import Evaluator
+import tensorflow as tf
+
+
+
 
 
 def main():
@@ -50,9 +54,15 @@ def main():
     # get logger
     logger = logging.getLogger(__name__)
 
+    FLAGS = tf.app.flags.FLAGS
+    tf.app.flags.DEFINE_integer('window_size', 3, 'must be between 2 - 8')
+
+    logger.info("window size is {}".format(FLAGS.window_size))
+
     simpleNN_config, LSTM_config = config_loader.load_configs()
     filename = LSTM_config.data_loader.name
-    window_size = LSTM_config.data_loader.window_size
+    #window_size = LSTM_config.data_loader.window_size
+    window_size = FLAGS.window_size
 
     filename = filename + '-' + str(window_size)
 
@@ -66,8 +76,10 @@ def main():
     preprocessor.tokenize()
     data = [preprocessor.trainX, preprocessor.trainY, preprocessor.valX, preprocessor.valY]
 
+
     #run model
     runLSTM()
+    logger.info("window size is {}".format(FLAGS.window_size))
 
 
 if __name__ == '__main__':
