@@ -5,11 +5,11 @@
         "full_data": "all_methoddeclarations_train",
         "local_data": "bigbluebutton_methoddeclarations_train",
         "window_size": 8,
-        "counter": 1
+        "counter": 4
     },
     "model": {
         "name": "model.LSTM",
-        "embedding_dim": 10,
+        "embedding_dim": 32,
         "learning_rate": 0.001,
         "loss": "categorical_crossentropy",
         "metrics": [

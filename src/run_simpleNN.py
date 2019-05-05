@@ -27,6 +27,10 @@ from src.evaluator.Evaluator import Evaluator
 import tensorflow as tf
 import pandas as pd
 
+from datetime import datetime
+from random import randint
+
+
 def main():
     """ runs model
     """
@@ -37,7 +41,7 @@ def main():
         model1 = SimpleNN(context_vocab_size=preprocessor.max_context_vocab_size,
                           length_Y=preprocessor.trainY.shape[1],
                           windows_size=window_size,
-                          config=simpleNN_config)
+                          config=simpleNN_config, report_folder=report_folder_simpleNN)
 
         logger.info("create trainer...")
         trainer1 = SimpleNNTrainer(model=model1.model, data=data, encoder=preprocessor.encoder, config=simpleNN_config)
@@ -71,7 +75,7 @@ def main():
         df_full.to_csv(predictions_report)
 
         logger.info("save evaluation to file")
-        evaluator1 = Evaluator(trainer1)
+        evaluator1 = Evaluator(trainer1, report_folder_simpleNN)
         evaluator1.visualize()
         evaluator1.evaluate()
 
@@ -94,9 +98,11 @@ def main():
     filename = filename + '-' + str(window_size)
 
     # create unique report folder
+    random_nr = randint(0, 10000)
+    unique_folder_key = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S') + "-" + str(random_nr)
     report_folder = path_file.report_folder
     report_folder_simpleNN = os.path.join(report_folder,
-                                      'reports-' + simpleNN_config.name + '-' + str(simpleNN_config.data_loader.counter))
+                                      'reports-' + simpleNN_config.name + '-' + unique_folder_key)
     os.mkdir(report_folder_simpleNN)
 
     # write in report folder
@@ -114,10 +120,7 @@ def main():
     #run model
     runSimpleNN()
 
-    simpleNN_config.data_loader.counter += 1
-    # overwrite
-    with open(path_file.simpleNN_config_path, 'w') as outfile:
-        json.dump(simpleNN_config, outfile, indent=4)
+
 
 
 if __name__ == '__main__':

@@ -19,6 +19,8 @@ import tensorflow as tf
 import pandas as pd
 import os
 import json
+from datetime import datetime
+from random import randint
 
 
 
@@ -32,7 +34,7 @@ def main():
         model2 = LSTMModel(context_vocab_size=preprocessor.max_context_vocab_size,
                            length_Y=preprocessor.trainY.shape[1],
                            windows_size=window_size,
-                           config=LSTM_config)
+                           config=LSTM_config, report_folder=report_folder_LSTM)
 
         logger.info("create trainer...")
         trainer2 = LSTMTrainer(model=model2.model, data=data, encoder=preprocessor.encoder, config=LSTM_config)
@@ -45,14 +47,9 @@ def main():
         df_full = pd.DataFrame(columns=['X', 'Y', 'Predictions'])
         i = 1
         while i < 100:
-
-            #logger.info("make a prediction...")
-            #logger.info("prediction for {}" .format(preprocessor.reverse_tokenize(preprocessor.valX[i:i+1])))
-            #logger.info("correct Y is {}".format(preprocessor.encoder.inverse_transform(preprocessor.valY[i:i+1])))
             x = preprocessor.reverse_tokenize(preprocessor.valX[i:i+1])
             y = preprocessor.encoder.inverse_transform(preprocessor.valY[i:i+1])
             predictions = trainer2.predict(preprocessor.valX[i:i+1])
-            #logger.info(predictions)
             df = {"X": x,
                   "Y": y,
                   "Predictions": [predictions]}
@@ -66,7 +63,7 @@ def main():
         df_full.to_csv(predictions_report)
 
         logger.info("save evaluation to file")
-        evaluator2 = Evaluator(trainer2)
+        evaluator2 = Evaluator(trainer2, report_folder_LSTM)
         evaluator2.visualize()
         evaluator2.evaluate()
 
@@ -89,9 +86,13 @@ def main():
     filename = filename + "-" + str(window_size)
 
 
+
     #create unique report folder
+    random_nr = randint(0, 10000)
+    unique_folder_key = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S') + "-" + str(random_nr)
     report_folder = path_file.report_folder
-    report_folder_LSTM = os.path.join(report_folder, 'reports-'+LSTM_config.name+'-'+str(LSTM_config.data_loader.counter))
+    report_folder_LSTM = os.path.join(report_folder, 'reports-'+LSTM_config.name+'-'+unique_folder_key)
+
     os.mkdir(report_folder_LSTM)
 
     # write in report folder
@@ -112,8 +113,6 @@ def main():
 
     #run model
     runLSTM()
-    logger.info("window size is {}".format(window_size))
-
     LSTM_config.data_loader.counter += 1
     # overwrite
     with open(path_file.LSTM_config_path, 'w') as outfile:

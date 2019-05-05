@@ -8,8 +8,9 @@ from src.trainer.AbstractTrain import AbstractTrain
 import src.utils.path as path_file
 
 class Evaluator(object):
-    def __init__(self, trained_model:AbstractTrain):
+    def __init__(self, trained_model:AbstractTrain, report_folder):
         self.__trained_model = trained_model
+        self.report_folder = report_folder
 
     def evaluate(self):
         if not self.__trained_model.history:
@@ -33,11 +34,11 @@ class Evaluator(object):
         report = metrics.classification_report(self.__trained_model.valY, predicted_classes, target_names=target_names, output_dict=True)
         df = pd.DataFrame(report).transpose()
 
-        report_folder = path_file.report_folder
-        report_folder = os.path.join(report_folder,
-                                     'reports-' + self.__trained_model.config.name + '-' + str(
-                                         self.__trained_model.config.data_loader.counter))
-        sklearn_report = os.path.join(report_folder, "report-"+self.__trained_model.type+".csv")
+        #report_folder = path_file.report_folder
+        #report_folder = os.path.join(report_folder,
+                                     #'reports-' + self.__trained_model.config.name + '-' + str(
+                                      #   self.__trained_model.config.data_loader.counter))
+        sklearn_report = os.path.join(self.report_folder, "report-"+self.__trained_model.type+".csv")
         df.to_csv(sklearn_report)
 
 
@@ -49,12 +50,13 @@ class Evaluator(object):
         if not self.__trained_model.type:
             raise Exception("You need to assign a type to the model")
 
-        report_folder = path_file.report_folder
-        report_folder= os.path.join(report_folder,
-                                          'reports-' + self.__trained_model.config.name + '-' + str(self.__trained_model.config.data_loader.counter))
+        #report_folder = path_file.report_folder
+        #report_folder= os.path.join(report_folder,
+                                          #'reports-' + self.__trained_model.config.name + '-' + str(self.__trained_model.config.data_loader.counter))
 
-        acc_plot = os.path.join(report_folder, 'acc-' + self.__trained_model.type + '.png')
-        loss_plot = os.path.join(report_folder, 'loss-' + self.__trained_model.type + '.png')
+
+        acc_plot = os.path.join(self.report_folder, 'acc-' + self.__trained_model.type + '.png')
+        loss_plot = os.path.join(self.report_folder, 'loss-' + self.__trained_model.type + '.png')
 
         acc = self.__trained_model.history.history['acc']
         val_acc = self.__trained_model.history.history['val_acc']

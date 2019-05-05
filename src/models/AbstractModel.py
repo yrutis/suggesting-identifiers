@@ -5,10 +5,11 @@ import src.utils.path as path_file
 
 class AbstractModel(object):
 
-    def __init__(self, config):
+    def __init__(self, config, report_folder):
         self.model = None
         self.type = None
         self.config = config
+        self.report_folder = report_folder
 
     def build_model(self):
         raise NotImplementedError
@@ -22,16 +23,8 @@ class AbstractModel(object):
 
         logger = logging.getLogger(__name__)
 
-        # path to model folder
-        model_folder = path_file.model_folder
-
-
-        # check if model folder exists
-        if not os.path.exists(model_folder):
-            logger.info("creating models folder...")
-            os.mkdir(model_folder)
 
         # save model architecture to disk
-        plotted_model = os.path.join(model_folder, 'model-' + self.type +'.png')
+        plotted_model = os.path.join(self.report_folder, 'model-' + self.type +'.png')
         plot_model(self.model, to_file=plotted_model)
         logger.info("Saved model architecture to disk")

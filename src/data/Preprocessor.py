@@ -11,6 +11,8 @@ from keras.preprocessing.sequence import pad_sequences
 from keras.utils import to_categorical
 
 from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+
 
 
 class Preprocessor(object):
@@ -49,7 +51,6 @@ class Preprocessor(object):
         padded_sequences = pad_sequences(sequences, maxlen=None, value=0)  # make sure they are all same length
 
         if not self.max_context_vocab_size:
-
             self.max_context_vocab_size = len(self.tokenizer.word_index) + 1
             logger.info('Found %s unique tokens.' % self.max_context_vocab_size)
         else:
@@ -72,6 +73,11 @@ class Preprocessor(object):
 
         # select only 90% for training
         trainYEnc = encoded_Y[0: int(0.9 * Y.shape[0])]
+
+        #self.trainX, self.valX, self.trainY, self.valY = train_test_split(padded_sequences, encoded_Y, test_size = 0.1)
+
+
+
         self.trainY = to_categorical(trainYEnc, num_classes=lenY)
 
 

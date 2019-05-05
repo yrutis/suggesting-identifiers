@@ -12,8 +12,8 @@ from keras.optimizers import Adam
 
 
 class LSTMModel(AbstractModel):
-    def __init__(self, context_vocab_size, windows_size, length_Y, config):
-        super(LSTMModel, self).__init__(config) #call parent constractor
+    def __init__(self, context_vocab_size, windows_size, length_Y, config, report_folder):
+        super(LSTMModel, self).__init__(config, report_folder) #call parent constractor
         self.__context_vocab_size = context_vocab_size
         self.__windows_size = windows_size
         self.__length_Y = length_Y
