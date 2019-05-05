@@ -113,10 +113,6 @@ def main():
 
     #run model
     runLSTM()
-    LSTM_config.data_loader.counter += 1
-    # overwrite
-    with open(path_file.LSTM_config_path, 'w') as outfile:
-        json.dump(LSTM_config, outfile, indent=4)
 
 
 if __name__ == '__main__':

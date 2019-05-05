@@ -1,7 +1,7 @@
 {
     "name": "simpleNN",
     "data_loader": {
-        "name": "bigbluebutton_methoddeclarations_train",
+        "name": "all_methoddeclarations_train",
         "full_data": "all_methoddeclarations_train",
         "local_data": "bigbluebutton_methoddeclarations_train",
         "window_size": 8,
@@ -9,7 +9,7 @@
     },
     "model": {
         "name": "model.SimpleNN",
-        "embedding_dim": 54,
+        "embedding_dim": 32,
         "learning_rate": 0.001,
         "loss": "categorical_crossentropy",
         "metrics": [
@@ -18,7 +18,7 @@
     },
     "trainer": {
         "name": "trainer.SimpleNN",
-        "num_epochs": 3,
+        "num_epochs": 15,
         "batch_size": 64,
         "validation_split": 0.1
     }
