@@ -12,6 +12,7 @@
         "embedding_dim": 128,
         "lstm_dim": 128,
         "dense_dim": 100,
+        "dropout_1": 0.5,
         "loss": "categorical_crossentropy",
         "metrics": [
             "acc"

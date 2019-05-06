@@ -7,6 +7,7 @@ from keras import layers
 from keras.layers import Embedding
 from keras.layers import Dense
 from keras.layers import LSTM
+from keras.layers import Dropout
 from keras.models import Model
 from keras.optimizers import Adam
 
@@ -31,6 +32,7 @@ class LSTMModel(AbstractModel):
         tensor = Input(shape=(self.__windows_size,))
         c = contextEmbedding(tensor)
         c = LSTM(self.config.model.lstm_dim)(c)
+        c = Dropout(self.config.model.dropout_1)(c)
         c = Dense(self.config.model.dense_dim)(c)
         answer = layers.Dense(self.__length_Y, activation='softmax')(c)
 
