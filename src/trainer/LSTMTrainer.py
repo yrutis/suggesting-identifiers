@@ -2,10 +2,10 @@ from src.trainer.AbstractTrain import AbstractTrain
 
 
 class LSTMTrainer(AbstractTrain):
-    def __init__(self, model, data, encoder, config, callbacks):
+    def __init__(self, model, data, encoder, config):
         super(LSTMTrainer, self).__init__(model, data, encoder, config)
         self.type = "LSTM"
-        self.callbacks = callbacks
+        #self.callbacks = callbacks
 
 
     def train(self):
