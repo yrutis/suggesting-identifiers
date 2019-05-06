@@ -30,12 +30,12 @@ class LSTMModel(AbstractModel):
 
         tensor = Input(shape=(self.__windows_size,))
         c = contextEmbedding(tensor)
-        c = LSTM(self.config.model.embedding_dim)(c)
-        c = Dense(self.__context_vocab_size)(c)
+        c = LSTM(self.config.model.lstm_dim)(c)
+        c = Dense(self.config.model.dense_dim)(c)
         answer = layers.Dense(self.__length_Y, activation='softmax')(c)
 
         self.model = Model(tensor, answer)
-        optimizer = Adam(lr=self.config.model.learning_rate)
+        optimizer = Adam()
         self.model.compile(optimizer=optimizer, loss=self.config.model.loss, metrics=self.config.model.metrics)
         print(self.model.summary())
 

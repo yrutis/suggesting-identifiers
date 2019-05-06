@@ -1,16 +1,17 @@
 {
     "name": "LSTM",
     "data_loader": {
-        "name": "all_methoddeclarations_train",
+        "name": "bigbluebutton_methoddeclarations_train",
         "full_data": "all_methoddeclarations_train",
         "local_data": "bigbluebutton_methoddeclarations_train",
         "window_size": 8,
-        "counter": 4
+        "max_words": 30000
     },
     "model": {
         "name": "model.LSTM",
-        "embedding_dim": 32,
-        "learning_rate": 0.001,
+        "embedding_dim": 128,
+        "lstm_dim": 128,
+        "dense_dim": 100,
         "loss": "categorical_crossentropy",
         "metrics": [
             "acc"
@@ -18,7 +19,7 @@
     },
     "trainer": {
         "name": "trainer.LSTM",
-        "num_epochs": 15,
+        "num_epochs": 3,
         "batch_size": 64,
         "validation_split": 0.1
     }

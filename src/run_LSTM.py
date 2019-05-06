@@ -106,7 +106,7 @@ def main():
 
 
     #encode inputs, outputs to make ready for model
-    preprocessor = Preprocessor(filename=filename, max_words=10000)
+    preprocessor = Preprocessor(filename=filename, max_words=LSTM_config.data_loader.max_words)
     preprocessor.tokenize()
     data = [preprocessor.trainX, preprocessor.trainY, preprocessor.valX, preprocessor.valY]
 

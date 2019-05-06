@@ -60,7 +60,7 @@ class AbstractTrain(object):
             current_dict['prob'] = prob
             current_dict['name'] = predicted_label[idx]
             predictions.append(current_dict)
-            logger.info("Number {} prob is {} % for {}".format(idx + 1, prob, predicted_label[idx]))
+            #logger.info("Number {} prob is {} % for {}".format(idx + 1, prob, predicted_label[idx]))
 
         return predictions
 
