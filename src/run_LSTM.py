@@ -22,6 +22,8 @@ import json
 from datetime import datetime
 from random import randint
 
+from src.evaluator.Callback import Histories
+
 
 
 def main():
@@ -35,8 +37,12 @@ def main():
                            windows_size=window_size,
                            config=LSTM_config, report_folder=report_folder_LSTM)
 
+        logger.info("getting callback object...")
+        histories = Histories()
+
+
         logger.info("create trainer...")
-        trainer2 = LSTMTrainer(model=model2.model, data=data, encoder=preprocessor.encoder, config=LSTM_config)
+        trainer2 = LSTMTrainer(model=model2.model, data=data, encoder=preprocessor.encoder, config=LSTM_config, callbacks=histories)
 
         logger.info("start LSTM training...")
         trainer2.train()
@@ -45,7 +51,7 @@ def main():
         #generating some predictions...
         df_full = pd.DataFrame(columns=['X', 'Y', 'Predictions'])
         i = 1
-        while i < 100:
+        while i < len(preprocessor.valX):
             x = preprocessor.reverse_tokenize(preprocessor.valX[i:i+1])
             y = preprocessor.encoder.inverse_transform(preprocessor.valY[i:i+1])
             predictions = trainer2.predict(preprocessor.valX[i:i+1])

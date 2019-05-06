@@ -38,7 +38,6 @@ class Preprocessor(object):
         data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
         processed_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'), 'decoded'),
                                                    self.__filename + '.csv')  # get decoded path
-        logger.info("Processed decoded full path {}".format(processed_decoded_full_path))
 
         processedDf = pd.read_csv(processed_decoded_full_path)
 
@@ -56,7 +55,6 @@ class Preprocessor(object):
         else:
             logger.info("only considering the topmost {} words" .format(self.max_context_vocab_size))
 
-        self.trainX = padded_sequences[0: int(0.9 * padded_sequences.shape[0])]
 
         # load Y's
         y = processedDf['y']  # get all Y
@@ -71,25 +69,18 @@ class Preprocessor(object):
         # amount of unique Y's
         lenY = len(np.unique(Y))
 
-        # select only 90% for training
-        trainYEnc = encoded_Y[0: int(0.9 * Y.shape[0])]
 
-        #self.trainX, self.valX, self.trainY, self.valY = train_test_split(padded_sequences, encoded_Y, test_size = 0.1)
+        self.trainX, self.valX, self.trainY, self.valY = train_test_split(padded_sequences, encoded_Y, test_size = 0.2)
 
 
+        self.trainY = to_categorical(self.trainY, num_classes=lenY)
 
-        self.trainY = to_categorical(trainYEnc, num_classes=lenY)
-
-
-        self.valX = padded_sequences[int(0.9 * padded_sequences.shape[0]): padded_sequences.shape[0]]
-        self.valY = encoded_Y[int(0.9 * Y.shape[0]): Y.shape[0]]
-
-        #logging.warning("This is trainYEnc {}, this is trainY to categorical {}, this is valY {}".format(trainYEnc, self.trainY, self.valY))
         logger.info("this is lenY {} unique, this is shape of categorical Y {}" .format(lenY, self.trainY.shape))
 
         # saving tokenizer
         #with open('tokenizer.pickle', 'wb') as handle:
         #    pickle.dump(self.tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
 
     def reverse_tokenize(self, sequence):
 

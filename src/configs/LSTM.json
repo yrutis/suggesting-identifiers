@@ -1,11 +1,11 @@
 {
     "name": "LSTM",
     "data_loader": {
-        "name": "all_methoddeclarations_train",
+        "name": "bigbluebutton_methoddeclarations_train",
         "full_data": "all_methoddeclarations_train",
         "local_data": "bigbluebutton_methoddeclarations_train",
         "window_size": 8,
-        "max_words": 30000
+        "max_words": 10000
     },
     "model": {
         "name": "model.LSTM",
@@ -21,7 +21,7 @@
     },
     "trainer": {
         "name": "trainer.LSTM",
-        "num_epochs": 15,
+        "num_epochs": 3,
         "batch_size": 128,
         "validation_split": 0.2
     }
