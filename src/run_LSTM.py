@@ -28,7 +28,6 @@ def main():
     """ runs model
     """
 
-
     def runLSTM():
         logger.info("create LSTM Model...")
         model2 = LSTMModel(context_vocab_size=preprocessor.max_context_vocab_size,
@@ -99,10 +98,6 @@ def main():
     with open(os.path.join(report_folder_LSTM, 'LSTM.json'), 'w') as outfile:
         json.dump(LSTM_config, outfile, indent=4)
 
-
-    #create decoded version of dataset
-    #make_dataset.main(filename, window_size)
-    #prepare_data.main(filename, window_size)
 
 
     #encode inputs, outputs to make ready for model
