@@ -22,7 +22,7 @@ import json
 from datetime import datetime
 from random import randint
 
-from src.evaluator.Callback import Histories
+#from src.evaluator.Callback import Histories
 
 
 
@@ -37,8 +37,8 @@ def main():
                            windows_size=window_size,
                            config=LSTM_config, report_folder=report_folder_LSTM)
 
-        logger.info("getting callback object...")
-        histories = Histories()
+        #logger.info("getting callback object...")
+        #histories = Histories()
 
 
         logger.info("create trainer...")
