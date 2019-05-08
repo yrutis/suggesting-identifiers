@@ -70,9 +70,9 @@ def main():
     #tokenize just trainX
     vocab_size = len(word_index) +1
     sequences = tokenizer.texts_to_sequences(x_train)
-    print(sequences)
+    print(sequences[:10])
     trainX = pad_sequences(sequences, maxlen=8, value=0)
-    print(trainX)
+    print(trainX[:10])
 
     #tokenize just trainY
     y_train = list(y_train)
@@ -154,7 +154,7 @@ def main():
     # fit model
     history = model.fit(trainX, trainY,
               validation_data=[valX, valY],
-              batch_size=128, epochs=2,
+              batch_size=128, epochs=50,
               callbacks=[histories])
 
     # save the model to file
@@ -175,7 +175,6 @@ def main():
     acc = history_dict['acc']
     val_acc = history_dict['val_acc']
     epochs = range(1, len(acc) + 1)
-    print(acc)
 
     always_unknown_train_list = []
     for x in epochs:
@@ -208,23 +207,26 @@ def main():
     i = 0
     while i < len( histories.currentPredictions):
 
-        first_x = histories.currentPredictions[i]['X'].tolist()
-        first_y = histories.currentPredictions[i]['Y'].tolist()
-        first_y_hat = histories.currentPredictions[i]['Y_hat'].tolist()
-        first_y_hat = list(map(lambda x:[x], first_y_hat))
+        #every 5 epochs
+        if i % 5 == 0:
+
+            first_x = histories.currentPredictions[i]['X'].tolist()
+            first_y = histories.currentPredictions[i]['Y'].tolist()
+            first_y_hat = histories.currentPredictions[i]['Y_hat'].tolist()
+            first_y_hat = list(map(lambda x:[x], first_y_hat))
 
 
-        # Creating texts
-        first_x_reversed = list(map(sequence_to_text, first_x))
-        first_y_reversed = list(map(sequence_to_text, first_y))
-        first_y_hat_reversed = list(map(sequence_to_text, first_y_hat))
+            # Creating texts
+            first_x_reversed = list(map(sequence_to_text, first_x))
+            first_y_reversed = list(map(sequence_to_text, first_y))
+            first_y_hat_reversed = list(map(sequence_to_text, first_y_hat))
 
-        df = pd.DataFrame(
-            {"X": first_x_reversed,
-             "Y": first_y_reversed,
-             "Y_hat": first_y_hat_reversed})
+            df = pd.DataFrame(
+                {"X": first_x_reversed,
+                 "Y": first_y_reversed,
+                 "Y_hat": first_y_hat_reversed})
 
-        df.to_csv('myPred_epoch-'+str(i)+'.csv')
+            df.to_csv('myPred_epoch-'+str(i)+'.csv')
         i += 1
 
 
