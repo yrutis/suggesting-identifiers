@@ -20,7 +20,7 @@ import src.data.utils.helper_functions as helper_functions
 
 
 def main():
-    df = pd.read_json('Android-Universal-Image-Loader.json', orient='records')
+    df = pd.read_json('all_methods_train.json', orient='records')
 
 
     df['parameters'] = df['parameters'].apply(helper_functions.turn_all_to_lower)
