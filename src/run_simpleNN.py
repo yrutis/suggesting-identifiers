@@ -23,21 +23,24 @@ def main():
     simpleNN_config = config_loader.get_config_from_json(simpleNN_config_path)
 
     FLAGS = tf.app.flags.FLAGS
-
     #define some tf flags
     tf.app.flags.DEFINE_integer('window_size', simpleNN_config.data_loader.window_size, 'must be between 2+')
+    FLAGS = tf.app.flags.FLAGS
     simpleNN_config.data_loader.window_size = FLAGS.window_size
     logger.info("window size is {}".format(simpleNN_config.data_loader.window_size))
 
     tf.app.flags.DEFINE_string('data', simpleNN_config.data_loader.name, 'must be either Android-Universal-Image-Loader or all_methods_train')
+    FLAGS = tf.app.flags.FLAGS
     simpleNN_config.data_loader.name = FLAGS.data
     logger.info("data used is {}".format(simpleNN_config.data_loader.name))
 
     tf.app.flags.DEFINE_integer('epochs', simpleNN_config.trainer.num_epochs, 'must be between 1-100')
+    FLAGS = tf.app.flags.FLAGS
     simpleNN_config.trainer.num_epochs = FLAGS.epochs
     logger.info("epochs num is {}".format(simpleNN_config.trainer.num_epochs))
 
     tf.app.flags.DEFINE_integer('batch_size', simpleNN_config.trainer.batch_size, 'must be a power of 2 2^1 - 2^6')
+    FLAGS = tf.app.flags.FLAGS
     simpleNN_config.trainer.batch_size = FLAGS.batch_size
     logger.info("batch size is {}".format(simpleNN_config.trainer.batch_size))
 
