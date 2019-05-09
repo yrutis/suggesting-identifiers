@@ -44,7 +44,9 @@ def main():
     simpleNN_config.trainer.batch_size = FLAGS.batch_size
     logger.info("batch size is {}".format(simpleNN_config.trainer.batch_size))
 
-    trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test = \
+
+    #get data, UNK and other statistics
+    trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test, statistics = \
         prepare_data_new.main(simpleNN_config.data_loader.name, simpleNN_config.data_loader.window_size)
 
     word_index = tokenizer.word_index
@@ -59,37 +61,41 @@ def main():
     random_nr = randint(0, 10000)
     unique_folder_key = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S') + "-" + str(random_nr)
     report_folder = path_file.report_folder
-    report_folder_LSTM = os.path.join(report_folder, 'reports-' + simpleNN_config.name + '-' + unique_folder_key)
+    report_folder_simpleNN = os.path.join(report_folder, 'reports-' + simpleNN_config.name + '-' + unique_folder_key)
 
-    os.mkdir(report_folder_LSTM)
+    os.mkdir(report_folder_simpleNN)
 
     # write in report folder
-    with open(os.path.join(report_folder_LSTM, 'simpleNN.json'), 'w') as outfile:
+    with open(os.path.join(report_folder_simpleNN, 'simpleNN.json'), 'w') as outfile:
         json.dump(simpleNN_config, outfile, indent=4)
 
-    logger.info("create LSTM Model...")
+    logger.info("create simpleNN Model...")
     model2 = SimpleNNModel(context_vocab_size=vocab_size,
                        windows_size=simpleNN_config.data_loader.window_size,
-                       config=simpleNN_config, report_folder=report_folder_LSTM)
+                       config=simpleNN_config, report_folder=report_folder_simpleNN)
 
     data = [trainX, trainY, valX, valY]
 
     logger.info("create trainer...")
     trainer2 = AbstractTrain(model=model2.model, data=data,
                              tokenizer=tokenizer, config=simpleNN_config,
-                             callbacks=histories, report_folder=report_folder_LSTM)
+                             callbacks=histories, report_folder=report_folder_simpleNN)
 
-    logger.info("start LSTM training...")
+    logger.info("start simpleNN training...")
     trainer2.train()
     trainer2.save_callback_predictions()
 
     logger.info("save evaluation to file")
-    evaluator2 = Evaluator(trainer2, report_folder_LSTM)
+    evaluator2 = Evaluator(trainer2, report_folder_simpleNN)
     evaluator2.visualize(always_unknown_train, always_unknown_test)
     evaluator2.evaluate()
 
-    tokenizer_path = os.path.join(report_folder_LSTM, 'tokenizer.pkl')
+    tokenizer_path = os.path.join(report_folder_simpleNN, 'tokenizer.pkl')
     dump(tokenizer, open(tokenizer_path, 'wb'))
+
+    # safe statistics
+    statistics_path = os.path.join(report_folder_simpleNN, 'statistics.csv')
+    statistics.to_csv(statistics_path)
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

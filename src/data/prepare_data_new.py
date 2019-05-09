@@ -29,27 +29,36 @@ def main(filename, window_size):
     df["methodBody"] = df['methodBody'].apply(helper_functions.delete_certain_strings)
     df["methodBody"] = df['methodBody'].apply(helper_functions.turn_all_to_lower)
 
+    #clean from function structure
+    df['methodBodyCleaned'] = df['methodBody'].apply(helper_functions.clean_from_function_structure)
+
+    #concat type, params, method body
     df["concatMethodBodyCleaned"] = df['Type'].map(lambda x: [x]) + df["parameters"] + df["methodBodyCleaned"]
 
     # df['methodName']= df['methodName'].str.lower() should a function be all lower?
 
     # compute some statistics
-    # avg_mean = df['methodBody'].apply(compute_col_length).mean()
-    df['methodBodyCleaned'] = df['methodBody'].apply(helper_functions.clean_from_function_structure)
+    avg_mean_body_uncleaned = df['methodBody'].apply(helper_functions.compute_col_length).mean()
+
+    #compute avg length of params
+    avg_mean_params = df['parameters'].apply(helper_functions.compute_col_length).mean()
 
     #compute avg length of body
-    df['avg_mean_body'] = df['methodBodyCleaned'].apply(helper_functions.compute_col_length).mean()
-
-    #compute avg length of body
-    df['avg_mean_body'] = df['methodBodyCleaned'].apply(helper_functions.compute_col_length).mean()
-
-    #compute avg length of body
-    df['avg_mean_body'] = df['methodBodyCleaned'].apply(helper_functions.compute_col_length).mean()
-
-
+    avg_mean_body = df['methodBodyCleaned'].apply(helper_functions.compute_col_length).mean()
 
     # compute avg length of body + params + type
-    df['avg_mean_body_params_type'] = df['concatMethodBodyCleaned'].apply(helper_functions.compute_col_length).mean()
+    avg_mean_body_params_type = df['concatMethodBodyCleaned'].apply(helper_functions.compute_col_length).mean()
+
+    statistics = {'avg_mean_body_params_type': [avg_mean_body_params_type],
+                  'avg_mean_params': [avg_mean_params],
+                  'avg_mean_body': [avg_mean_body],
+                  'avg_mean_body_uncleaned': [avg_mean_body_uncleaned]}
+
+    statistics = pd.DataFrame(statistics, columns=['avg_mean_body_params_type',
+                                                    'avg_mean_params',
+                                                    'avg_mean_body',
+                                                   'avg_mean_body_uncleaned'])
+    print(statistics.head())
 
     x_train, x_test, y_train, y_test = train_test_split(df['concatMethodBodyCleaned'], df['methodName'], test_size=0.2)
     method_body_cleaned_list_x = list(x_train)
@@ -119,7 +128,7 @@ def main(filename, window_size):
                                                                                        counter / len(y_test_tokenized)))
 
     always_unknown_test = counter / len(y_test_tokenized)
-    return trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test
+    return trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test, statistics
 
     # trainY = to_categorical(trainY, num_classes=vocab_size)
     # valY = to_categorical(valY, num_classes=vocab_size)

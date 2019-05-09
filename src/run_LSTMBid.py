@@ -46,7 +46,7 @@ def main():
 
 
 
-    trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test = \
+    trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test, statistics = \
         prepare_data_new.main(LSTMBid_config.data_loader.name, LSTMBid_config.data_loader.window_size)
 
     word_index = tokenizer.word_index
@@ -90,6 +90,10 @@ def main():
 
     tokenizer_path = os.path.join(report_folder_LSTMBid, 'tokenizer.pkl')
     dump(tokenizer, open(tokenizer_path, 'wb'))
+
+    # safe statistics
+    statistics_path = os.path.join(report_folder_LSTMBid, 'statistics.csv')
+    statistics.to_csv(statistics_path)
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
