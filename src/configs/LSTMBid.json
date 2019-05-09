@@ -1,16 +1,17 @@
 {
-    "name": "simpleNN",
+    "name": "LSTMBid",
     "data_loader": {
         "name": "Android-Universal-Image-Loader",
         "full_data": "all_methods_train",
         "local_data": "Android-Universal-Image-Loader",
         "window_size": 8,
-        "counter": 1
+        "counter": 2
     },
     "model": {
-        "name": "model.SimpleNN",
-        "embedding_dim": 32,
-        "dense_dim": 32,
+        "name": "model.LSTMBid",
+        "embedding_dim": 128,
+        "lstm_dim": 128,
+        "dense_dim": 100,
         "learning_rate": 0.001,
         "loss": "sparse_categorical_crossentropy",
         "metrics": [
@@ -18,8 +19,8 @@
         ]
     },
     "trainer": {
-        "name": "trainer.SimpleNN",
-        "num_epochs": 15,
+        "name": "trainer.LSTMBid",
+        "num_epochs": 2,
         "batch_size": 64,
         "validation_split": 0.1
     }

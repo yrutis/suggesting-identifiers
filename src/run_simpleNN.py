@@ -1,131 +1,90 @@
-# -*- coding: utf-8 -*-
-from numpy.random import seed
-seed(1)
-from tensorflow import set_random_seed
-set_random_seed(2)
-
-
-import logging
-import os
-
-import src.utils.config as config_loader
-import src.utils.path as path_file
-import json
-
-import src.data.make_dataset as make_dataset
-import src.data.prepare_data as prepare_data
-
-
-from src.data.Preprocessor import Preprocessor
-from src.models.SimpleNN import SimpleNN
-from src.models.LSTMModel import LSTMModel
-
-from src.trainer.SimpleNNTrainer import SimpleNNTrainer
-from src.trainer.LSTMTrainer import LSTMTrainer
-
-from src.evaluator.Evaluator import Evaluator
-import tensorflow as tf
-import pandas as pd
-
 from datetime import datetime
 from random import randint
+from pickle import dump
+import logging
+import os
+import json
+import tensorflow as tf
+
+
+import src.data.prepare_data_new as prepare_data_new
+from src.evaluator.Callback import Histories
+from src.evaluator.Evaluator import Evaluator
+from src.models.SimpleNN_new import SimpleNNModel
+import src.utils.config as config_loader
+import src.utils.path as path_file
+from src.trainer.AbstractTrain import AbstractTrain
 
 
 def main():
-    """ runs model
-    """
-
-    def runSimpleNN():
-
-        logger.info('Create the model...')
-        model1 = SimpleNN(context_vocab_size=preprocessor.max_context_vocab_size,
-                          length_Y=preprocessor.trainY.shape[1],
-                          windows_size=window_size,
-                          config=simpleNN_config, report_folder=report_folder_simpleNN)
-
-        logger.info("create trainer...")
-        trainer1 = SimpleNNTrainer(model=model1.model, data=data, encoder=preprocessor.encoder, config=simpleNN_config)
-
-        logger.info("start training...")
-        trainer1.train()
-
-
-
-        # generating some predictions...
-        df_full = pd.DataFrame(columns=['X', 'Y', 'Predictions'])
-        i = 1
-        while i < 100:
-            # logger.info("make a prediction...")
-            # logger.info("prediction for {}" .format(preprocessor.reverse_tokenize(preprocessor.valX[i:i+1])))
-            # logger.info("correct Y is {}".format(preprocessor.encoder.inverse_transform(preprocessor.valY[i:i+1])))
-            x = preprocessor.reverse_tokenize(preprocessor.valX[i:i + 1])
-            y = preprocessor.encoder.inverse_transform(preprocessor.valY[i:i + 1])
-            predictions = trainer1.predict(preprocessor.valX[i:i + 1])
-            # logger.info(predictions)
-            df = {"X": x,
-                  "Y": y,
-                  "Predictions": [predictions]}
-
-            df_full = df_full.append(df, ignore_index=True)
-            i += 1
-
-        logger.info(df_full.head())
-
-        predictions_report = os.path.join(report_folder_simpleNN, filename + "-predictions.csv")
-        df_full.to_csv(predictions_report)
-
-        logger.info("save evaluation to file")
-        evaluator1 = Evaluator(trainer1, report_folder_simpleNN)
-        evaluator1.visualize()
-        evaluator1.evaluate()
-
-
-
     # get logger
     logger = logging.getLogger(__name__)
-
-    simpleNN_config, LSTM_config = config_loader.load_configs()
-
-    filename = simpleNN_config.data_loader.name
-
+    simpleNN_config_path = path_file.simpleNN_config_path
+    simpleNN_config = config_loader.get_config_from_json(simpleNN_config_path)
 
     FLAGS = tf.app.flags.FLAGS
-    tf.app.flags.DEFINE_integer('window_size', simpleNN_config.data_loader.window_size, 'must be between 2 - 8')
 
+    #define some tf flags
+    tf.app.flags.DEFINE_integer('window_size', simpleNN_config.data_loader.window_size, 'must be between 2+')
     simpleNN_config.data_loader.window_size = FLAGS.window_size
-    window_size = FLAGS.window_size
+    logger.info("window size is {}".format(simpleNN_config.data_loader.window_size))
 
-    filename = filename + '-' + str(window_size)
+    tf.app.flags.DEFINE_string('data', simpleNN_config.data_loader.name, 'must be either Android-Universal-Image-Loader or all_methods_train')
+    simpleNN_config.data_loader.name = FLAGS.data
+    logger.info("data used is {}".format(simpleNN_config.data_loader.name))
 
-    # create unique report folder
+    tf.app.flags.DEFINE_integer('epochs', simpleNN_config.trainer.num_epochs, 'must be between 1-100')
+    simpleNN_config.trainer.num_epochs = FLAGS.epochs
+    logger.info("epochs num is {}".format(simpleNN_config.trainer.num_epochs))
+
+    tf.app.flags.DEFINE_integer('batch_size', simpleNN_config.trainer.batch_size, 'must be a power of 2 2^1 - 2^6')
+    simpleNN_config.trainer.batch_size = FLAGS.window_size
+    logger.info("batch size is {}".format(simpleNN_config.trainer.batch_size))
+
+    trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test = \
+        prepare_data_new.main(simpleNN_config.data_loader.name, simpleNN_config.data_loader.window_size)
+
+    word_index = tokenizer.word_index
+    logger.info('Found {} unique tokens.'.format(len(word_index) + 1))
+
+    vocab_size = len(word_index) + 1
+    histories = Histories()
+
+    #create unique report folder
     random_nr = randint(0, 10000)
     unique_folder_key = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S') + "-" + str(random_nr)
     report_folder = path_file.report_folder
-    report_folder_simpleNN = os.path.join(report_folder,
-                                      'reports-' + simpleNN_config.name + '-' + unique_folder_key)
-    os.mkdir(report_folder_simpleNN)
+    report_folder_LSTM = os.path.join(report_folder, 'reports-' + simpleNN_config.name + '-' + unique_folder_key)
+
+    os.mkdir(report_folder_LSTM)
 
     # write in report folder
-    with open(os.path.join(report_folder_simpleNN, 'simpleNN.json'), 'w') as outfile:
+    with open(os.path.join(report_folder_LSTM, 'simpleNN.json'), 'w') as outfile:
         json.dump(simpleNN_config, outfile, indent=4)
 
-    #create decoded version of dataset
-    #prepare_data.main(filename, window_size)
+    logger.info("create LSTM Model...")
+    model2 = SimpleNNModel(context_vocab_size=vocab_size,
+                       windows_size=simpleNN_config.data_loader.window_size,
+                       config=simpleNN_config, report_folder=report_folder_LSTM)
 
-    #encode inputs, outputs to make ready for model
-    preprocessor = Preprocessor(filename=filename, max_words=10000)
-    preprocessor.tokenize()
-    data = [preprocessor.trainX, preprocessor.trainY, preprocessor.valX, preprocessor.valY]
+    data = [trainX, trainY, valX, valY]
 
-    #run model
-    runSimpleNN()
+    logger.info("create trainer...")
+    trainer2 = AbstractTrain(model=model2.model, data=data,
+                             tokenizer=tokenizer, config=simpleNN_config,
+                             callbacks=histories, report_folder=report_folder_LSTM)
 
+    logger.info("start LSTM training...")
+    trainer2.train()
+    trainer2.save_callback_predictions()
 
+    logger.info("save evaluation to file")
+    evaluator2 = Evaluator(trainer2, report_folder_LSTM)
+    evaluator2.visualize(always_unknown_train, always_unknown_test)
+    evaluator2.evaluate()
 
+    tokenizer_path = os.path.join(report_folder_LSTM, 'tokenizer.pkl')
+    dump(tokenizer, open(tokenizer_path, 'wb'))
 
 if __name__ == '__main__':
-    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(level=logging.INFO, format=log_fmt)
-
     main()
-
