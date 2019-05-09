@@ -29,14 +29,27 @@ def main(filename, window_size):
     df["methodBody"] = df['methodBody'].apply(helper_functions.delete_certain_strings)
     df["methodBody"] = df['methodBody'].apply(helper_functions.turn_all_to_lower)
 
+    df["concatMethodBodyCleaned"] = df['Type'].map(lambda x: [x]) + df["parameters"] + df["methodBodyCleaned"]
+
     # df['methodName']= df['methodName'].str.lower() should a function be all lower?
 
+    # compute some statistics
     # avg_mean = df['methodBody'].apply(compute_col_length).mean()
     df['methodBodyCleaned'] = df['methodBody'].apply(helper_functions.clean_from_function_structure)
 
-    df["concatMethodBodyCleaned"] = df['Type'].map(lambda x: [x]) + df["parameters"] + df["methodBodyCleaned"]
+    #compute avg length of body
+    df['avg_mean_body'] = df['methodBodyCleaned'].apply(helper_functions.compute_col_length).mean()
 
-    # avg_mean_cleaned = df['methodBodyCleaned'].apply(compute_col_length).mean()
+    #compute avg length of body
+    df['avg_mean_body'] = df['methodBodyCleaned'].apply(helper_functions.compute_col_length).mean()
+
+    #compute avg length of body
+    df['avg_mean_body'] = df['methodBodyCleaned'].apply(helper_functions.compute_col_length).mean()
+
+
+
+    # compute avg length of body + params + type
+    df['avg_mean_body_params_type'] = df['concatMethodBodyCleaned'].apply(helper_functions.compute_col_length).mean()
 
     x_train, x_test, y_train, y_test = train_test_split(df['concatMethodBodyCleaned'], df['methodName'], test_size=0.2)
     method_body_cleaned_list_x = list(x_train)
