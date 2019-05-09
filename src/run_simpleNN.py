@@ -38,7 +38,7 @@ def main():
     logger.info("epochs num is {}".format(simpleNN_config.trainer.num_epochs))
 
     tf.app.flags.DEFINE_integer('batch_size', simpleNN_config.trainer.batch_size, 'must be a power of 2 2^1 - 2^6')
-    simpleNN_config.trainer.batch_size = FLAGS.window_size
+    simpleNN_config.trainer.batch_size = FLAGS.batch_size
     logger.info("batch size is {}".format(simpleNN_config.trainer.batch_size))
 
     trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test = \

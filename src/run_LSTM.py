@@ -43,7 +43,7 @@ def main():
 
 
     tf.app.flags.DEFINE_integer('batch_size', LSTM_config.trainer.batch_size, 'must be a power of 2 2^1 - 2^6')
-    LSTM_config.trainer.batch_size = FLAGS.window_size
+    LSTM_config.trainer.batch_size = FLAGS.batch_size
     logger.info("batch size is {}".format(LSTM_config.trainer.batch_size))
 
 

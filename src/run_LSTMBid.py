@@ -39,7 +39,7 @@ def main():
     logger.info("epochs num is {}".format(LSTMBid_config.trainer.num_epochs))
 
     tf.app.flags.DEFINE_integer('batch_size', LSTMBid_config.trainer.batch_size, 'must be a power of 2 2^1 - 2^6')
-    LSTMBid_config.trainer.batch_size = FLAGS.window_size
+    LSTMBid_config.trainer.batch_size = FLAGS.batch_size
     logger.info("batch size is {}".format(LSTMBid_config.trainer.batch_size))
 
 
