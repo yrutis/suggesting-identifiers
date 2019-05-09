@@ -13,11 +13,10 @@ from keras.optimizers import Adam
 
 
 class LSTMModel(AbstractModel):
-    def __init__(self, context_vocab_size, windows_size, length_Y, config, report_folder):
+    def __init__(self, context_vocab_size, windows_size, config, report_folder):
         super(LSTMModel, self).__init__(config, report_folder) #call parent constractor
         self.__context_vocab_size = context_vocab_size
         self.__windows_size = windows_size
-        self.__length_Y = length_Y
         self.type = "LSTM"
         self.build_model()
 
@@ -35,7 +34,7 @@ class LSTMModel(AbstractModel):
         c = Dropout(self.config.model.dropout_1)(c)
         c = Dense(self.config.model.dense_dim)(c)
         c = Dropout(self.config.model.dropout_2)(c)
-        answer = layers.Dense(self.__length_Y, activation='softmax')(c)
+        answer = layers.Dense(self.__context_vocab_size, activation='softmax')(c)
 
         self.model = Model(tensor, answer)
         optimizer = Adam()
@@ -43,5 +42,3 @@ class LSTMModel(AbstractModel):
         print(self.model.summary())
 
         super().save_model_architecture() #save model architecture to disk
-
-

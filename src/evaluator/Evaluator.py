@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from sklearn import metrics
 from src.trainer.AbstractTrain import AbstractTrain
-import src.utils.path as path_file
+
 
 class Evaluator(object):
     def __init__(self, trained_model:AbstractTrain, report_folder):
@@ -13,58 +13,75 @@ class Evaluator(object):
         self.report_folder = report_folder
 
     def evaluate(self):
-        if not self.__trained_model.history:
-            raise Exception("You have to train the model first before evaluating")
-
-        if not self.__trained_model.type:
-            raise Exception("You need to assign a type to the model")
-
         # get logger
         logger = logging.getLogger(__name__)
 
+
+        if not self.__trained_model.history:
+            raise Exception("You have to train the model first before evaluating")
+
+
+
+        # Creating a reverse dictionary
+        reverse_word_map = dict(map(reversed, self.__trained_model.tokenizer.word_index.items()))
+
+        # Function takes a tokenized sentence and returns the words
+        def sequence_to_text(list_of_indices):
+            # Looking up words in dictionary
+            words = [reverse_word_map.get(letter) for letter in list_of_indices]
+            return (words)
+
+
         predictions = self.__trained_model.model.predict(self.__trained_model.valX)  # get all predictions
         predicted_classes = np.argmax(predictions, axis=1)
-        predicted_prob = np.amax(predictions, axis=1)
+        #predicted_classes = list(map(lambda x: [x], predicted_classes))
 
-        #get all possible predictions and true values
-        target_names = self.__trained_model.encoder.inverse_transform(
-            np.unique(np.append(predicted_classes, self.__trained_model.valY))
-        )
+        #get all possible target names
+
+        target_names = np.unique(np.append(predicted_classes, self.__trained_model.valY)).tolist()
+        target_names = list(map(lambda x: [x], target_names))
+        target_names = list(map(sequence_to_text, target_names))
+        target_names = list(map(lambda x: x[0], target_names))
+
 
         report = metrics.classification_report(self.__trained_model.valY, predicted_classes, target_names=target_names, output_dict=True)
         df = pd.DataFrame(report).transpose()
 
-        #report_folder = path_file.report_folder
-        #report_folder = os.path.join(report_folder,
-                                     #'reports-' + self.__trained_model.config.name + '-' + str(
-                                      #   self.__trained_model.config.data_loader.counter))
-        sklearn_report = os.path.join(self.report_folder, "report-"+self.__trained_model.type+".csv")
+
+        sklearn_report = os.path.join(self.report_folder, "report.csv")
         df.to_csv(sklearn_report)
 
 
 
-    def visualize(self):
+    def visualize(self, always_unknown_train, always_unknown_test):
         if not self.__trained_model.history:
             raise Exception("You have to train the model first before visualizing")
 
-        if not self.__trained_model.type:
-            raise Exception("You need to assign a type to the model")
-
-        #report_folder = path_file.report_folder
-        #report_folder= os.path.join(report_folder,
-                                          #'reports-' + self.__trained_model.config.name + '-' + str(self.__trained_model.config.data_loader.counter))
 
 
-        acc_plot = os.path.join(self.report_folder, 'acc-' + self.__trained_model.type + '.png')
-        loss_plot = os.path.join(self.report_folder, 'loss-' + self.__trained_model.type + '.png')
+        acc_plot = os.path.join(self.report_folder, 'acc.png')
+        loss_plot = os.path.join(self.report_folder, 'loss.png')
 
         acc = self.__trained_model.history.history['acc']
         val_acc = self.__trained_model.history.history['val_acc']
         loss = self.__trained_model.history.history['loss']
         val_loss = self.__trained_model.history.history['val_loss']
         epochs = range(1, len(acc) + 1)
+
+        #hack
+        always_unknown_train_list = []
+        for x in epochs:
+            always_unknown_train_list.append(always_unknown_train)
+
+        always_unknown_test_list = []
+        for x in epochs:
+            always_unknown_test_list.append(always_unknown_test)
+
+
         plt.plot(epochs, acc, 'bo', label='Training acc')
         plt.plot(epochs, val_acc, 'b', label='Validation acc')
+        plt.plot(epochs, always_unknown_train_list, 'go', label='Unknown Training acc')
+        plt.plot(epochs, always_unknown_test_list, 'g', label='Unknown Test Acc')
         plt.title('Training and validation accuracy')
         plt.legend()
         plt.savefig(acc_plot)

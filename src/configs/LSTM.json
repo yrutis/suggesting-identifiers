@@ -1,7 +1,7 @@
 {
     "name": "LSTM",
     "data_loader": {
-        "name": "all_methoddeclarations_train",
+        "name": "Android-Universal-Image-Loader",
         "full_data": "all_methoddeclarations_train",
         "local_data": "bigbluebutton_methoddeclarations_train",
         "window_size": 8,
@@ -14,7 +14,7 @@
         "dense_dim": 100,
         "dropout_1": 0.5,
         "dropout_2": 0.5,
-        "loss": "categorical_crossentropy",
+        "loss": "sparse_categorical_crossentropy",
         "metrics": [
             "acc"
         ]

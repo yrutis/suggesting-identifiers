@@ -20,7 +20,7 @@ import src.data.utils.helper_functions as helper_functions
 
 
 def main():
-    df = pd.read_json('all_methods_train.json', orient='records')
+    df = pd.read_json('Android-Universal-Image-Loader.json', orient='records')
 
 
     df['parameters'] = df['parameters'].apply(helper_functions.turn_all_to_lower)
@@ -80,6 +80,7 @@ def main():
     print(y_train_tokenized[0:10])
     print(y_train[0:10])
     y_train_tokenized = list(map(lambda x: x[0], y_train_tokenized))
+
 
     counter = 0
     for x in y_train_tokenized:

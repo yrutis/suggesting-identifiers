@@ -52,7 +52,6 @@ def compute_col_length(method_body):
 
 def clean_from_function_structure(method_body):
     '''
-
     :param method_body: method_body
     :return: returns a cleaned from function structure like ();. form of the method body
     '''
