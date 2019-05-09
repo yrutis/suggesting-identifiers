@@ -30,10 +30,10 @@ class LSTMModel(AbstractModel):
 
         tensor = Input(shape=(self.__windows_size,))
         c = contextEmbedding(tensor)
-        c = LSTM(self.config.model.lstm_dim, dropout=0.2, recurrent_dropout=0.2)(c)
-        c = Dropout(self.config.model.dropout_1)(c)
+        c = LSTM(self.config.model.lstm_dim)(c)
+        #c = Dropout(self.config.model.dropout_1)(c)
         c = Dense(self.config.model.dense_dim)(c)
-        c = Dropout(self.config.model.dropout_2)(c)
+        #c = Dropout(self.config.model.dropout_2)(c)
         answer = layers.Dense(self.__context_vocab_size, activation='softmax')(c)
 
         self.model = Model(tensor, answer)
