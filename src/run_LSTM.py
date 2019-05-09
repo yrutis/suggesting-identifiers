@@ -1,9 +1,11 @@
 from datetime import datetime
 from random import randint
-
 from pickle import dump
-
 import logging
+import os
+import json
+import tensorflow as tf
+
 
 import src.data.prepare_data_new as prepare_data_new
 from src.evaluator.Callback import Histories
@@ -11,23 +13,34 @@ from src.evaluator.Evaluator import Evaluator
 from src.models.LSTMModel import LSTMModel
 import src.utils.config as config_loader
 import src.utils.path as path_file
-import os
-import json
+
 
 from src.trainer.AbstractTrain import AbstractTrain
 
 def main():
     # get logger
     logger = logging.getLogger(__name__)
-
     LSTM_config_path = path_file.LSTM_config_path
     LSTM_config = config_loader.get_config_from_json(LSTM_config_path)
+
+    FLAGS = tf.app.flags.FLAGS
+
+    #define some tf flags
+    tf.app.flags.DEFINE_integer('window_size', LSTM_config.data_loader.window_size, 'must be between 2+')
+    LSTM_config.data_loader.window_size = FLAGS.window_size
+    logger.info("window size is {}".format(LSTM_config.data_loader.window_size))
+
+    tf.app.flags.DEFINE_string('data', LSTM_config.data_loader.name, 'must be either Android-Universal-Image-Loader or all_methods_train')
+    LSTM_config.data_loader.name = FLAGS.data
+    logger.info("data used is {}".format(LSTM_config.data_loader.name))
+
+
 
     trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test = \
         prepare_data_new.main(LSTM_config.data_loader.name, LSTM_config.data_loader.window_size)
 
     word_index = tokenizer.word_index
-    print('Found {} unique tokens.'.format(len(word_index) + 1))
+    logger.info('Found {} unique tokens.'.format(len(word_index) + 1))
 
     vocab_size = len(word_index) + 1
     histories = Histories()
