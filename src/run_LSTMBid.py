@@ -27,18 +27,20 @@ def main():
 
     #define some tf flags
     tf.app.flags.DEFINE_integer('window_size', LSTMBid_config.data_loader.window_size, 'must be between 2+')
+    tf.app.flags.DEFINE_string('data', LSTMBid_config.data_loader.name, 'must be either Android-Universal-Image-Loader or all_methods_train')
+    tf.app.flags.DEFINE_integer('epochs', LSTMBid_config.trainer.num_epochs, 'must be between 1-100')
+    tf.app.flags.DEFINE_integer('batch_size', LSTMBid_config.trainer.batch_size, 'must be a power of 2 2^1 - 2^6')
+
+
     LSTMBid_config.data_loader.window_size = FLAGS.window_size
     logger.info("window size is {}".format(LSTMBid_config.data_loader.window_size))
 
-    tf.app.flags.DEFINE_string('data', LSTMBid_config.data_loader.name, 'must be either Android-Universal-Image-Loader or all_methods_train')
     LSTMBid_config.data_loader.name = FLAGS.data
     logger.info("data used is {}".format(LSTMBid_config.data_loader.name))
 
-    tf.app.flags.DEFINE_integer('epochs', LSTMBid_config.trainer.num_epochs, 'must be between 1-100')
     LSTMBid_config.trainer.num_epochs = FLAGS.epochs
     logger.info("epochs num is {}".format(LSTMBid_config.trainer.num_epochs))
 
-    tf.app.flags.DEFINE_integer('batch_size', LSTMBid_config.trainer.batch_size, 'must be a power of 2 2^1 - 2^6')
     LSTMBid_config.trainer.batch_size = FLAGS.batch_size
     logger.info("batch size is {}".format(LSTMBid_config.trainer.batch_size))
 
