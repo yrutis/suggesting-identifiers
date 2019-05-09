@@ -51,7 +51,7 @@ def main():
     vocab_size = len(word_index) + 1
     histories = Histories()
 
-    print(FLAGS)
+    print(FLAGS.data)
 
     #create unique report folder
     random_nr = randint(0, 10000)
