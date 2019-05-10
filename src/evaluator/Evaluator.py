@@ -61,12 +61,23 @@ class Evaluator(object):
 
         acc_plot = os.path.join(self.report_folder, 'acc.png')
         loss_plot = os.path.join(self.report_folder, 'loss.png')
+        acc_loss = os.path.join(self.report_folder, 'acc_loss.csv')
 
         acc = self.__trained_model.history.history['acc']
         val_acc = self.__trained_model.history.history['val_acc']
         loss = self.__trained_model.history.history['loss']
         val_loss = self.__trained_model.history.history['val_loss']
         epochs = range(1, len(acc) + 1)
+
+        #save model data
+        model_data = {'acc': acc,
+                      'val_acc': val_acc,
+                      'loss': loss,
+                      'val_loss': val_loss}
+
+        df = pd.DataFrame(model_data, columns=['acc', 'val_acc', 'loss', 'val_loss'])
+        df.to_csv(acc_loss)
+
 
         #hack
         always_unknown_train_list = []
