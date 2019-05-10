@@ -69,14 +69,7 @@ class Evaluator(object):
         val_loss = self.__trained_model.history.history['val_loss']
         epochs = range(1, len(acc) + 1)
 
-        #save model data
-        model_data = {'acc': acc,
-                      'val_acc': val_acc,
-                      'loss': loss,
-                      'val_loss': val_loss}
 
-        df = pd.DataFrame(model_data, columns=['acc', 'val_acc', 'loss', 'val_loss'])
-        df.to_csv(acc_loss)
 
 
         #hack
@@ -87,6 +80,18 @@ class Evaluator(object):
         always_unknown_test_list = []
         for x in epochs:
             always_unknown_test_list.append(always_unknown_test)
+
+
+        # save model data
+        model_data = {'acc': acc,
+                      'val_acc': val_acc,
+                      'unk_acc': always_unknown_train_list,
+                      'unk_val_acc': always_unknown_test_list,
+                      'loss': loss,
+                      'val_loss': val_loss}
+
+        df = pd.DataFrame(model_data, columns=['acc', 'val_acc', 'unk_acc', 'unk_val_acc', 'loss', 'val_loss'])
+        df.to_csv(acc_loss)
 
 
         plt.plot(epochs, acc, 'bo', label='Training acc')
