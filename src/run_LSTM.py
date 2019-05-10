@@ -59,8 +59,7 @@ def main():
 
     vocab_size = len(word_index) + 1
 
-    #callback
-    histories = Histories()
+
 
     #create unique report folder
     random_nr = randint(0, 10000)
@@ -69,6 +68,9 @@ def main():
     report_folder_LSTM = os.path.join(report_folder, 'reports-' + LSTM_config.name + '-' + unique_folder_key)
 
     os.mkdir(report_folder_LSTM)
+
+    # callback
+    histories = Histories(report_folder_LSTM, tokenizer)
 
     # write in report folder
     with open(os.path.join(report_folder_LSTM, 'LSTM.json'), 'w') as outfile:
@@ -88,7 +90,7 @@ def main():
 
     logger.info("start LSTM training...")
     trainer2.train()
-    trainer2.save_callback_predictions()
+    #trainer2.save_callback_predictions()
 
     logger.info("save evaluation to file")
     evaluator2 = Evaluator(trainer2, report_folder_LSTM)

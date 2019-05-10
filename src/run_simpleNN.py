@@ -53,7 +53,6 @@ def main():
     logger.info('Found {} unique tokens.'.format(len(word_index) + 1))
 
     vocab_size = len(word_index) + 1
-    histories = Histories()
 
     print(FLAGS.data)
 
@@ -64,6 +63,9 @@ def main():
     report_folder_simpleNN = os.path.join(report_folder, 'reports-' + simpleNN_config.name + '-' + unique_folder_key)
 
     os.mkdir(report_folder_simpleNN)
+
+    histories = Histories(report_folder_simpleNN, tokenizer)
+
 
     # write in report folder
     with open(os.path.join(report_folder_simpleNN, 'simpleNN.json'), 'w') as outfile:
@@ -83,7 +85,7 @@ def main():
 
     logger.info("start simpleNN training...")
     trainer2.train()
-    trainer2.save_callback_predictions()
+    #trainer2.save_callback_predictions()
 
     logger.info("save evaluation to file")
     evaluator2 = Evaluator(trainer2, report_folder_simpleNN)

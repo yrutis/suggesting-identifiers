@@ -53,7 +53,6 @@ def main():
     logger.info('Found {} unique tokens.'.format(len(word_index) + 1))
 
     vocab_size = len(word_index) + 1
-    histories = Histories()
 
     #create unique report folder
     random_nr = randint(0, 10000)
@@ -62,6 +61,8 @@ def main():
     report_folder_LSTMBid = os.path.join(report_folder, 'reports-' + LSTMBid_config.name + '-' + unique_folder_key)
 
     os.mkdir(report_folder_LSTMBid)
+    histories = Histories(report_folder_LSTMBid, tokenizer)
+
 
     # write in report folder
     with open(os.path.join(report_folder_LSTMBid, 'LSTMBid.json'), 'w') as outfile:
@@ -81,7 +82,7 @@ def main():
 
     logger.info("start LSTMBid training...")
     trainer2.train()
-    trainer2.save_callback_predictions()
+    #trainer2.save_callback_predictions()
 
     logger.info("save evaluation to file")
     evaluator2 = Evaluator(trainer2, report_folder_LSTMBid)
