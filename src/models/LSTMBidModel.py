@@ -4,7 +4,7 @@ import logging
 
 from keras import Input
 from keras import layers
-from keras.layers import Embedding
+from keras.layers import Embedding, Dropout
 from keras.layers import Dense
 from keras.layers import LSTM, Bidirectional
 from keras.models import Model
@@ -32,7 +32,7 @@ class LSTMModelBid(AbstractModel):
         tensor = Input(shape=(self.__windows_size,))
         c = contextEmbedding(tensor)
         c = Bidirectional(LSTM(self.config.model.lstm_dim))(c)
-        # c = Dropout(self.config.model.dropout_1)(c)
+        c = Dropout(self.config.model.dropout_1)(c)
         c = Dense(self.config.model.dense_dim)(c)
         # c = Dropout(self.config.model.dropout_2)(c)
         answer = layers.Dense(self.__context_vocab_size, activation='softmax')(c)

@@ -3,11 +3,7 @@ from src.models.AbstractModel import AbstractModel
 import logging
 
 from keras import Input
-from keras import layers
-from keras.layers import Embedding, Flatten
-from keras.layers import Dense
-from keras.layers import LSTM
-from keras.layers import Dropout
+from keras.layers import Embedding, Flatten, Dense, Dropout
 from keras.models import Model
 from keras.optimizers import Adam
 
@@ -31,10 +27,10 @@ class SimpleNNModel(AbstractModel):
         tensor = Input(shape=(self.__windows_size,))
         c = contextEmbedding(tensor)
         c = Flatten()(c)
-        #c = Dropout(self.config.model.dropout_1)(c)
+        c = Dropout(self.config.model.dropout_1)(c)
         c = Dense(self.config.model.dense_dim)(c)
         #c = Dropout(self.config.model.dropout_2)(c)
-        answer = layers.Dense(self.__context_vocab_size, activation='softmax')(c)
+        answer = Dense(self.__context_vocab_size, activation='softmax')(c)
 
         self.model = Model(tensor, answer)
         optimizer = Adam()
