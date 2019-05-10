@@ -45,20 +45,27 @@ class AbstractTrain(object):
         while i < len(self.callbacks.currentPredictions):
             # every 5 epochs thats why i + 1
             if (i + 1) % 5 == 0:
+
                 first_x = self.callbacks.currentPredictions[i]['X'].tolist()
                 first_y = self.callbacks.currentPredictions[i]['Y'].tolist()
                 first_y_hat = self.callbacks.currentPredictions[i]['Y_hat'].tolist()
-                first_y_hat = list(map(lambda x: [x], first_y_hat))
+                first_k_y_hat = self.callbacks.currentPredictions[i]['top_k'].indices.tolist()
+                self_k_y_probs = self.callbacks.currentPredictions[i]['top_k'].values.tolist()
 
+
+                first_y_hat = list(map(lambda x: [x], first_y_hat))
                 # Creating texts
                 first_x_reversed = list(map(sequence_to_text, first_x))
                 first_y_reversed = list(map(sequence_to_text, first_y))
                 first_y_hat_reversed = list(map(sequence_to_text, first_y_hat))
+                first_k_y_hat_reversed = list(map(sequence_to_text, first_k_y_hat))
 
                 df = pd.DataFrame(
                     {"X": first_x_reversed,
                      "Y": first_y_reversed,
-                     "Y_hat": first_y_hat_reversed})
+                     "Y_hat": first_y_hat_reversed,
+                     "top_k": first_k_y_hat_reversed,
+                     "top_k_probs": self_k_y_probs})
 
                 prediction_file = os.path.join(self.report_folder, 'myPred_epoch-' + str(i+1) + '.csv')
                 df.to_csv(prediction_file)

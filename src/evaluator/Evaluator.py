@@ -63,8 +63,8 @@ class Evaluator(object):
         loss_plot = os.path.join(self.report_folder, 'loss.png')
         acc_loss = os.path.join(self.report_folder, 'acc_loss.csv')
 
-        acc = self.__trained_model.history.history['acc']
-        val_acc = self.__trained_model.history.history['val_acc']
+        acc = self.__trained_model.history.history[self.__trained_model.config.model.metrics[0]]
+        val_acc = self.__trained_model.history.history[self.__trained_model.config.model.metrics[0]]
         loss = self.__trained_model.history.history['loss']
         val_loss = self.__trained_model.history.history['val_loss']
         epochs = range(1, len(acc) + 1)
