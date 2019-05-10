@@ -18,7 +18,8 @@ class Histories(keras.callbacks.Callback):
         current_dict["X"] = self.validation_data[0]
         current_dict["Y_hat"] = np.argmax(y_pred, axis=1)
         current_dict["Y"] = self.validation_data[1]
-        top_k = tf.nn.top_k(y_pred, k=5, sorted=True, name=None)
+        max_lenght = min(len(y_pred), 1000)
+        top_k = tf.nn.top_k(y_pred[:max_lenght], k=5, sorted=True, name=None)
         sess = tf.Session()
         top_k = sess.run(top_k)
         current_dict["top_k"] = top_k
