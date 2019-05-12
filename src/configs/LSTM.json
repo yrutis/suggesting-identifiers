@@ -8,10 +8,10 @@
     },
     "model": {
         "name": "model.LSTM",
-        "embedding_dim": 56,
-        "lstm_dim": 56,
-        "dense_dim": 50,
-        "dropout_1": 0.5,
+        "embedding_dim": 128,
+        "lstm_dim": 100,
+        "dense_dim": 70,
+        "dropout_1": 0.2,
         "loss": "sparse_categorical_crossentropy",
         "metrics": [
             "acc"
