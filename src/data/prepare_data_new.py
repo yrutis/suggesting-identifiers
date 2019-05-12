@@ -120,6 +120,61 @@ def main(filename, window_size):
     y_test_tokenized = list(map(lambda x: x[0], y_test_tokenized))
     valY = np.array(y_test_tokenized)
 
+    print("TRAINX before X: {}".format(trainX[:10]))
+    print("TRAINY before Y: {}".format(trainY[:10]))
+
+
+    #hack to remove some unk from training
+    #----------------------------------------
+
+    train_df = pd.DataFrame({'trainY': trainY, 'trainX': list(trainX)})
+    print(train_df.head())
+    cnt_unk = len(train_df[(train_df['trainY'] == 1)])
+    cnt_all = len(train_df.index)
+    perc_unk = cnt_unk / cnt_all
+    print(perc_unk)
+
+    train_df = train_df.drop(train_df[train_df['trainY'] == 1].sample(frac=.5).index)
+    cnt_unk = len(train_df[(train_df['trainY'] == 1)])
+    cnt_all = len(train_df.index)
+    perc_unk = cnt_unk / cnt_all
+    print(perc_unk)
+
+    trainX = np.array(train_df['trainX'].values.tolist())
+    trainY = train_df['trainY'].values
+    print("TRAINX after X: {}".format(trainX[:10]))
+    print("TRAINY after Y: {}".format(trainY[:10]))
+
+    #-------------------------------------------
+
+    print("VALX before X: {}".format(valX[:10]))
+    print("VALY before Y: {}".format(valY[:10]))
+
+    #hack to remove some unk from validation
+    #----------------------------------------
+
+    val_df = pd.DataFrame({'valY': valY, 'valX': list(valX)})
+    print(val_df.head())
+    cnt_unk = len(val_df[(val_df['valY'] == 1)])
+    cnt_all = len(val_df.index)
+    perc_unk = cnt_unk / cnt_all
+    print(perc_unk)
+
+    val_df = val_df.drop(val_df[val_df['valY'] == 1].sample(frac=.5).index)
+    cnt_unk = len(val_df[(val_df['valY'] == 1)])
+    cnt_all = len(val_df.index)
+    perc_unk = cnt_unk / cnt_all
+    print(perc_unk)
+
+    #val_df['valX'] = val_df['valX'].apply(lambda x: np.array(x))
+    valX = np.array(val_df['valX'].values.tolist())
+    valY = val_df['valY'].values
+    print("VALX after X: {}".format(valX[:10]))
+    print("VALY after Y: {}".format(valY[:10]))
+
+    #-------------------------------------------
+
+
     counter = 0
     for x in y_test_tokenized:
         if x == 1:
@@ -134,4 +189,6 @@ def main(filename, window_size):
     # valY = to_categorical(valY, num_classes=vocab_size)
 
 if __name__ == '__main__':
-    main("all_methods_train", 8)
+    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    logging.basicConfig(level=logging.INFO, format=log_fmt)
+    main("Android-Universal-Image-Loader", 8)
