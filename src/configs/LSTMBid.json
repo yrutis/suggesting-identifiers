@@ -14,7 +14,7 @@
         "dropout_1": 0.5,
         "loss": "sparse_categorical_crossentropy",
         "metrics": [
-            "acc"
+            "sparse_top_k_categorical_accuracy"
         ]
     },
     "trainer": {
