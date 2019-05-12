@@ -96,7 +96,10 @@ def main(filename, window_size):
     #print(y_train_tokenized[0:10])
     #print(y_train[0:10])
     y_train_tokenized = list(map(lambda x: x[0], y_train_tokenized))
+    trainY = np.array(y_train_tokenized)
 
+
+    '''
     counter = 0
     for x in y_train_tokenized:
         if x == 1:
@@ -105,8 +108,9 @@ def main(filename, window_size):
         y_train_tokenized)))
 
     always_unknown_train = counter / len(y_train_tokenized)
+    '''
 
-    trainY = np.array(y_train_tokenized)
+
 
     # tokenize just valX
     x_test_seq = tokenizer.texts_to_sequences(x_test)
@@ -115,8 +119,6 @@ def main(filename, window_size):
     # tokenize just testY
     y_test = list(y_test)
     y_test_tokenized = tokenizer.texts_to_sequences(y_test)
-    #print(y_test_tokenized[0:10])
-    #print(y_test[0:10])
     y_test_tokenized = list(map(lambda x: x[0], y_test_tokenized))
     valY = np.array(y_test_tokenized)
 
@@ -137,8 +139,8 @@ def main(filename, window_size):
     train_df = train_df.drop(train_df[train_df['trainY'] == 1].sample(frac=.5).index)
     cnt_unk = len(train_df[(train_df['trainY'] == 1)])
     cnt_all = len(train_df.index)
-    perc_unk = cnt_unk / cnt_all
-    print(perc_unk)
+    perc_unk_train = cnt_unk / cnt_all
+    print(perc_unk_train)
 
     trainX = np.array(train_df['trainX'].values.tolist())
     trainY = train_df['trainY'].values
@@ -163,8 +165,8 @@ def main(filename, window_size):
     val_df = val_df.drop(val_df[val_df['valY'] == 1].sample(frac=.5).index)
     cnt_unk = len(val_df[(val_df['valY'] == 1)])
     cnt_all = len(val_df.index)
-    perc_unk = cnt_unk / cnt_all
-    print(perc_unk)
+    perc_unk_test = cnt_unk / cnt_all
+    print(perc_unk_test)
 
     #val_df['valX'] = val_df['valX'].apply(lambda x: np.array(x))
     valX = np.array(val_df['valX'].values.tolist())
@@ -174,7 +176,7 @@ def main(filename, window_size):
 
     #-------------------------------------------
 
-
+    '''
     counter = 0
     for x in y_test_tokenized:
         if x == 1:
@@ -182,8 +184,10 @@ def main(filename, window_size):
     logger.info("has this amount of UNK functions in Y Val {} percentage of total {}".format(counter,
                                                                                        counter / len(y_test_tokenized)))
 
+
     always_unknown_test = counter / len(y_test_tokenized)
-    return trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test, statistics
+    '''
+    return trainX, trainY, valX, valY, tokenizer, perc_unk_train, perc_unk_test, statistics
 
     # trainY = to_categorical(trainY, num_classes=vocab_size)
     # valY = to_categorical(valY, num_classes=vocab_size)
