@@ -106,6 +106,7 @@ def get_training_vocab(method_list, is_for_x):
 
     if is_for_x:
         flat_list = [item for sublist in method_list for item in sublist]
+        #TODO flat_list = flat_list[0: max seq]
     else:
         flat_list = method_list
 
