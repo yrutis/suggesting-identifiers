@@ -25,7 +25,8 @@ def main(filename, window_size):
 
     # some basic operations: preprocessing method body
     df['methodBody'] = df['methodBody'].apply(helper_functions.removeOptional)
-    df["methodBody"] = df['methodBody'].apply(helper_functions.turn_string_to_function)
+    df['methodBody'] = df['methodBody'].apply(helper_functions.replace_string_values)
+    df["methodBody"] = df['methodBody'].apply(helper_functions.turn_strings_to_list)
     df["methodBody"] = df['methodBody'].apply(helper_functions.delete_certain_strings)
     df["methodBody"] = df['methodBody'].apply(helper_functions.turn_all_to_lower)
 
@@ -86,15 +87,11 @@ def main(filename, window_size):
     # tokenize just trainX
     vocab_size = len(word_index) + 1
     sequences = tokenizer.texts_to_sequences(x_train)
-    #print(sequences[:10])
     trainX = pad_sequences(sequences, maxlen=window_size, value=0)
-    #print(trainX[:10])
 
     # tokenize just trainY
     y_train = list(y_train)
     y_train_tokenized = tokenizer.texts_to_sequences(y_train)
-    #print(y_train_tokenized[0:10])
-    #print(y_train[0:10])
     y_train_tokenized = list(map(lambda x: x[0], y_train_tokenized))
     trainY = np.array(y_train_tokenized)
 
@@ -195,4 +192,4 @@ def main(filename, window_size):
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
-    main("all_methods_train", 8)
+    main("Android-Universal-Image-Loader", 8)

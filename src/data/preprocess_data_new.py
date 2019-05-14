@@ -30,7 +30,7 @@ def main():
 
     #some basic operations: preprocessing
     df['methodBody'] = df['methodBody'].apply(helper_functions.removeOptional)
-    df["methodBody"] = df['methodBody'].apply(helper_functions.turn_string_to_function)
+    df["methodBody"] = df['methodBody'].apply(helper_functions.turn_strings_to_list)
     df["methodBody"] = df['methodBody'].apply(helper_functions.delete_certain_strings)
     df["methodBody"] = df['methodBody'].apply(helper_functions.turn_all_to_lower)
 

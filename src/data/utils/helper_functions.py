@@ -13,7 +13,19 @@ def removeOptional(method_body):
     return remove_optional
 
 
-def turn_string_to_function(method_body):
+def replace_string_values(method_body):
+    '''
+
+    :param method_body: method body
+    :return: string value like: string = "I need help" --> string = STRINGVALUE
+    '''
+
+    method_body = re.sub(r'"([^"]*)"', "STRINGVALUE", method_body)
+    return method_body
+
+
+
+def turn_strings_to_list(method_body):
     '''
 
     :param method_body: methodbody
