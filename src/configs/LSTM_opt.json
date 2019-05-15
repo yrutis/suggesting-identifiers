@@ -1,0 +1,37 @@
+{
+    "name": "LSTM",
+    "mode": "opt",
+    "data_loader": {
+        "name": "Android-Universal-Image-Loader",
+        "full_data": "all_methods_train",
+        "local_data": "Android-Universal-Image-Loader",
+        "window_size": 8
+    },
+    "model": {
+        "name": "model.LSTM",
+        "embedding_min": 64,
+        "embedding_dim": 128,
+        "embedding_max": 256,
+        "lstm_min": 60,
+        "lstm_dim": 100,
+        "lstm_max": 250,
+        "dense_dim_1_min": 10,
+        "dense_dim_1_max": 150,
+        "dense_activation_1": "sigmoid",
+
+        "dropout_min": 0,
+        "dropout_max": 0.5,
+
+
+        "loss": "sparse_categorical_crossentropy",
+        "metrics": [
+            "acc"
+        ]
+    },
+    "trainer": {
+        "name": "trainer.LSTM",
+        "num_epochs": 15,
+        "batch_size_min": 64,
+        "batch_size_max": 128
+    }
+}
