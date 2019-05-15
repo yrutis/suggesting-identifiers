@@ -1,164 +1,132 @@
 import pandas as pd
+import numpy as np
+
+from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.sequence import pad_sequences
+from sklearn.model_selection import train_test_split
+import src.data.utils.helper_functions as helper_functions
 import logging
 import os
-import re
-import ast
-import numpy as np
 
 
 def main(filename, window_size):
-
+    # get logger
     logger = logging.getLogger(__name__)
 
-
-    '''
-    TODO get better at retrieving whole function
-    def getMethodBody(code_tokens, method_index):
-        i = method_index
-        max_length = len(code_tokens)
-        counter = 0
-        while i < max_length:
-            if code_tokens[i] == '{':
-                counter += 1
-    
-            if code_tokens[i] == '}':
-                counter -= 1
-    
-                if counter == 0:
-                    end = i
-                    return end
-            i += 1
-    
-        return "NotAnIndex"
-    '''
-
-    def getFilteredList(df):
-        x = []
-        for index, row in df.iterrows():
-            filter_elem = lambda x: re.match(r'^\w+$', x)
-            filtered_whole_method_body = list(filter(filter_elem, row['x']))
-            uniq = []
-            [uniq.append(x) for x in filtered_whole_method_body if x not in uniq]
-            x.append(uniq)
-        data = {'x': x}
-        df_cleaned = pd.DataFrame(data, columns=['x'])
-        df_cleaned['y'] = df['y'].values
-        return df_cleaned
-
-
-
-    def getClearedList(df):
-        logger.info("getting predictands...")
-        y = []
-        x = []
-
-        for index, row in df.iterrows():
-
-            # retrieve element in list
-            get_elem = lambda x: x[0]
-            list_of_methods = list(map(get_elem, row['boundVariables']))
-            list_of_methods.sort()
-
-            length_list_of_methods = len(list_of_methods)
-            length_of_code_tokens = len(row['codeTokens'])
-
-            for idx, val in enumerate(list_of_methods):
-                begin = list_of_methods[idx] - 1  # begin is one word before
-                method = list_of_methods[idx]
-                if idx < (length_list_of_methods - 1):
-                    end = list_of_methods[idx + 1]  # end is where next method starts
-                else:
-                    end = length_of_code_tokens
-
-                x.append([row['codeTokens'][begin]] + row['codeTokens'][method + 1:end])
-                y.append(row['codeTokens'][method])
-
-
-        data = {'x': x, 'y': y}
-        df_cleaned = pd.DataFrame(data, columns=['x', 'y'])
-        return df_cleaned
-
-    def rareIdentifiersToUnk(df):
-        """
-        transforms rare identifiers (y <= 2) to %UNK%
-        """
-        logger.info("substituting rare identifiers with %UNK%...")
-        cleanedDf = df.copy()
-        cleanedDf.loc[cleanedDf.groupby('y').y.transform(len) <= 2, 'y'] = "%UNK%"
-        logger.info("Check if still same lenght as before substituting: {}".format(len(df) == len(cleanedDf)))
-        logger.info(
-            "amount of unique y after substitution: {}, check this number with excel".format(len(cleanedDf.y.unique())))
-        return cleanedDf
-
-
-    logger.info('turning raw data in something useful')
-
     data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
-    full_path = os.path.join(os.path.join(os.path.join(data_folder, 'raw'), 'json'), filename + '.json') #get decoded path
-    intermediate_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'), 'intermediate'), filename + '.csv') #get decoded path
-    processed_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'), 'decoded'), filename +'-'+str(window_size)+ '.csv') #get decoded path
+    processed_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'), 'decoded'),
+                                               filename + '.json')  # get decoded path
 
-    if not os.path.exists(full_path):
-        logger.info("raw data does not exist!")
-        return False
-
-    if not os.path.exists(os.path.join(data_folder, 'processed')):  # check if path exists
-        logger.info("creating processed folder...")
-        os.mkdir(os.path.join(data_folder, 'processed'))
-
-    if not os.path.exists(os.path.join(os.path.join(data_folder, 'processed'), 'intermediate')):  # check if path exists
-        logger.info("creating intermediate folder...")
-        os.mkdir(os.path.join(os.path.join(data_folder, 'processed'), 'intermediate'))
-
-    if not os.path.exists(os.path.join(os.path.join(data_folder, 'processed'), 'decoded')):  # check if path exists
-        logger.info("creating decoded folder...")
-        os.mkdir(os.path.join(os.path.join(data_folder, 'processed'), 'decoded'))
-
-    if not os.path.exists(intermediate_decoded_full_path):
-        logger.info("preprocessing data..")
-
-        logger.info("getting method body")
-        df = pd.read_json(full_path)
-        df_cleaned = getClearedList(df)
-        df_filtered = getFilteredList(df_cleaned)
-        df_filtered = rareIdentifiersToUnk(df_filtered)
-        #print(df_cleaned.head())
-        #print(df_filtered.head())
-        df_filtered.to_csv(intermediate_decoded_full_path)
-
-    if not os.path.exists(processed_decoded_full_path):
-        logger.info("creating decoded version of data..")
-
-        processedDf = pd.read_csv(intermediate_decoded_full_path)
-        context = processedDf['x'].apply(ast.literal_eval)  # saves all context x as list in list
-        f = lambda x: x[0:min(len(x), window_size)]
-        r = context.apply(f)
-        df = pd.DataFrame(columns=['x', 'y'])
-        df['x'] = r
-        df['y'] = processedDf['y']
-        df.to_csv(processed_decoded_full_path)
+    df = pd.read_json(processed_decoded_full_path, orient='records')
 
 
-        '''
-        splitted = np.array_split(df, 3)
-        i = 0
-        print(splitted)
-        while i < len(splitted):
-            #save partition
-            splitted[i].to_csv("number-" + str(i) +".csv")
-            i += 1
+    x_train, x_test, y_train, y_test = train_test_split(df['concatMethodBodyCleaned'], df['methodName'], test_size=0.2)
+    method_body_cleaned_list_x = list(x_train)
+    method_name_x = list(y_train)
 
-        '''
-        #ToDo refactor!
+    training_vocab_x = helper_functions.get_training_vocab(method_body_cleaned_list_x, is_for_x=True)
+    training_vocab_y = helper_functions.get_training_vocab(method_name_x, is_for_x=False)
 
-    logger.info("done preparing data")
+    x_train = list(map(helper_functions.get_into_tokenizer_format, method_body_cleaned_list_x))
+    #print(x_train[:10])
 
+    # fit on text the most common words from trainX and trainY
+    tokenizer = Tokenizer(oov_token=True)
+      # actual training data gets mapped on text
+    tokenizer.fit_on_texts(training_vocab_y)  # actual training data gets mapped on text
+
+    word_index = tokenizer.word_index
+    logger.info('Found {} unique Y tokens.'.format(len(word_index) + 1))
+
+    tokenizer.fit_on_texts(training_vocab_x)
+
+    word_index = tokenizer.word_index
+    logger.info('Found {} unique X+Y tokens.'.format(len(word_index) + 1))
+
+    # tokenize just trainX
+    vocab_size = len(word_index) + 1
+    sequences = tokenizer.texts_to_sequences(x_train)
+    trainX = pad_sequences(sequences, maxlen=window_size, value=0)
+
+    # tokenize just trainY
+    y_train = list(y_train)
+    y_train_tokenized = tokenizer.texts_to_sequences(y_train)
+    y_train_tokenized = list(map(lambda x: x[0], y_train_tokenized))
+    trainY = np.array(y_train_tokenized)
+
+
+
+    # tokenize just valX
+    x_test_seq = tokenizer.texts_to_sequences(x_test)
+    valX = pad_sequences(x_test_seq, maxlen=window_size, value=0)
+
+    # tokenize just testY
+    y_test = list(y_test)
+    y_test_tokenized = tokenizer.texts_to_sequences(y_test)
+    y_test_tokenized = list(map(lambda x: x[0], y_test_tokenized))
+    valY = np.array(y_test_tokenized)
+
+    print("TRAINX before X: {}".format(trainX[:10]))
+    print("TRAINY before Y: {}".format(trainY[:10]))
+
+
+    #hack to remove some unk from training
+    #----------------------------------------
+
+    train_df = pd.DataFrame({'trainY': trainY, 'trainX': list(trainX)})
+    print(train_df.head())
+    cnt_unk = len(train_df[(train_df['trainY'] == 1)])
+    cnt_all = len(train_df.index)
+    perc_unk = cnt_unk / cnt_all
+    print(perc_unk)
+
+    train_df = train_df.drop(train_df[train_df['trainY'] == 1].sample(frac=.5).index)
+    cnt_unk = len(train_df[(train_df['trainY'] == 1)])
+    cnt_all = len(train_df.index)
+    perc_unk_train = cnt_unk / cnt_all
+    print(perc_unk_train)
+
+    trainX = np.array(train_df['trainX'].values.tolist())
+    trainY = train_df['trainY'].values
+    print("TRAINX after X: {}".format(trainX[:10]))
+    print("TRAINY after Y: {}".format(trainY[:10]))
+
+    #-------------------------------------------
+
+    print("VALX before X: {}".format(valX[:10]))
+    print("VALY before Y: {}".format(valY[:10]))
+
+    #hack to remove some unk from validation
+    #----------------------------------------
+
+    val_df = pd.DataFrame({'valY': valY, 'valX': list(valX)})
+    print(val_df.head())
+    cnt_unk = len(val_df[(val_df['valY'] == 1)])
+    cnt_all = len(val_df.index)
+    perc_unk = cnt_unk / cnt_all
+    print(perc_unk)
+
+    val_df = val_df.drop(val_df[val_df['valY'] == 1].sample(frac=.5).index)
+    cnt_unk = len(val_df[(val_df['valY'] == 1)])
+    cnt_all = len(val_df.index)
+    perc_unk_test = cnt_unk / cnt_all
+    print(perc_unk_test)
+
+    #val_df['valX'] = val_df['valX'].apply(lambda x: np.array(x))
+    valX = np.array(val_df['valX'].values.tolist())
+    valY = val_df['valY'].values
+    print("VALX after X: {}".format(valX[:10]))
+    print("VALY after Y: {}".format(valY[:10]))
+
+    #-------------------------------------------
+
+
+    return trainX, trainY, valX, valY, tokenizer, perc_unk_train, perc_unk_test
+
+    # trainY = to_categorical(trainY, num_classes=vocab_size)
+    # valY = to_categorical(valY, num_classes=vocab_size)
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
-
-    filename = 'bigbluebutton_methoddeclarations_train'
-
-    window_size = 8
-    main(filename, window_size)
+    main("Android-Universal-Image-Loader", 8)

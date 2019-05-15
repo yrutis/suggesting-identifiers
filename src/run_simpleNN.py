@@ -7,7 +7,7 @@ import json
 import tensorflow as tf
 
 
-import src.data.prepare_data_new as prepare_data_new
+import src.data.prepare_data as prepare_data
 from src.evaluator.Callback import Histories
 from src.evaluator.Evaluator import Evaluator
 from src.models.SimpleNN_new import SimpleNNModel
@@ -46,8 +46,8 @@ def main():
 
 
     #get data, UNK and other statistics
-    trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test, statistics = \
-        prepare_data_new.main(simpleNN_config.data_loader.name, simpleNN_config.data_loader.window_size)
+    trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test = \
+        prepare_data.main(simpleNN_config.data_loader.name, simpleNN_config.data_loader.window_size)
 
     word_index = tokenizer.word_index
     logger.info('Found {} unique tokens.'.format(len(word_index) + 1))
@@ -95,9 +95,6 @@ def main():
     tokenizer_path = os.path.join(report_folder_simpleNN, 'tokenizer.pkl')
     dump(tokenizer, open(tokenizer_path, 'wb'))
 
-    # safe statistics
-    statistics_path = os.path.join(report_folder_simpleNN, 'statistics.csv')
-    statistics.to_csv(statistics_path)
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
