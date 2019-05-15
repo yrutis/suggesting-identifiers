@@ -5,7 +5,7 @@ import logging
 import os
 import json
 import tensorflow as tf
-
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 
 import src.data.prepare_data as prepare_data
 from src.evaluator.Callback import Histories
@@ -69,9 +69,6 @@ def main():
 
     os.mkdir(report_folder_LSTM)
 
-    # callback
-    histories = Histories(report_folder_LSTM, tokenizer)
-
     # write in report folder
     with open(os.path.join(report_folder_LSTM, 'LSTM.json'), 'w') as outfile:
         json.dump(LSTM_config, outfile, indent=4)
@@ -86,7 +83,7 @@ def main():
     logger.info("create trainer...")
     trainer2 = AbstractTrain(model=model2.model, data=data,
                              tokenizer=tokenizer, config=LSTM_config,
-                             callbacks=histories, report_folder=report_folder_LSTM)
+                             report_folder=report_folder_LSTM)
 
     logger.info("start LSTM training...")
     trainer2.train()

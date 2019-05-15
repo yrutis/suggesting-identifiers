@@ -8,7 +8,6 @@ import tensorflow as tf
 
 
 import src.data.prepare_data as prepare_data
-from src.evaluator.Callback import Histories
 from src.evaluator.Evaluator import Evaluator
 from src.models.SimpleNN_new import SimpleNNModel
 import src.utils.config as config_loader
@@ -64,8 +63,6 @@ def main():
 
     os.mkdir(report_folder_simpleNN)
 
-    histories = Histories(report_folder_simpleNN, tokenizer)
-
 
     # write in report folder
     with open(os.path.join(report_folder_simpleNN, 'simpleNN.json'), 'w') as outfile:
@@ -81,7 +78,7 @@ def main():
     logger.info("create trainer...")
     trainer2 = AbstractTrain(model=model2.model, data=data,
                              tokenizer=tokenizer, config=simpleNN_config,
-                             callbacks=histories, report_folder=report_folder_simpleNN)
+                             report_folder=report_folder_simpleNN)
 
     logger.info("start simpleNN training...")
     trainer2.train()

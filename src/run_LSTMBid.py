@@ -8,7 +8,6 @@ import tensorflow as tf
 
 
 import src.data.prepare_data as prepare_data
-from src.evaluator.Callback import Histories
 from src.evaluator.Evaluator import Evaluator
 from src.models.LSTMBidModel import LSTMModelBid
 import src.utils.config as config_loader
@@ -61,7 +60,6 @@ def main():
     report_folder_LSTMBid = os.path.join(report_folder, 'reports-' + LSTMBid_config.name + '-' + unique_folder_key)
 
     os.mkdir(report_folder_LSTMBid)
-    histories = Histories(report_folder_LSTMBid, tokenizer)
 
 
     # write in report folder
@@ -78,7 +76,7 @@ def main():
     logger.info("create trainer...")
     trainer2 = AbstractTrain(model=model2.model, data=data,
                              tokenizer=tokenizer, config=LSTMBid_config,
-                             callbacks=histories, report_folder=report_folder_LSTMBid)
+                             report_folder=report_folder_LSTMBid)
 
     logger.info("start LSTMBid training...")
     trainer2.train()
