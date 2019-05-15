@@ -9,7 +9,9 @@ from keras.layers import Dense
 from keras.layers import LSTM
 from keras.layers import Dropout
 from keras.models import Model
-from keras.optimizers import Adam
+from keras.optimizers import Adam, RMSprop
+from hyperas.distributions import choice, uniform
+
 
 
 class LSTMModel(AbstractModel):
@@ -25,6 +27,7 @@ class LSTMModel(AbstractModel):
 
         logger.info("building model...")
         logger.info("Embedding of shape {}, {}, {}".format(self.__context_vocab_size, self.config.model.embedding_dim, self.__windows_size))
+
 
         contextEmbedding = Embedding(input_dim=self.__context_vocab_size, output_dim=self.config.model.embedding_dim, input_length=self.__windows_size)
 

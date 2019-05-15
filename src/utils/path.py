@@ -19,6 +19,13 @@ seq2seq_config_path = os.path.join(os.path.join(os.path.dirname(os.path.dirname(
 
 #------------------------------------------------------------------------------------------------------------------
 
+#optimize path
+LSTM_opt_config_path = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                    'configs'), "LSTM_opt.json")
+
+#------------------------------------------------------------------------------------------------------------------
+
+
 
 # path to model folder
 model_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),

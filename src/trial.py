@@ -26,12 +26,12 @@ def data():
     print('X_train shape:', X_train.shape)
     print('X_test shape:', X_test.shape)
 
-    return X_train, X_test, y_train, y_test, max_features, maxlen
+    return X_train, X_test, y_train, y_test, max_features
 
 
-def model(X_train, X_test, y_train, y_test, max_features, maxlen):
+def model(X_train, X_test, y_train, y_test, max_features):
     model = Sequential()
-    model.add(Embedding(max_features, 128, input_length=maxlen))
+    model.add(Embedding(max_features, 128, input_length=8))
     model.add(LSTM(128))
     model.add(Dropout({{uniform(0, 1)}}))
     model.add(Dense(1))
