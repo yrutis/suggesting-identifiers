@@ -1,105 +1,30 @@
+import glob
+import json
+
 import pandas as pd
+import os
 
 def main():
-    df = pd.read_json('../data/Android-Universal-Image-Loader.json', orient='records')
+    data_folder = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))), 'data')
 
-    df2 = pd.read_json('../data/bigbluebutton.json', orient='records')
-    # print(df.head())
-    print(len(df.index))
-    df = df.append(df2, sort=True)
 
-    df2 = pd.read_json('../data/Bukkit.json', orient='records')
-    # print(df.head())
-    print(len(df.index))
-    df = df.append(df2, sort=True)
 
-    df2 = pd.read_json('../data/clojure.json', orient='records')
-    # print(df.head())
-    print(len(df.index))
-    df = df.append(df2, sort=True)
+    raw_train_full_path = os.path.join(os.path.join(data_folder, 'raw'), 'train')
+    intermediate_full_path = os.path.join(os.path.join(data_folder, 'processed'), 'intermediate')
 
-    df2 = pd.read_json('../data/elasticsearch.json', orient='records')
-    # print(df.head())
-    print(len(df.index))
-    df = df.append(df2, sort=True)
+    files = os.listdir(raw_train_full_path)
+    complete_path_files = [os.path.join(raw_train_full_path, f) for f in files]
 
-    df2 = pd.read_json('../data/junit.json', orient='records')
-    # print(df.head())
-    print(len(df.index))
-    df = df.append(df2, sort=True)
 
-    df2 = pd.read_json('../data/libgdx.json', orient='records')
-    # print(df.head())
-    print(len(df.index))
-    df = df.append(df2, sort=True)
+    df = pd.concat([pd.read_json(f, orient='records') for f in complete_path_files], ignore_index=True, keys=files)
 
-    df2 = pd.read_json('../data/metrics.json', orient='records')
-    # print(df.head())
-    print(len(df.index))
-    df = df.append(df2, sort=True)
 
-    df2 = pd.read_json('../data/netty.json', orient='records')
-    # print(df.head())
-    print(len(df.index))
-    df = df.append(df2, sort=True)
-
-    df2 = pd.read_json('../data/nokogiri.json', orient='records')
-    # print(df.head())
-    print(len(df.index))
-    df = df.append(df2, sort=True)
-
-    df2 = pd.read_json('../data/okhttp.json', orient='records')
-    # print(df.head())
-    print(len(df.index))
-    df = df.append(df2, sort=True)
-
-    #df2 = pd.read_json('../data/platform_frameworks_base_1.json', orient='records')
-    # print(df.head())
-    #print(len(df.index))
-    #df = df.append(df2, sort=True)
-
-    #df2 = pd.read_json('../data/platform_frameworks_base_2.json', orient='records')
-    # print(df.head())
-    #print(len(df.index))
-    #df = df.append(df2, sort=True)
-
-    df2 = pd.read_json('../data/presto.json', orient='records')
-    # print(df.head())
-    print(len(df.index))
-    df = df.append(df2, sort=True)
-
-    df2 = pd.read_json('../data/RxJava.json', orient='records')
-    # print(df.head())
-    print(len(df.index))
-    df = df.append(df2, sort=True)
-
-    df2 = pd.read_json('../data/spring-boot.json', orient='records')
-    # print(df.head())
-    print(len(df.index))
-    df = df.append(df2, sort=True)
-
-    df2 = pd.read_json('../data/spring-framework.json', orient='records')
-    # print(df.head())
-    print(len(df.index))
-    df = df.append(df2, sort=True)
-
-    df2 = pd.read_json('../data/storm.json', orient='records')
-    # print(df.head())
-    print(len(df.index))
-    df = df.append(df2, sort=True)
-
-    df2 = pd.read_json('../data/zxing.json', orient='records')
-    # print(df.head())
-    print(len(df.index))
-    df = df.append(df2, sort=True)
-
-    # print(df.head())
-    print(len(df.index))
     print(df.head())
+    print(df.shape)
 
-    df2 = None
 
-    df.to_json("all_methods_train_without_platform.json", orient='records')
+    df.to_json(os.path.join(intermediate_full_path, "all_methods_train_with_new_data.json"), orient='records')
 
 
 if __name__ == '__main__':
