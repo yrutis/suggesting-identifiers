@@ -1,7 +1,7 @@
 {
     "name": "simpleNN",
     "data_loader": {
-        "name": "Android-Universal-Image-Loader",
+        "name": "all_methods_train_without_platform",
         "full_data": "all_methods_train",
         "local_data": "Android-Universal-Image-Loader",
         "window_size": 8,
