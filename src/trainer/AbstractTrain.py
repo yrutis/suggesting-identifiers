@@ -1,11 +1,8 @@
-import matplotlib.pyplot as plt
 import os
 import logging
-import numpy as np
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 
-import src.utils.path as path_file
-import pandas as pd
+
 from src.evaluator.Callback import Histories
 
 
@@ -28,11 +25,15 @@ class AbstractTrain(object):
 
 
     def train(self):
+        logger = logging.getLogger(__name__)
         self.history = self.model.fit(self.trainX, self.trainY,
                             validation_data=[self.valX, self.valY],
                             batch_size=self.config.trainer.batch_size,
                             epochs=self.config.trainer.num_epochs,
                             verbose=0,
                             callbacks=[self.histories, self.es, self.mc])
+
+        score, acc = self.model.evaluate(self.valX, self.valY, verbose=0)
+        logger.info('Validation accuracy: {}' .format(acc))
 
 

@@ -1,7 +1,7 @@
 {
     "name": "LSTM",
     "data_loader": {
-        "name": "all_methods_train_without_platform",
+        "name": "Android-Universal-Image-Loader",
         "full_data": "all_methods_train",
         "local_data": "Android-Universal-Image-Loader",
         "window_size": 8

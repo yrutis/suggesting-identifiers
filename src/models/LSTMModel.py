@@ -10,7 +10,6 @@ from keras.layers import LSTM
 from keras.layers import Dropout
 from keras.models import Model
 from keras.optimizers import Adam, RMSprop
-from hyperas.distributions import choice, uniform
 
 
 
