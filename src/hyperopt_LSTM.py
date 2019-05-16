@@ -8,7 +8,6 @@ from random import randint
 
 from keras import Input, Model
 from keras.optimizers import RMSprop, Adam
-from src.models.LSTMModel import LSTMModel
 
 import src.utils.path as path_file
 from src.data import prepare_data
@@ -16,18 +15,14 @@ import src.utils.config as config_loader
 from hyperopt import Trials, STATUS_OK, tpe
 from hyperas import optim
 from hyperas.distributions import choice, uniform
-from keras.preprocessing import sequence
-from keras.datasets import imdb
-from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation
 from keras.layers.embeddings import Embedding
 from keras.layers.recurrent import LSTM
-from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.callbacks import EarlyStopping
 
 
 def data():
-    maxlen = 100
-    max_features = 20000
+
 
     # load default settings
     LSTM_config_path = path_file.LSTM_opt_config_path
@@ -51,14 +46,13 @@ def data():
 
     os.mkdir(report_folder_LSTM)
 
-    # write in report folder
-    with open(os.path.join(report_folder_LSTM, 'LSTM.json'), 'w') as outfile:
-        json.dump(LSTM_config, outfile, indent=4)
 
-    return trainX, trainY, valX, valY, vocab_size, LSTM_config
+    return trainX, trainY, valX, valY, vocab_size, LSTM_config, report_folder_LSTM
 
 
-def model(trainX, trainY, valX, valY, vocab_size, LSTM_config):
+
+
+def model(trainX, trainY, valX, valY, vocab_size, LSTM_config, report_folder_LSTM):
     logger = logging.getLogger(__name__)
 
 
@@ -67,21 +61,29 @@ def model(trainX, trainY, valX, valY, vocab_size, LSTM_config):
 
     tensor = Input(shape=(LSTM_config.data_loader.window_size,))
     c = contextEmbedding(tensor)
-    c = LSTM(LSTM_config.model.lstm_dim, recurrent_dropout=0.2, dropout=0.2)(c)
-    c = Dropout({{uniform(0, 5)}})(c)
-    c = Dense(100, activation='sigmoid')(c)
-    c = Dropout(0.2)(c)
+    c = Dropout({{uniform(0, 0.5)}})(c)
+    c = LSTM(LSTM_config.model.lstm_dim, recurrent_dropout={{uniform(0, 0.2)}}, dropout={{uniform(0, 0.2)}})(c)
+    c = Dropout({{uniform(0, 0.5)}})(c)
+    c = Dense(100, activation={{choice(['sigmoid', 'elu', 'selu'])}})(c)
+    c = Dropout({{uniform(0, 0.5)}})(c)
+
+    if {{choice(['three', 'four'])}} == 'four':
+        c = Dense(100, activation={{choice(['sigmoid', 'elu', 'selu'])}})(c)
+        c = Dropout({{uniform(0, 0.5)}})(c)
     answer = Dense(vocab_size, activation='softmax')(c)
 
     model = Model(tensor, answer)
     optimizer = Adam()
     model.compile(optimizer=optimizer, loss=LSTM_config.model.loss, metrics=LSTM_config.model.metrics)
 
+    early_stopping = EarlyStopping(monitor='val_loss', patience=4)
+
     model.fit(trainX, trainY,
               batch_size={{choice([64, 128])}},
-              epochs=1,
+              epochs={{choice([10, 15, 20, 30])}},
               verbose=2,
-              validation_data=(valX, valY))
+              validation_data=(valX, valY),
+              callbacks=[early_stopping])
     score, acc = model.evaluate(valX, valY, verbose=0)
     print('Test accuracy:', acc)
     return {'loss': -acc, 'status': STATUS_OK, 'model': model}
@@ -95,3 +97,12 @@ if __name__ == '__main__':
                                           max_evals=10,
                                           trials=Trials())
     print(best_run)
+
+    trainX, trainY, valX, valY, vocab_size, LSTM_config, report_folder_LSTM = data()
+    print("Evalutation of best performing model:")
+    print(best_model.evaluate(valX, valY))
+    print("Best performing model chosen hyper-parameters:")
+    print(best_run)
+
+    best_model.save(os.path.join(report_folder_LSTM, 'best_model.h5'))
+    json.dump(best_run, open(os.path.join(report_folder_LSTM, "best_run.txt"), 'w'))
