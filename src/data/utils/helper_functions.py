@@ -113,7 +113,7 @@ def get_training_vocab(method_list, is_for_x):
 
     :param method_list: method body list or method names
     :param is_for_x: either x or y
-    :return: get words that appear more often than 3x
+    :return: get words that appear more often than 3x, return in right format for fit on text keras
     '''
 
     if is_for_x:
