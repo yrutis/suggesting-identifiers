@@ -5,10 +5,8 @@ import logging
 import os
 import json
 import tensorflow as tf
-from keras.callbacks import EarlyStopping, ModelCheckpoint
 
 import src.data.prepare_data as prepare_data
-from src.evaluator.Callback import Histories
 from src.evaluator.Evaluator import Evaluator
 from src.models.LSTMModel import LSTMModel
 import src.utils.config as config_loader

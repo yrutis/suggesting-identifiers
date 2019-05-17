@@ -3,7 +3,7 @@ import logging
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 
 
-from src.evaluator.Callback import Histories
+from src.trainer.Callbacks.Callback import Histories
 
 
 class AbstractTrain(object):
