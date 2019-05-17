@@ -1,5 +1,4 @@
 #%%
-import os
 from datetime import datetime
 from random import randint
 
@@ -12,6 +11,11 @@ import src.utils.path as path_file
 
 from matplotlib import pyplot as plt
 from sklearn import metrics
+
+import keras
+import numpy as np
+import os
+import pandas as pd
 
 
 
@@ -43,11 +47,7 @@ os.mkdir(report_folder_multiple_input)
 
 #%% callback, early stopping, checkpoint saving
 
-import keras
-import numpy as np
-import tensorflow as tf
-import os
-import pandas as pd
+
 
 class Histories(keras.callbacks.Callback):
     def __init__(self, report_folder, tokenizer):
