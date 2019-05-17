@@ -20,7 +20,7 @@ def main(filename, window_size):
     df = pd.read_json(processed_decoded_full_path, orient='records')
 
 
-    x_train, x_test, y_train, y_test = train_test_split(df['concatMethodBodyCleaned'], df['methodName'], test_size=0.2)
+    x_train, x_test, y_train, y_test = train_test_split(df['concatMethodBodyCleaned'], df['methodName'], test_size=0.2, random_state=200)
     method_body_cleaned_list_x = list(x_train)
     method_name_x = list(y_train)
 

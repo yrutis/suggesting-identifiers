@@ -36,20 +36,9 @@ df['parameters'] = df['parameters'].apply(helper_functions.split_params)
 #%% preproc methodbody
 # some basic operations: preprocessing method body
 df['methodBody'] = df['methodBody'].apply(helper_functions.removeOptional)
-
-
-#%% preproc
-
 df['methodBody'] = df['methodBody'].apply(helper_functions.replace_string_values)
-#%% preproc
-
 df["methodBody"] = df['methodBody'].apply(helper_functions.turn_strings_to_list)
-#%% preproc
-
 df["methodBody"] = df['methodBody'].apply(helper_functions.delete_certain_strings)
-
-#%% preproc
-
 df["methodBody"] = df['methodBody'].apply(helper_functions.turn_all_to_lower)
 
 #%%
@@ -106,6 +95,7 @@ print("len_method_body_excl_empt_excl_spec \n{}".format(len_method_body_excl_emp
 print("len_method_body_excl_empt_incl_spec \n{}".format(len_method_body_excl_empt_incl_spec))
 
 #%%
+#compute data distribution with empty functions 1) without spec chars, 2) with special chars
 
 len_method_body_incl_empt_excl_spec = df['methodBodyCleaned'].apply(helper_functions.compute_col_length)
 len_method_body_incl_empt_excl_spec = len_method_body_incl_empt_excl_spec.describe()
@@ -113,6 +103,13 @@ len_method_body_incl_empt_excl_spec = len_method_body_incl_empt_excl_spec.descri
 len_method_body_incl_empt_incl_spec = df['methodBodyLength'].describe()
 print("len_method_body_incl_empt_excl_spec \n{}".format(len_method_body_incl_empt_excl_spec))
 print("len_method_body_incl_empt_incl_spec \n{}".format(len_method_body_incl_empt_incl_spec))
+
+
+#%%
+#get statistics for param tokens
+df['parameterLength'] = df['parameters'].apply(helper_functions.compute_col_length)
+parameter_length_statistics = df['parameterLength'].describe()
+
 
 
 #%%
