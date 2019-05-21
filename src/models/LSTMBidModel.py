@@ -29,7 +29,7 @@ class LSTMModelBid(AbstractModel):
         contextEmbedding = Embedding(input_dim=self.__context_vocab_size, output_dim=self.config.model.embedding_dim,
                                      input_length=self.__windows_size)
 
-        tensor = Input(shape=(self.__windows_size,))
+        tensor = Input(shape=(self.__windows_size,), name=self.input_name)
         c = contextEmbedding(tensor)
         c = Bidirectional(LSTM(self.config.model.lstm_dim))(c)
         c = Dropout(self.config.model.dropout_1)(c)

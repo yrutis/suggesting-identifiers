@@ -8,8 +8,13 @@ import src.data.utils.helper_functions as helper_functions
 import logging
 import os
 
+#%%
 
-def main(filename, window_size):
+
+def main(filename, window_size_params, window_size_body):
+
+    #%%
+
     # get logger
     logger = logging.getLogger(__name__)
 
@@ -17,8 +22,22 @@ def main(filename, window_size):
     processed_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'), 'decoded'),
                                                filename + '.json')  # get decoded path
 
+    #%%
     df = pd.read_json(processed_decoded_full_path, orient='records')
 
+    #%% only keep max first window_size_params params
+    # only keep max first window_size_body words in methodbody
+
+    max_return_type_elems = 1 #only 1 return type
+    max_input_elemts = 1 + window_size_params + window_size_body
+
+
+    df['parameters'] = df['parameters'].apply(helper_functions.get_first_x_elem, args=(window_size_params,))
+    df['methodBodyCleaned'] = df['methodBodyCleaned'].apply(helper_functions.get_first_x_elem, args=(window_size_body,))
+    df["concatMethodBodyCleaned"] = df['Type'].map(lambda x: [x]) + df["parameters"] + df["methodBodyCleaned"]
+
+
+    #%%
 
     x_train, x_test, y_train, y_test = train_test_split(df['concatMethodBodyCleaned'], df['methodName'], test_size=0.2, random_state=200)
     method_body_cleaned_list_x = list(x_train)
@@ -46,7 +65,7 @@ def main(filename, window_size):
     # tokenize just trainX
     vocab_size = len(word_index) + 1
     sequences = tokenizer.texts_to_sequences(x_train)
-    trainX = pad_sequences(sequences, maxlen=window_size, value=0)
+    trainX = pad_sequences(sequences, maxlen=max_input_elemts, value=0)
 
     # tokenize just trainY
     y_train = list(y_train)
@@ -58,7 +77,7 @@ def main(filename, window_size):
 
     # tokenize just valX
     x_test_seq = tokenizer.texts_to_sequences(x_test)
-    valX = pad_sequences(x_test_seq, maxlen=window_size, value=0)
+    valX = pad_sequences(x_test_seq, maxlen=max_input_elemts, value=0)
 
     # tokenize just testY
     y_test = list(y_test)
@@ -121,7 +140,7 @@ def main(filename, window_size):
     #-------------------------------------------
 
 
-    return trainX, trainY, valX, valY, tokenizer, perc_unk_train, perc_unk_test
+    return trainX, trainY, valX, valY, tokenizer, perc_unk_train, perc_unk_test, max_input_elemts
 
     # trainY = to_categorical(trainY, num_classes=vocab_size)
     # valY = to_categorical(valY, num_classes=vocab_size)
@@ -129,4 +148,4 @@ def main(filename, window_size):
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
-    main("all_methods_train_without_platform", 8)
+    main("Android-Universal-Image-Loader", 2, 8)

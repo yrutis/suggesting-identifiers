@@ -128,10 +128,14 @@ def get_training_vocab(method_list, is_for_x):
     for key, count in dropwhile(lambda key_count: key_count[1] >= 3, c.most_common()):
         del c[key]
 
-    print("outputting {}".format(len(c)))
 
     training = list(c.keys())
     training_string = [" ".join(training)]
     return training_string
 
 
+def get_first_x_elem(elem_list, window_size):
+    if len(elem_list) <= window_size:
+        return elem_list
+    else:
+        return elem_list[:window_size]
