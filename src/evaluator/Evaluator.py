@@ -50,7 +50,11 @@ class Evaluator(object):
 
         sklearn_report = os.path.join(self.report_folder, "report.csv")
         df.to_csv(sklearn_report)
-
+        (_, _, f1, _) = metrics.precision_recall_fscore_support(self.__trained_model.valY,
+                                                                predicted_classes,
+                                                                average='weighted',
+                                                                warn_for=tuple())
+        logger.info("weighted f1 score is {}".format(f1))
 
 
     def visualize(self, always_unknown_train, always_unknown_test):

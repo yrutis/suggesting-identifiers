@@ -5,7 +5,7 @@
         "full_data": "all_methods_train",
         "local_data": "Android-Universal-Image-Loader",
         "window_size_body": 8,
-        "window_size_params": 2
+        "window_size_params": 0
     },
     "model": {
         "name": "model.SimpleNN",

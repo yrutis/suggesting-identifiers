@@ -6,6 +6,7 @@ import os
 
 
 
+
 #%% get logger to work
 log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 logging.basicConfig(level=logging.INFO, format=log_fmt)
@@ -31,6 +32,12 @@ df = pd.read_json(processed_decoded_full_path, orient='records')
 # some basic operations: preprocessing parameters
 df['parameters'] = df['parameters'].apply(helper_functions.turn_all_to_lower)
 df['parameters'] = df['parameters'].apply(helper_functions.split_params)
+
+#%%
+#get statistics for param tokens
+df['parameterLength'] = df['parameters'].apply(helper_functions.compute_col_length)
+parameter_length_statistics = df['parameterLength'].describe()
+
 
 
 #%% preproc methodbody
@@ -103,13 +110,6 @@ len_method_body_incl_empt_excl_spec = len_method_body_incl_empt_excl_spec.descri
 len_method_body_incl_empt_incl_spec = df['methodBodyLength'].describe()
 print("len_method_body_incl_empt_excl_spec \n{}".format(len_method_body_incl_empt_excl_spec))
 print("len_method_body_incl_empt_incl_spec \n{}".format(len_method_body_incl_empt_incl_spec))
-
-
-#%%
-#get statistics for param tokens
-df['parameterLength'] = df['parameters'].apply(helper_functions.compute_col_length)
-parameter_length_statistics = df['parameterLength'].describe()
-
 
 
 #%%
