@@ -41,10 +41,10 @@ def main(config_path):
     logger.info("data used is {}".format(config.data_loader.name))
 
     config.data_loader.window_size_body = FLAGS.window_size_body
-    logger.info("window size is {}".format(config.data_loader.window_size_body))
+    logger.info("window size body is {}".format(config.data_loader.window_size_body))
 
     config.data_loader.window_size_params = FLAGS.window_size_params
-    logger.info("window size is {}".format(config.data_loader.window_size_params))
+    logger.info("window size params is {}".format(config.data_loader.window_size_params))
 
     config.trainer.num_epochs = FLAGS.epochs
     logger.info("epochs num is {}".format(config.trainer.num_epochs))
