@@ -64,7 +64,7 @@ def model(trainX, trainY, valX, valY, vocab_size, LSTM_config, report_folder_LST
     c = Dropout({{uniform(0, 0.5)}})(c)
     c = LSTM({{choice([60, 100, 220])}}, recurrent_dropout={{uniform(0, 0.2)}}, dropout={{uniform(0, 0.2)}})(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
-    c = Dense({{choice([30, 50, 70])}}, activation={{choice(['sigmoid', 'elu', 'selu'])}})(c)
+    c = Dense({{choice([70, 100, 200])}}, activation={{choice(['sigmoid', 'elu', 'selu'])}})(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
 
     if {{choice(['three', 'four'])}} == 'four':

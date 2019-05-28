@@ -30,8 +30,6 @@ def main(filename):
     #clean from function structure
     df['methodBodyCleaned'] = df['methodBody'].apply(helper_functions.clean_from_function_structure)
 
-    #concat type, params, method body
-    df["concatMethodBodyCleaned"] = df['Type'].map(lambda x: [x]) + df["parameters"] + df["methodBodyCleaned"]
 
     df.to_json(processed_decoded_full_path, orient='records')
     logger.info('finished')
