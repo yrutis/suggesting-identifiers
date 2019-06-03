@@ -63,6 +63,16 @@ len_parameters_splitted = len_parameters_splitted.describe()
 
 #%%
 
+train_method_body_splitted_stats, _, train_method_name_splitted_stats, _ = train_test_split(df['methodBodySplitted'], df['methodNameSplitted'], test_size=0.2,
+                                                    random_state=200)
+
+
+len_method_name_splitted = train_method_name_splitted_stats.apply(helper_functions.compute_col_length)
+len_method_name_splitted = len_method_name_splitted.describe()
+
+
+#%%
+
 window_size_params = 2
 window_size_body = 8
 

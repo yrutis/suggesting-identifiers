@@ -35,7 +35,8 @@ df['methodBodySplitted'] = df['methodBodySplitted'].apply(add_start_end_token)
 df['methodNameSplitted'] = df['methodNameSplitted'].apply(add_start_end_token)
 
 #%% split dataset
-x_train, x_test, y_train, y_test = train_test_split(df['methodBodySplitted'], df['methodNameSplitted'], test_size=0.2)
+x_train, x_test, y_train, y_test = train_test_split(df['methodBodySplitted'], df['methodNameSplitted'], test_size=0.2,
+                                                    random_state=200)
 method_body_cleaned_list_x = list(x_train)
 method_name_x = list(y_train)
 
