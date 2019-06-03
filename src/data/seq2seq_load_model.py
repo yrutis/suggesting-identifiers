@@ -1,13 +1,20 @@
-from pickle import dump
-
+import pickle
+from keras import Input, Model
+from keras.engine.saving import load_model
 import pandas as pd
 import numpy as np
-
-from keras.preprocessing.text import Tokenizer
-from sklearn.model_selection import train_test_split
-import src.data.utils.helper_functions as helper_functions
 import logging
 import os
+
+#%%
+
+# loading
+from sklearn.model_selection import train_test_split
+from src.data.utils import helper_functions
+
+with open('tokenizer.pkl', 'rb') as handle:
+    tokenizer = pickle.load(handle)
+
 
 #%%
 
@@ -34,6 +41,7 @@ df = pd.read_json(processed_decoded_full_path, orient='records')
 df['methodBodySplitted'] = df['methodBodySplitted'].apply(add_start_end_token)
 df['methodNameSplitted'] = df['methodNameSplitted'].apply(add_start_end_token)
 
+
 #%% split dataset
 x_train, x_test, y_train, y_test = train_test_split(df['methodBodySplitted'], df['methodNameSplitted'], test_size=0.2)
 method_body_cleaned_list_x = list(x_train)
@@ -41,25 +49,10 @@ method_name_x = list(y_train)
 
 #%%dataset in training vocab format
 
-training_vocab_x = helper_functions.get_training_vocab(method_body_cleaned_list_x, is_for_x=True)
-training_vocab_y = helper_functions.get_training_vocab(method_name_x, is_for_x=True)
 
 x_train = list(map(helper_functions.get_into_tokenizer_format, method_body_cleaned_list_x))
 
-#%%word2idx
 
-# fit on text the most common words from trainX and trainY
-tokenizer = Tokenizer(oov_token=True)
-# actual training data gets mapped on text
-tokenizer.fit_on_texts(training_vocab_y)  # actual training data gets mapped on text
-
-word_index = tokenizer.word_index
-print('Found {} unique Y tokens.'.format(len(word_index) + 1))
-
-tokenizer.fit_on_texts(training_vocab_x)
-
-word_index = tokenizer.word_index
-print('Found {} unique X+Y tokens.'.format(len(word_index) + 1))
 #%% idx2word
 
 # Creating a reverse dictionary
@@ -72,6 +65,8 @@ def sequence_to_text(list_of_indices):
     return (words)
 
 #%%
+
+word_index = tokenizer.word_index
 
 # tokenize just trainX
 vocab_size = len(word_index) + 1
@@ -93,8 +88,8 @@ y_train_rev = list(map(sequence_to_text, y_train_tokenized))
 print(y_train_rev[:20])
 
 
-
 #%%
+
 
 #get longest method name TODO remove method names longer than ...
 max_len_method = max([len(i) for i in y_train_tokenized])
@@ -107,26 +102,16 @@ for i in y_train_tokenized:
         longest_method = i
 print(longest_method)
 
+
 #%%
-
-
-print(sequence_to_text(longest_method))
-print(max_len_method)
-print(len(y_train_tokenized), len(x_train_tokenized))
-
 
 encoder_input_data = np.zeros(
     (len(x_train_tokenized), 20),
     dtype='float32')
+
 decoder_input_data = np.zeros(
     (len(y_train_tokenized), max_len_method),
     dtype='float32')
-decoder_target_data = np.zeros(
-    (len(y_train_tokenized), max_len_method, vocab_size),
-    dtype='float32')
-
-#%%
-
 
 for i, (input_text, target_text) in enumerate(zip(x_train_tokenized, y_train_tokenized)):
     for t, word in enumerate(input_text):
@@ -135,64 +120,51 @@ for i, (input_text, target_text) in enumerate(zip(x_train_tokenized, y_train_tok
             encoder_input_data[i, t] = input_text[t]
 
     for t, word in enumerate(target_text):
-        # decoder_target_data is ahead of decoder_input_data by one timestep
         decoder_input_data[i, t] = target_text[t]
-        if t > 0:
-            # decoder_target_data will be ahead by one timestep (t=0 is always start)
-            # and will not include the start character.
-            decoder_target_data[i, t - 1, target_text[t]] = 1.
-
-# print(encoder_input_data[:100])
-print(decoder_input_data[:10])
-print(decoder_target_data[:10])
-
-
-
-#%% run model
-
-from keras.layers import Input, LSTM, Embedding, Dense
-from keras.models import Model
-
-e = Embedding(vocab_size, 10)
-encoder_inputs = Input(shape=(None,))
-en_x = e(encoder_inputs)
-encoder = LSTM(50, return_state=True)
-encoder_outputs, state_h, state_c = encoder(en_x)
-# We discard `encoder_outputs` and only keep the states.
-encoder_states = [state_h, state_c]
-
-# Set up the decoder, using `encoder_states` as initial state.
-decoder_inputs = Input(shape=(None,))
-dex = e
-final_dex = dex(decoder_inputs)
-
-decoder_lstm = LSTM(50, return_sequences=True, return_state=True)
-
-decoder_outputs, _, _ = decoder_lstm(final_dex,
-                                     initial_state=encoder_states)
-
-decoder_dense = Dense(vocab_size, activation='softmax')
-
-decoder_outputs = decoder_dense(decoder_outputs)
-
-model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
-
-model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['acc'])
-
-print(model.summary())
-
-
-model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
-          batch_size=128,
-          epochs=2,
-          validation_split=0.05)
-
-#%% save model+ tokenizer
-model.save('s2s.h5')
-dump(tokenizer, open('tokenizer.pkl', 'wb'))
 
 
 #%%
+#make model ready
+model = load_model('s2s.h5')
+
+print(model.layers)
+print("first layer {}".format(model.layers[1]))
+print("second layer {}".format(model.layers[2]))
+
+latent_dim = 50
+encoder_inputs = model.input[0]   # input_1
+dex = model.layers[2]
+
+encoder_outputs, state_h_enc, state_c_enc = model.layers[3].output   # lstm_1
+encoder_states = [state_h_enc, state_c_enc]
+encoder_model = Model(encoder_inputs, encoder_states)
+
+decoder_inputs = model.input[1]   # input_2
+decoder_state_input_h = Input(shape=(latent_dim,), name='input_3')
+decoder_state_input_c = Input(shape=(latent_dim,), name='input_4')
+decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
+
+
+dec_emb2= dex(decoder_inputs) # Get the embeddings of the decoder sequence
+
+
+decoder_lstm = model.layers[4]
+decoder_outputs, state_h_dec, state_c_dec = decoder_lstm(
+    dec_emb2, initial_state=decoder_states_inputs)
+decoder_states = [state_h_dec, state_c_dec]
+
+
+decoder_dense = model.layers[5]
+decoder_outputs = decoder_dense(decoder_outputs)
+decoder_model = Model(
+    [decoder_inputs] + decoder_states_inputs,
+    [decoder_outputs] + decoder_states)
+
+
+
+
+#%% decoder setup
+
 def decode_sequence(input_seq):
     # Encode the input as state vectors.
     states_value = encoder_model.predict(input_seq)
@@ -233,39 +205,21 @@ def decode_sequence(input_seq):
 
     return decoded_sentence
 
-#%%
-
-# Encode the input sequence to get the "thought vectors"
-encoder_model = Model(encoder_inputs, encoder_states)
-
-# Decoder setup
-# Below tensors will hold the states of the previous time step
-decoder_state_input_h = Input(shape=(50,))
-decoder_state_input_c = Input(shape=(50,))
-decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
-
-dec_emb2= dex(decoder_inputs) # Get the embeddings of the decoder sequence
-
-# To predict the next word in the sequence, set the initial states to the states from the previous time step
-decoder_outputs2, state_h2, state_c2 = decoder_lstm(dec_emb2, initial_state=decoder_states_inputs)
-decoder_states2 = [state_h2, state_c2]
-decoder_outputs2 = decoder_dense(decoder_outputs2) # A dense softmax layer to generate prob dist. over the target vocabulary
-
-# Final decoder model
-decoder_model = Model(
-    [decoder_inputs] + decoder_states_inputs,
-    [decoder_outputs2] + decoder_states2)
-
 
 #%% generate some method names
 i = 0
 while i < 10:
     input_seq = encoder_input_data[i: i+1]
+    correct_output = decoder_input_data[i: i+1]
+    correct_output_list = correct_output.tolist()[0]
+    decoded_correct_output_list = sequence_to_text(correct_output_list)
     input_seq_list = input_seq.tolist()[0] #get in right format for tokenizer
 
-    print("this is the input seq decoded: {}".format(input_seq_list))
+    print("Input: {}".format(input_seq_list))
     input_enc = sequence_to_text(input_seq_list)
-    print("this is the input seq encoded: {}".format(input_enc))
+    #print("this is the input seq encoded: {}".format(input_enc))
     decoded_sentence = decode_sequence(input_seq)
-    print("this is the output seq decoded: {}".format(decoded_sentence))
+    print("Prediction: {}".format(decoded_sentence))
+    #print("this is the correct output seq encoded: {}".format(correct_output))
+    print("Correct: {}".format(decoded_correct_output_list))
     i += 1
