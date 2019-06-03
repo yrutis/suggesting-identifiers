@@ -1,4 +1,6 @@
+from datetime import datetime
 from pickle import dump
+from random import randint
 
 import pandas as pd
 import numpy as np
@@ -10,6 +12,8 @@ import src.data.utils.helper_functions as helper_functions
 import logging
 import os
 from matplotlib import pyplot as plt
+import src.utils.path as path_file
+
 
 #%%
 
@@ -20,7 +24,7 @@ def add_start_end_token(y):
 #%%
 
 #basic init
-filename = 'Android-Universal-Image-Loader-subtoken'
+filename = 'all_methods_train_without_platform-subtoken'
 # get logger
 logger = logging.getLogger(__name__)
 
@@ -55,7 +59,8 @@ df['concatMethodBodySplittedClean'] = df['concatMethodBodySplittedClean'].apply(
 df['methodNameSplitted'] = df['methodNameSplitted'].apply(add_start_end_token)
 
 #%% split dataset
-x_train, x_test, y_train, y_test = train_test_split(df['concatMethodBodySplittedClean'], df['methodNameSplitted'], test_size=0.2,
+x_train, x_test, y_train, y_test = train_test_split(df['concatMethodBodySplittedClean'], df['methodNameSplitted'],
+                                                    test_size=0.2,
                                                     random_state=200)
 method_body_cleaned_list_x = list(x_train)
 method_name_x = list(y_train)
@@ -117,24 +122,7 @@ print(y_train_rev[:20])
 
 #%%
 
-#get longest method name TODO remove method names longer than ...
-max_len_method = max([len(i) for i in y_train_tokenized])
-
-maxlen = 0
-longest_method = ""
-for i in y_train_tokenized:
-    if len(i) >= maxlen:
-        maxlen = len(i)
-        longest_method = i
-print(longest_method)
-
-#%%
-
-
-print(sequence_to_text(longest_method))
-print(max_len_method)
 print(len(y_train_tokenized), len(x_train_tokenized))
-
 
 encoder_input_data = np.zeros(
     (len(x_train_tokenized), max_input_elemts),
@@ -174,8 +162,8 @@ print(decoder_target_data[:10])
 from keras.layers import Input, LSTM, Embedding, Dense
 from keras.models import Model
 
-e = Embedding(vocab_size, 10)
-encoder_inputs = Input(shape=(None,))
+e = Embedding(vocab_size, 64)
+encoder_inputs = Input(shape=(None,), name="encoder_input")
 en_x = e(encoder_inputs)
 encoder = LSTM(50, return_state=True)
 encoder_outputs, state_h, state_c = encoder(en_x)
@@ -183,7 +171,7 @@ encoder_outputs, state_h, state_c = encoder(en_x)
 encoder_states = [state_h, state_c]
 
 # Set up the decoder, using `encoder_states` as initial state.
-decoder_inputs = Input(shape=(None,))
+decoder_inputs = Input(shape=(None,), name='decoder_input')
 dex = e
 final_dex = dex(decoder_inputs)
 
@@ -208,9 +196,19 @@ history = model.fit([encoder_input_data, decoder_input_data], decoder_target_dat
           epochs=2,
           validation_split=0.05)
 
+
+#%% create report folder
+# create unique report folder
+random_nr = randint(0, 10000)
+unique_folder_key = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S') + "-" + str(random_nr)
+report_folder = os.path.join(path_file.report_folder, 'reports-seq2seq-' + unique_folder_key)
+
+os.mkdir(report_folder)
+
+
 #%% save model+ tokenizer
-model.save('s2s.h5')
-dump(tokenizer, open('tokenizer.pkl', 'wb'))
+model.save(os.path.join(report_folder, 's2s.h5'))
+dump(tokenizer, open(os.path.join(report_folder,'tokenizer.pkl'), 'wb'))
 
 
 #%%
@@ -317,18 +315,18 @@ plt.plot(epochs, acc, 'bo', label='Training acc')
 plt.plot(epochs, val_acc, 'b', label='Validation acc')
 plt.title('Training and validation accuracy')
 plt.legend()
-plt.savefig("acc_plot.png")
+plt.savefig(os.path.join(report_folder, "acc_plot.png"))
 plt.figure()
 plt.plot(epochs, loss, 'bo', label='Training loss')
 plt.plot(epochs, val_loss, 'b', label='Validation loss')
 plt.title('Training and validation loss')
 plt.legend()
-plt.savefig("loss_plot.png")
+plt.savefig(os.path.join(report_folder, "loss_plot.png"))
 
 
 #%%
 
 # summarize model
-plot_model(encoder_model, to_file='encoder_model.png', show_shapes=True)
-plot_model(decoder_model, to_file='decoder_model.png', show_shapes=True)
-plot_model(model, to_file='model.png', show_shapes=True)
+plot_model(encoder_model, to_file=os.path.join(report_folder, 'encoder_model.png'), show_shapes=True)
+plot_model(decoder_model, to_file=os.path.join(report_folder, 'decoder_model.png'), show_shapes=True)
+plot_model(model, to_file=os.path.join(report_folder, 'model.png'), show_shapes=True)
