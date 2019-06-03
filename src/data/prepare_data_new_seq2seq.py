@@ -4,10 +4,12 @@ import pandas as pd
 import numpy as np
 
 from keras.preprocessing.text import Tokenizer
+from keras.utils import plot_model
 from sklearn.model_selection import train_test_split
 import src.data.utils.helper_functions as helper_functions
 import logging
 import os
+from matplotlib import pyplot as plt
 
 #%%
 
@@ -30,12 +32,30 @@ processed_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder
 
 df = pd.read_json(processed_decoded_full_path, orient='records')
 
+#%%
+
+window_size_params = 4
+window_size_body = 12
+
+window_size_name = 3
+
+max_input_elemts = 1 + window_size_params + window_size_body + 2 #return type + ... + ... + startendtoken
+max_output_elemts = 2 + window_size_name #startendtoken + ...
+
+
+df['parametersSplitted'] = df['parametersSplitted'].apply(helper_functions.get_first_x_elem, args=(window_size_params,))
+df['methodBodySplitted'] = df['methodBodySplitted'].apply(helper_functions.get_first_x_elem, args=(window_size_body,))
+df["concatMethodBodySplittedClean"] = df['Type'].map(lambda x: [x]) + df["parametersSplitted"] + df["methodBodySplitted"]
+
+df['methodNameSplitted'] = df['methodNameSplitted'].apply(helper_functions.get_first_x_elem, args=(window_size_name,))
+
+
 #%% add start end token
-df['methodBodySplitted'] = df['methodBodySplitted'].apply(add_start_end_token)
+df['concatMethodBodySplittedClean'] = df['concatMethodBodySplittedClean'].apply(add_start_end_token)
 df['methodNameSplitted'] = df['methodNameSplitted'].apply(add_start_end_token)
 
 #%% split dataset
-x_train, x_test, y_train, y_test = train_test_split(df['methodBodySplitted'], df['methodNameSplitted'], test_size=0.2,
+x_train, x_test, y_train, y_test = train_test_split(df['concatMethodBodySplittedClean'], df['methodNameSplitted'], test_size=0.2,
                                                     random_state=200)
 method_body_cleaned_list_x = list(x_train)
 method_name_x = list(y_train)
@@ -117,13 +137,13 @@ print(len(y_train_tokenized), len(x_train_tokenized))
 
 
 encoder_input_data = np.zeros(
-    (len(x_train_tokenized), 20),
+    (len(x_train_tokenized), max_input_elemts),
     dtype='float32')
 decoder_input_data = np.zeros(
-    (len(y_train_tokenized), max_len_method),
+    (len(y_train_tokenized), max_output_elemts),
     dtype='float32')
 decoder_target_data = np.zeros(
-    (len(y_train_tokenized), max_len_method, vocab_size),
+    (len(y_train_tokenized), max_output_elemts, vocab_size),
     dtype='float32')
 
 #%%
@@ -132,7 +152,7 @@ decoder_target_data = np.zeros(
 for i, (input_text, target_text) in enumerate(zip(x_train_tokenized, y_train_tokenized)):
     for t, word in enumerate(input_text):
         #20 is the maximum length
-        if t < 20:
+        if t < max_input_elemts:
             encoder_input_data[i, t] = input_text[t]
 
     for t, word in enumerate(target_text):
@@ -183,7 +203,7 @@ model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['ac
 print(model.summary())
 
 
-model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
+history = model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
           batch_size=128,
           epochs=2,
           validation_split=0.05)
@@ -222,7 +242,7 @@ def decode_sequence(input_seq):
         # Exit condition: either hit max length
         # or find stop character.
         if (sampled_char == 'endtoken' or
-           len(decoded_sentence) > 52):
+           len(decoded_sentence) > max_output_elemts):
             stop_condition = True
 
         # Update the target sequence (of length 1).
@@ -260,13 +280,55 @@ decoder_model = Model(
 
 #%% generate some method names
 i = 0
-while i < 10:
+correct = 0
+amnt = 10
+while i < amnt:
     input_seq = encoder_input_data[i: i+1]
     input_seq_list = input_seq.tolist()[0] #get in right format for tokenizer
+    correct_output = decoder_input_data[i: i + 1]
+    correct_output_list = correct_output.tolist()[0] #get in right format for tokenizer
+    decoded_correct_output_list = sequence_to_text(correct_output_list)
 
-    print("this is the input seq decoded: {}".format(input_seq_list))
     input_enc = sequence_to_text(input_seq_list)
-    print("this is the input seq encoded: {}".format(input_enc))
+
+
+    print("this is the input seq decoded: {}".format(input_enc))
     decoded_sentence = decode_sequence(input_seq)
-    print("this is the output seq decoded: {}".format(decoded_sentence))
+    print("Predicted: {}".format(decoded_sentence))
+    print("Correct: {}".format(decoded_correct_output_list))
     i += 1
+
+    if decoded_sentence == decoded_correct_output_list:
+        correct += 1
+
+accuracy = correct/amnt
+print("total accuracy %.2f%%" %accuracy)
+
+
+#%%
+
+acc = history.history['acc']
+val_acc = history.history['val_acc']
+loss = history.history['loss']
+val_loss = history.history['val_loss']
+epochs = range(1, len(acc) + 1)
+
+plt.plot(epochs, acc, 'bo', label='Training acc')
+plt.plot(epochs, val_acc, 'b', label='Validation acc')
+plt.title('Training and validation accuracy')
+plt.legend()
+plt.savefig("acc_plot.png")
+plt.figure()
+plt.plot(epochs, loss, 'bo', label='Training loss')
+plt.plot(epochs, val_loss, 'b', label='Validation loss')
+plt.title('Training and validation loss')
+plt.legend()
+plt.savefig("loss_plot.png")
+
+
+#%%
+
+# summarize model
+plot_model(encoder_model, to_file='encoder_model.png', show_shapes=True)
+plot_model(decoder_model, to_file='decoder_model.png', show_shapes=True)
+plot_model(model, to_file='model.png', show_shapes=True)

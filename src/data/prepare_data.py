@@ -28,7 +28,6 @@ def main(filename, window_size_params, window_size_body):
     #%% only keep max first window_size_params params
     # only keep max first window_size_body words in methodbody
 
-    max_return_type_elems = 1 #only 1 return type
     max_input_elemts = 1 + window_size_params + window_size_body
 
 
