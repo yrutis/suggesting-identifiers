@@ -193,7 +193,7 @@ print(model.summary())
 
 history = model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
           batch_size=128,
-          epochs=2,
+          epochs=30,
           validation_split=0.05)
 
 
