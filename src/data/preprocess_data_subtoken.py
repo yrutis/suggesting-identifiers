@@ -63,12 +63,8 @@ def main(filename):
     df['parameters'] = df['parameters'].apply(helper_functions.turn_all_to_lower)
 
     # delete any rows where there is no method name for some reason...
-    df['methodName'] = df['methodName'].apply(lambda x: " ".join(x))
-
     df = df[df['methodName'] != ' ']
     df = df[df['methodName'] != '']
-    # back to list
-    df['methodName'] = df['methodName'].apply(lambda x: x.split())
 
 
     #remove all abstract methods
