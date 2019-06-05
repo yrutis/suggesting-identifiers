@@ -27,8 +27,10 @@ def main(filename, window_size_params, window_size_body):
 
     #%% keep only data where method name is not empty
     # delete any rows where there is no method name for some reason...
+    logger.info(df.shape)
     df = df[df['methodName'] != ' ']
     df = df[df['methodName'] != '']
+    logger.info(df.shape)
 
 
     #%% only keep max first window_size_params params
