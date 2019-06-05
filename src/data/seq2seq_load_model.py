@@ -12,7 +12,7 @@ import os
 from sklearn.model_selection import train_test_split
 from src.data.utils import helper_functions
 
-with open('tokenizer.pkl', 'rb') as handle:
+with open('reports-seq2seq/tokenizer.pkl', 'rb') as handle:
     tokenizer = pickle.load(handle)
 
 
@@ -36,6 +36,25 @@ processed_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder
 #%% load dataset
 
 df = pd.read_json(processed_decoded_full_path, orient='records')
+
+
+#%%
+
+window_size_params = 4
+window_size_body = 12
+
+window_size_name = 3
+
+max_input_elemts = 1 + window_size_params + window_size_body + 2 #return type + ... + ... + startendtoken
+max_output_elemts = 2 + window_size_name #startendtoken + ...
+
+
+df['parametersSplitted'] = df['parametersSplitted'].apply(helper_functions.get_first_x_elem, args=(window_size_params,))
+df['methodBodySplitted'] = df['methodBodySplitted'].apply(helper_functions.get_first_x_elem, args=(window_size_body,))
+df["concatMethodBodySplittedClean"] = df['Type'].map(lambda x: [x]) + df["parametersSplitted"] + df["methodBodySplitted"]
+
+df['methodNameSplitted'] = df['methodNameSplitted'].apply(helper_functions.get_first_x_elem, args=(window_size_name,))
+
 
 #%% add start end token
 df['methodBodySplitted'] = df['methodBodySplitted'].apply(add_start_end_token)
@@ -90,28 +109,13 @@ print(y_train_rev[:20])
 
 #%%
 
-
-#get longest method name TODO remove method names longer than ...
-max_len_method = max([len(i) for i in y_train_tokenized])
-
-maxlen = 0
-longest_method = ""
-for i in y_train_tokenized:
-    if len(i) >= maxlen:
-        maxlen = len(i)
-        longest_method = i
-print(longest_method)
-
-
-#%%
-
 encoder_input_data = np.zeros(
-    (len(x_train_tokenized), 20),
+    (len(x_train_tokenized), max_input_elemts),
+    dtype='float32')
+decoder_input_data = np.zeros(
+    (len(y_train_tokenized), max_output_elemts),
     dtype='float32')
 
-decoder_input_data = np.zeros(
-    (len(y_train_tokenized), max_len_method),
-    dtype='float32')
 
 for i, (input_text, target_text) in enumerate(zip(x_train_tokenized, y_train_tokenized)):
     for t, word in enumerate(input_text):
@@ -125,7 +129,7 @@ for i, (input_text, target_text) in enumerate(zip(x_train_tokenized, y_train_tok
 
 #%%
 #make model ready
-model = load_model('s2s.h5')
+model = load_model('reports-seq2seq/s2s.h5')
 
 print(model.layers)
 print("first layer {}".format(model.layers[1]))
@@ -205,21 +209,103 @@ def decode_sequence(input_seq):
 
     return decoded_sentence
 
+#%%
+
+
+def perSubtokenStatistics(results):
+    #check if in vocabulary
+    complete_true = 0
+    true_positive = 0
+    false_positive = 0
+    false_negative = 0
+    for correct, predicted in results:
+        if ''.join(correct) == ''.join(predicted):
+            true_positive += len(correct)
+            complete_true += 1
+            continue
+
+        for subtok in predicted:
+            if subtok in correct:
+                true_positive += 1
+            else:
+                false_positive += 1
+        for subtok in correct:
+            if not subtok in predicted:
+                false_negative += 1
+
+    return complete_true, true_positive, false_positive, false_negative
+
+def calculate_results(complete_true, total, true_positive, false_positive, false_negative):
+    accuracy = 0
+    if total != 0:
+        accuracy = complete_true / total
+    if true_positive + false_positive > 0:
+        precision = true_positive / (true_positive + false_positive)
+    else:
+        precision = 0
+    if true_positive + false_negative > 0:
+        recall = true_positive / (true_positive + false_negative)
+    else:
+        recall = 0
+    if precision + recall > 0:
+        f1 = 2 * precision * recall / (precision + recall)
+    else:
+        f1 = 0
+    return accuracy, precision, recall, f1
+
+#%%
+
+def filter_results(subtoken_list):
+    subtoken_list = list(filter(None, subtoken_list))
+    subtoken_list = [str(x) for x in subtoken_list]
+    subtoken_list = list(filter(lambda x: x != "starttoken", subtoken_list))
+    subtoken_list = list(filter(lambda x: x != "endtoken", subtoken_list))
+    subtoken_list = list(filter(lambda x: x != "True", subtoken_list)) #oov
+    return subtoken_list
+
 
 #%% generate some method names
+input = []
+predictions = []
+correct = []
 i = 0
-while i < 10:
+while i < 100:
     input_seq = encoder_input_data[i: i+1]
     correct_output = decoder_input_data[i: i+1]
     correct_output_list = correct_output.tolist()[0]
     decoded_correct_output_list = sequence_to_text(correct_output_list)
     input_seq_list = input_seq.tolist()[0] #get in right format for tokenizer
 
-    print("Input: {}".format(input_seq_list))
+    #input
     input_enc = sequence_to_text(input_seq_list)
-    #print("this is the input seq encoded: {}".format(input_enc))
+    print("Input: {}".format(input_enc))
+    input.append(input_enc)
+
+    #prediction
     decoded_sentence = decode_sequence(input_seq)
-    print("Prediction: {}".format(decoded_sentence))
-    #print("this is the correct output seq encoded: {}".format(correct_output))
+    decoded_sentence_list = decoded_sentence.split()
+    print("Prediction List: {}".format(decoded_sentence_list))
+    predictions.append(decoded_sentence_list)
+
+
+    #correct
     print("Correct: {}".format(decoded_correct_output_list))
+    correct.append(decoded_correct_output_list)
+
     i += 1
+
+print(predictions)
+print(correct)
+print(len(correct))
+print(len(predictions))
+
+predictions = list(map(filter_results, predictions))
+correct = list(map(filter_results, correct))
+print(predictions)
+print(correct)
+
+complete_true, true_positive, false_positive, false_negative = perSubtokenStatistics(zip(correct, predictions))
+print(complete_true, true_positive, false_positive, false_negative)
+total = len(correct)
+accuracy, precision, recall, f1 = calculate_results(complete_true, total, true_positive, false_positive, false_negative)
+print((accuracy, precision, recall, f1))

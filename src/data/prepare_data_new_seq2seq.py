@@ -24,7 +24,7 @@ def add_start_end_token(y):
 #%%
 
 #basic init
-filename = 'all_methods_train_without_platform-subtoken'
+filename = 'Android-Universal-Image-Loader-subtoken'
 # get logger
 logger = logging.getLogger(__name__)
 
@@ -193,7 +193,7 @@ print(model.summary())
 
 history = model.fit([encoder_input_data, decoder_input_data], decoder_target_data,
           batch_size=128,
-          epochs=30,
+          epochs=2,
           validation_split=0.05)
 
 
@@ -238,7 +238,8 @@ def decode_sequence(input_seq):
         decoded_sentence += ' '+sampled_char
 
         # Exit condition: either hit max length
-        # or find stop character.
+        # or find stop token
+        #TODO figure out why stop condition
         if (sampled_char == 'endtoken' or
            len(decoded_sentence) > max_output_elemts):
             stop_condition = True
