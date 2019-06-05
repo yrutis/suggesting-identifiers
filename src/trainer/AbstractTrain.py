@@ -31,7 +31,7 @@ class AbstractTrain(object):
                             batch_size=self.config.trainer.batch_size,
                             epochs=self.config.trainer.num_epochs,
                             verbose=0,
-                            callbacks=[#self.histories,
+                            callbacks=[self.histories,
                                        self.es,
                                        self.mc])
 

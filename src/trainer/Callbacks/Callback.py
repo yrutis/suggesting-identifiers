@@ -21,16 +21,20 @@ class Histories(keras.callbacks.Callback):
         return
 
     def on_epoch_end(self, epoch, logs={}):
+        '''
+
+        :param epoch: epoch
+        :param logs: logs
+        :return: make 1000 predictions from validation data every 5 epochs
+        '''
         if epoch % 5 == 0:
-            y_pred = self.model.predict(self.validation_data[0])
-            max_lenght = min(len(y_pred)-1, 1000)
+            max_lenght = min(len(self.validation_data[0]) - 1, 1000)
+            y_pred = self.model.predict(self.validation_data[0][0:max_lenght])
+
             current_dict = {}
-            current_dict["X"] = self.validation_data[0]
-            current_dict["X"] = current_dict["X"][0:max_lenght]
+            current_dict["X"] = self.validation_data[0][0:max_lenght]
             current_dict["Y_hat"] = np.argmax(y_pred, axis=1)
-            current_dict["Y_hat"] = current_dict["Y_hat"][0:max_lenght]
-            current_dict["Y"] = self.validation_data[1]
-            current_dict["Y"] = current_dict["Y"][0:max_lenght]
+            current_dict["Y"] = self.validation_data[1][0:max_lenght]
 
             #get top k predictions
             top_k = tf.nn.top_k(y_pred[:max_lenght], k=5, sorted=True, name=None)
