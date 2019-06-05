@@ -50,6 +50,7 @@ def main(filename, window_size_params, window_size_body):
         try:
             return x[0]
         except IndexError:
+            print(x)
             return 1
     #%%
 
@@ -90,10 +91,6 @@ def main(filename, window_size_params, window_size_body):
     trainY = np.array(y_train_tokenized)
 
 
-
-
-
-
     # tokenize just valX
     x_test_seq = tokenizer.texts_to_sequences(x_test)
     valX = pad_sequences(x_test_seq, maxlen=max_input_elemts, value=0)
@@ -101,7 +98,7 @@ def main(filename, window_size_params, window_size_body):
     # tokenize just testY
     y_test = list(y_test)
     y_test_tokenized = tokenizer.texts_to_sequences(y_test)
-    y_test_tokenized = list(map(lambda x: x[0], y_test_tokenized))
+    y_test_tokenized = list(map(getFirstElem, y_test_tokenized))
     valY = np.array(y_test_tokenized)
 
     print("TRAINX before X: {}".format(trainX[:10]))
