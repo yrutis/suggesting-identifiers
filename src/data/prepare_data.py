@@ -50,7 +50,8 @@ def main(filename, window_size_params, window_size_body):
         try:
             return x[0]
         except IndexError:
-            print(x)
+            #if for some reason there is no method name -> map it to unknown
+            logger.info(x)
             return 1
     #%%
 

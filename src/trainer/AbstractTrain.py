@@ -31,7 +31,9 @@ class AbstractTrain(object):
                             batch_size=self.config.trainer.batch_size,
                             epochs=self.config.trainer.num_epochs,
                             verbose=0,
-                            callbacks=[self.histories, self.es, self.mc])
+                            callbacks=[#self.histories,
+                                       self.es,
+                                       self.mc])
 
         score, acc = self.model.evaluate(self.valX, self.valY, verbose=0)
         logger.info('Validation accuracy: {}' .format(acc))
