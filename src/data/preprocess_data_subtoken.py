@@ -62,29 +62,36 @@ def main(filename):
     df["methodBody"] = df['methodBody'].apply(helper_functions.turn_all_to_lower)
     df['parameters'] = df['parameters'].apply(helper_functions.turn_all_to_lower)
 
+    # delete any rows where there is no method name for some reason...
+    df['methodName'] = df['methodName'].apply(lambda x: " ".join(x))
+
+    df = df[df['methodName'] != ' ']
+    df = df[df['methodName'] != '']
+    # back to list
+    df['methodName'] = df['methodName'].apply(lambda x: x.split())
+
 
     #remove all abstract methods
     # create copy of df
-    df_mod = df.copy()
     # turn list in rows to strings
-    df_mod['methodBody'] = df_mod['methodBody'].apply(lambda x: " ".join(x))
+    df['methodBody'] = df['methodBody'].apply(lambda x: " ".join(x))
 
     # remove some rows
-    df_mod = df_mod[df_mod['methodBody'] != 'empt']
-    df_mod = df_mod[df_mod['methodBody'] != '{ }']
+    df = df[df['methodBody'] != 'empt']
+    df = df[df['methodBody'] != '{ }']
 
     # turn back to list
-    df_mod['methodBody'] = df_mod['methodBody'].apply(lambda x: x.split())
+    df['methodBody'] = df['methodBody'].apply(lambda x: x.split())
 
     # split list in rows to strings
-    df_mod['methodBodyCleaned'] = df_mod['methodBodyCleaned'].apply(lambda x: " ".join(x))
+    df['methodBodyCleaned'] = df['methodBodyCleaned'].apply(lambda x: " ".join(x))
 
-    df_mod = df_mod[df_mod['methodBodyCleaned'] != ' ']
-    df_mod = df_mod[df_mod['methodBodyCleaned'] != '']
+    df = df[df['methodBodyCleaned'] != ' ']
+    df = df[df['methodBodyCleaned'] != '']
     # back to list
-    df_mod['methodBodyCleaned'] = df_mod['methodBodyCleaned'].apply(lambda x: x.split())
+    df['methodBodyCleaned'] = df['methodBodyCleaned'].apply(lambda x: x.split())
 
-    export = df_mod.to_json(processed_decoded_full_path, orient='records')
+    export = df.to_json(processed_decoded_full_path, orient='records')
     logger.info('finished')
     logger.info(processed_decoded_full_path)
 
