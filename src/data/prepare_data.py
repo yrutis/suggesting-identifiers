@@ -46,6 +46,13 @@ def main(filename, window_size_params, window_size_body):
 
     #%%
 
+    def getFirstElem(x):
+        try:
+            return x[0]
+        except IndexError:
+            return 1
+    #%%
+
     x_train, x_test, y_train, y_test = train_test_split(df['concatMethodBodyCleaned'], df['methodName'], test_size=0.2, random_state=200)
     method_body_cleaned_list_x = list(x_train)
     method_name_x = list(y_train)
@@ -77,8 +84,13 @@ def main(filename, window_size_params, window_size_body):
     # tokenize just trainY
     y_train = list(y_train)
     y_train_tokenized = tokenizer.texts_to_sequences(y_train)
-    y_train_tokenized = list(map(lambda x: x[0], y_train_tokenized))
+    logger.info(y_train_tokenized[:5])
+    y_train_tokenized = list(map(getFirstElem, y_train_tokenized))
+    logger.info(y_train_tokenized[:5])
     trainY = np.array(y_train_tokenized)
+
+
+
 
 
 
