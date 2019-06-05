@@ -25,6 +25,12 @@ def main(filename, window_size_params, window_size_body):
     #%%
     df = pd.read_json(processed_decoded_full_path, orient='records')
 
+    #%% keep only data where method name is not empty
+    # delete any rows where there is no method name for some reason...
+    df = df[df['methodName'] != ' ']
+    df = df[df['methodName'] != '']
+
+
     #%% only keep max first window_size_params params
     # only keep max first window_size_body words in methodbody
 

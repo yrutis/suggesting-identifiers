@@ -62,10 +62,6 @@ def main(filename):
     df["methodBody"] = df['methodBody'].apply(helper_functions.turn_all_to_lower)
     df['parameters'] = df['parameters'].apply(helper_functions.turn_all_to_lower)
 
-    # delete any rows where there is no method name for some reason...
-    df = df[df['methodName'] != ' ']
-    df = df[df['methodName'] != '']
-
 
     #remove all abstract methods
     # create copy of df
