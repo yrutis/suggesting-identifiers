@@ -63,6 +63,7 @@ def main(filename):
     df['parameters'] = df['parameters'].apply(helper_functions.turn_all_to_lower)
 
 
+    #remove all abstract methods
     # create copy of df
     df_mod = df.copy()
     # turn list in rows to strings
@@ -89,4 +90,6 @@ def main(filename):
 
 
 if __name__ == '__main__':
-    main("Android-Universal-Image-Loader")
+    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    logging.basicConfig(level=logging.INFO, format=log_fmt)
+    main("jav_med_train")
