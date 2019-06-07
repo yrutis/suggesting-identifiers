@@ -19,8 +19,8 @@ with open('reports-seq2seq/tokenizer.pkl', 'rb') as handle:
 #%%
 
 def add_start_end_token(y):
-    splitted_list = ['starttoken'] + y + ['endtoken']
-    return splitted_list
+    _list = ['starttoken'] + y + ['endtoken']
+    return _list
 
 #%%
 
@@ -49,20 +49,20 @@ max_input_elemts = 1 + window_size_params + window_size_body + 2 #return type + 
 max_output_elemts = 2 + window_size_name #startendtoken + ...
 
 
-df['parametersSplitted'] = df['parametersSplitted'].apply(helper_functions.get_first_x_elem, args=(window_size_params,))
-df['methodBodySplitted'] = df['methodBodySplitted'].apply(helper_functions.get_first_x_elem, args=(window_size_body,))
-df["concatMethodBodySplittedClean"] = df['Type'].map(lambda x: [x]) + df["parametersSplitted"] + df["methodBodySplitted"]
+df['parameters'] = df['parameters'].apply(helper_functions.get_first_x_elem, args=(window_size_params,))
+df['methodBody'] = df['methodBody'].apply(helper_functions.get_first_x_elem, args=(window_size_body,))
+df["concatMethodBodyClean"] = df['Type'].map(lambda x: [x]) + df["parameters"] + df["methodBody"]
 
-df['methodNameSplitted'] = df['methodNameSplitted'].apply(helper_functions.get_first_x_elem, args=(window_size_name,))
+df['methodName'] = df['methodName'].apply(helper_functions.get_first_x_elem, args=(window_size_name,))
 
 
 #%% add start end token
-df['methodBodySplitted'] = df['methodBodySplitted'].apply(add_start_end_token)
-df['methodNameSplitted'] = df['methodNameSplitted'].apply(add_start_end_token)
+df['methodBody'] = df['methodBody'].apply(add_start_end_token)
+df['methodName'] = df['methodName'].apply(add_start_end_token)
 
 
 #%% split dataset
-x_train, x_test, y_train, y_test = train_test_split(df['methodBodySplitted'], df['methodNameSplitted'], test_size=0.2)
+x_train, x_test, y_train, y_test = train_test_split(df['methodBody'], df['methodName'], test_size=0.2)
 method_body_cleaned_list_x = list(x_train)
 method_name_x = list(y_train)
 
