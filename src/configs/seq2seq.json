@@ -1,0 +1,26 @@
+{
+    "name": "seq2seq",
+    "data_loader": {
+        "name": "Android-Universal-Image-Loader-subtoken",
+        "full_data": "all_methods_train",
+        "local_data": "Android-Universal-Image-Loader",
+        "window_size_body": 8,
+        "window_size_params": 2,
+        "window_size_name": 2
+    },
+    "model": {
+        "name": "model.SimpleNN",
+        "embedding_dim": 64,
+        "dense_dim": 50,
+        "dropout_1": 0.5,
+        "loss": "sparse_categorical_crossentropy",
+        "metrics": [
+            "acc"
+        ]
+    },
+    "trainer": {
+        "name": "trainer.seq2seq",
+        "num_epochs": 2,
+        "batch_size": 64
+    }
+}

@@ -91,11 +91,13 @@ def main(filename):
     df['methodBodySplitted'] = df['methodBodyCleaned'].apply(split_camel_case_and_snake_case_body)
     df['parameters'] = df['parameters'].apply(split_camel_case_and_snake_case_body)
 
-    df["methodBodySplitted"] = df['methodBodySplitted'].apply(helper_functions.turn_all_to_lower)
     df["parameters"] = df['parameters'].apply(helper_functions.turn_all_to_lower)
 
+    #turn everything to lowercase
     df["methodBody"] = df['methodBody'].apply(helper_functions.turn_all_to_lower)
-    df['parameters'] = df['parameters'].apply(helper_functions.turn_all_to_lower)
+    df["methodBodySplitted"] = df['methodBodySplitted'].apply(helper_functions.turn_all_to_lower)
+    df['Type'] = df['Type'].apply(lambda x: x.lower())
+    df['methodName'] = df['methodName'].apply(helper_functions.turn_all_to_lower)
 
     df = delete_abstract_methods(df)
 
@@ -112,4 +114,4 @@ def main(filename):
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
-    main("all_methods_train_without_platform")
+    main("Android-Universal-Image-Loader")

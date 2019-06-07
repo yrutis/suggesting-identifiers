@@ -14,7 +14,7 @@ import tensorflow as tf
 
 import src.data.prepare_data_token as prepare_data
 from src.evaluator.Evaluator import Evaluator
-from src.models.SimpleNN_new import SimpleNNModel
+from src.models.SimpleNN import SimpleNNModel
 import src.utils.config as config_loader
 import src.utils.path as path_file
 from src.trainer.AbstractTrain import AbstractTrain

@@ -23,6 +23,8 @@ def add_start_end_token(y):
 
 #%%
 
+
+
 #basic init
 filename = 'Android-Universal-Image-Loader-subtoken'
 # get logger
@@ -154,6 +156,9 @@ for i, (input_text, target_text) in enumerate(zip(x_train_tokenized, y_train_tok
 # print(encoder_input_data[:100])
 print(decoder_input_data[:10])
 print(decoder_target_data[:10])
+
+trainX = [encoder_input_data, decoder_input_data]
+trainY = decoder_target_data
 
 
 
