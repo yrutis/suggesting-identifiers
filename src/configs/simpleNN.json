@@ -1,11 +1,11 @@
 {
     "name": "simpleNN",
     "data_loader": {
-        "name": "Android-Universal-Image-Loader",
+        "name": "Android-Universal-Image-Loader-token",
         "full_data": "all_methods_train",
         "local_data": "Android-Universal-Image-Loader",
         "window_size_body": 8,
-        "window_size_params": 0
+        "window_size_params": 2
     },
     "model": {
         "name": "model.SimpleNN",

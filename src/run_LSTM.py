@@ -11,7 +11,7 @@ import os
 import json
 import tensorflow as tf
 
-import src.data.prepare_data as prepare_data
+import src.data.prepare_data_token as prepare_data
 from src.evaluator.Evaluator import Evaluator
 from src.models.LSTMModel import LSTMModel
 import src.utils.config as config_loader

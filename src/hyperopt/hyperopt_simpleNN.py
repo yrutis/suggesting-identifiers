@@ -10,7 +10,7 @@ from keras import Input, Model
 from keras.optimizers import Adam
 
 import src.utils.path as path_file
-from src.data import prepare_data
+from src.data import prepare_data_token
 import src.utils.config as config_loader
 from hyperopt import Trials, STATUS_OK, tpe
 from hyperas import optim
@@ -29,7 +29,7 @@ def data():
 
     # get data, UNK and other statistics
     trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test = \
-        prepare_data.main(simpleNN_config.data_loader.name, simpleNN_config.data_loader.window_size)
+        prepare_data_token.main(simpleNN_config.data_loader.name, simpleNN_config.data_loader.window_size)
 
     word_index = tokenizer.word_index
     print('Found {} unique tokens.'.format(len(word_index) + 1))
