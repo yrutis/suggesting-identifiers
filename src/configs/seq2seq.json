@@ -2,18 +2,18 @@
     "name": "seq2seq",
     "data_loader": {
         "name": "Android-Universal-Image-Loader-subtoken",
-        "full_data": "all_methods_train",
-        "local_data": "Android-Universal-Image-Loader",
         "window_size_body": 8,
         "window_size_params": 2,
         "window_size_name": 2
     },
     "model": {
-        "name": "model.SimpleNN",
+        "name": "model.seq2seq",
         "embedding_dim": 64,
+        "lstm_encoder_dim": 50,
+        "lstm_decoder_dim": 50,
         "dense_dim": 50,
         "dropout_1": 0.5,
-        "loss": "sparse_categorical_crossentropy",
+        "loss": "categorical_crossentropy",
         "metrics": [
             "acc"
         ]

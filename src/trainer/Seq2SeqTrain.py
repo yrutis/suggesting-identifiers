@@ -1,13 +1,9 @@
 import os
 import logging
 from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.utils import plot_model
 
-from src.models.Seq2SeqModel import Seq2SeqModel
 import numpy as np
 
-
-from src.trainer.Callbacks.Callback import Histories
 from matplotlib import pyplot as plt
 
 
@@ -33,8 +29,8 @@ class Seq2SeqTrain(object):
     def train(self):
         logger = logging.getLogger(__name__)
         self.history = self.model.fit(self.trainX, self.trainY,
-                            batch_size=64,
-                            epochs=2,
+                            batch_size=self.config.trainer.batch_size,
+                            epochs=self.config.trainer.num_epochs,
                             verbose=0,
                             validation_data=[self.valX, self.valY],
                             callbacks=[self.es, self.mc])
@@ -56,11 +52,6 @@ class Seq2SeqTrain(object):
         plt.title('Training and validation loss')
         plt.legend()
         plt.savefig(os.path.join(self.report_folder, "loss_plot.png"))
-
-        # summarize model
-        plot_model(self.encoder_model, to_file=os.path.join(self.report_folder, 'encoder_model.png'), show_shapes=True)
-        plot_model(self.decoder_model, to_file=os.path.join(self.report_folder, 'decoder_model.png'), show_shapes=True)
-        plot_model(self.model, to_file=os.path.join(self.report_folder, 'model.png'), show_shapes=True)
 
 
     def predict(self, input_seq):

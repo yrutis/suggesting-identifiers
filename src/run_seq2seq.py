@@ -13,7 +13,6 @@ import tensorflow as tf
 
 
 import src.data.prepare_data_subtoken as prepare_data
-from src.evaluator.Evaluator import Evaluator
 from src.models.Seq2SeqModel import Seq2SeqModel
 import src.utils.config as config_loader
 import src.utils.path as path_file
@@ -117,7 +116,7 @@ def main(config_path):
 
     # %% generate some method names
     encoder_input_data = valX[0]
-    decoder_input_data = valY[1]
+    decoder_input_data = valX[1]
     i = 0
     correct = 0
     amnt = 10
