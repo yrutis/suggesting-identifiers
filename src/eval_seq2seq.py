@@ -3,17 +3,13 @@ seed(1)
 from tensorflow import set_random_seed
 set_random_seed(2)
 
-from datetime import datetime
-from random import randint
-from pickle import dump
+
 import logging
 import os
-import json
 import tensorflow as tf
 
 
 import src.data.prepare_data_subtoken_test as prepare_data
-from src.models.Seq2SeqModel import Seq2SeqModel
 import src.utils.config as config_loader
 import src.utils.path as path_file
 from src.trainer.Seq2SeqTrain import Seq2SeqTrain
@@ -33,7 +29,6 @@ def main(config_path):
     report_folder_ID = FLAGS.report_folder_ID
 
 
-    #TODO hack to be removed
     report_folder = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'reports'),
                                  'reports-seq2seq-'+report_folder_ID)
 
@@ -56,6 +51,7 @@ def main(config_path):
     logger.info('Found {} unique tokens.'.format(vocab_size))
 
 
+    #TODO create new report_folder and safe everything there
     #create unique new report folder
     #random_nr = randint(0, 10000)
     #unique_folder_key = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S') + "-" + str(random_nr)
