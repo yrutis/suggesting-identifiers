@@ -8,53 +8,27 @@ from src.trainer.AbstractTrain import AbstractTrain
 
 
 class Evaluator(object):
-    def __init__(self, trained_model:AbstractTrain, report_folder):
+    def __init__(self, trained_model, report_folder):
         self.__trained_model = trained_model
         self.report_folder = report_folder
 
-    def evaluate(self):
+
+    def get_accuracy_precision_recall_f1_score(self, correct, predictions):
         # get logger
         logger = logging.getLogger(__name__)
 
+        predictions = list(map(self.filter_results, predictions))
+        correct = list(map(self.filter_results, correct))
 
-        if not self.__trained_model.history:
-            raise Exception("You have to train the model first before evaluating")
-
-
-
-        # Creating a reverse dictionary
-        reverse_word_map = dict(map(reversed, self.__trained_model.tokenizer.word_index.items()))
-
-        # Function takes a tokenized sentence and returns the words
-        def sequence_to_text(list_of_indices):
-            # Looking up words in dictionary
-            words = [reverse_word_map.get(letter) for letter in list_of_indices]
-            return (words)
+        complete_true, true_positive, false_positive, false_negative = self.perSubtokenStatistics(zip(correct, predictions))
+        print(complete_true, true_positive, false_positive, false_negative)
+        total = len(correct)
+        accuracy, precision, recall, f1 = self.calculate_results(complete_true, total, true_positive, false_positive,
+                                                            false_negative)
+        print(accuracy, precision, recall, f1)
+        return accuracy, precision, recall, f1
 
 
-        predictions = self.__trained_model.model.predict(self.__trained_model.valX)  # get all predictions
-        predicted_classes = np.argmax(predictions, axis=1)
-        #predicted_classes = list(map(lambda x: [x], predicted_classes))
-
-        #get all possible target names
-
-        target_names = np.unique(np.append(predicted_classes, self.__trained_model.valY)).tolist()
-        target_names = list(map(lambda x: [x], target_names))
-        target_names = list(map(sequence_to_text, target_names))
-        target_names = list(map(lambda x: x[0], target_names))
-
-
-        report = metrics.classification_report(self.__trained_model.valY, predicted_classes, target_names=target_names, output_dict=True)
-        df = pd.DataFrame(report).transpose()
-
-
-        sklearn_report = os.path.join(self.report_folder, "report.csv")
-        df.to_csv(sklearn_report)
-        (_, _, f1, _) = metrics.precision_recall_fscore_support(self.__trained_model.valY,
-                                                                predicted_classes,
-                                                                average='weighted',
-                                                                warn_for=tuple())
-        logger.info("weighted f1 score is {}".format(f1))
 
 
     def visualize(self, always_unknown_train, always_unknown_test):
@@ -72,8 +46,6 @@ class Evaluator(object):
         loss = self.__trained_model.history.history['loss']
         val_loss = self.__trained_model.history.history['val_loss']
         epochs = range(1, len(acc) + 1)
-
-
 
 
         #hack
@@ -111,4 +83,57 @@ class Evaluator(object):
         plt.title('Training and validation loss')
         plt.legend()
         plt.savefig(loss_plot)
+
+
+    @staticmethod
+    def perSubtokenStatistics(results):
+        # check if in vocabulary
+        complete_true = 0
+        true_positive = 0
+        false_positive = 0
+        false_negative = 0
+        for correct, predicted in results:
+            if ''.join(correct) == ''.join(predicted):
+                true_positive += len(correct)
+                complete_true += 1
+                continue
+
+            for subtok in predicted:
+                if subtok in correct:
+                    true_positive += 1
+                else:
+                    false_positive += 1
+            for subtok in correct:
+                if not subtok in predicted:
+                    false_negative += 1
+
+        return complete_true, true_positive, false_positive, false_negative
+
+    @staticmethod
+    def calculate_results(complete_true, total, true_positive, false_positive, false_negative):
+        accuracy = 0
+        if total != 0:
+            accuracy = complete_true / total
+        if true_positive + false_positive > 0:
+            precision = true_positive / (true_positive + false_positive)
+        else:
+            precision = 0
+        if true_positive + false_negative > 0:
+            recall = true_positive / (true_positive + false_negative)
+        else:
+            recall = 0
+        if precision + recall > 0:
+            f1 = 2 * precision * recall / (precision + recall)
+        else:
+            f1 = 0
+        return accuracy, precision, recall, f1
+
+    @staticmethod
+    def filter_results(subtoken_list):
+        subtoken_list = list(filter(None, subtoken_list))
+        subtoken_list = [str(x) for x in subtoken_list]
+        subtoken_list = list(filter(lambda x: x != "starttoken", subtoken_list))
+        subtoken_list = list(filter(lambda x: x != "endtoken", subtoken_list))
+        subtoken_list = list(filter(lambda x: x != "True", subtoken_list))  # oov
+        return subtoken_list
 

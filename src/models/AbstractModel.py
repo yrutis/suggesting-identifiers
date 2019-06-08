@@ -25,7 +25,6 @@ class AbstractModel(object):
 
         logger = logging.getLogger(__name__)
 
-
         # save model architecture to disk
         plotted_model = os.path.join(self.report_folder, 'model-' + self.type +'.png')
         plot_model(self.model, to_file=plotted_model)

@@ -1,5 +1,6 @@
 import os
 
+from keras.engine.saving import load_model
 from keras.utils import plot_model
 
 from src.models.AbstractModel import AbstractModel
@@ -9,7 +10,6 @@ import logging
 from keras import Input
 from keras.layers import Embedding, Flatten, Dense, Dropout, LSTM
 from keras.models import Model
-from keras.optimizers import Adam
 
 
 class Seq2SeqModel(AbstractModel):
@@ -18,7 +18,6 @@ class Seq2SeqModel(AbstractModel):
         self.__context_vocab_size = context_vocab_size
         self.__windows_size = windows_size
         self.type = "Seq2Seq"
-        self.build_model()
 
     def build_model(self):
         logger = logging.getLogger(__name__)
@@ -83,5 +82,4 @@ class Seq2SeqModel(AbstractModel):
         plot_model(self.encoder_model, to_file=os.path.join(self.report_folder, 'encoder_model.png'), show_shapes=True)
         plot_model(self.decoder_model, to_file=os.path.join(self.report_folder, 'decoder_model.png'), show_shapes=True)
         plot_model(self.model, to_file=os.path.join(self.report_folder, 'model.png'), show_shapes=True)
-
 

@@ -87,6 +87,9 @@ def main(config_path):
                        windows_size=window_size,
                        config=config, report_folder=report_folder)
 
+    #build graph
+    model.build_model()
+
     data = [trainX, trainY, valX, valY]
 
 
@@ -140,6 +143,10 @@ def main(config_path):
 
     accuracy = correct / amnt
     print("total accuracy %.2f%%" % accuracy)
+
+    # safe tokenizer
+    tokenizer_path = os.path.join(report_folder, 'tokenizer.pkl')
+    dump(tokenizer, open(tokenizer_path, 'wb'))
 
 
 

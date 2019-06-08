@@ -1,8 +1,11 @@
 import os
 import logging
+
+from keras import Model, Input
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 
 import numpy as np
+from keras.engine.saving import load_model
 
 from matplotlib import pyplot as plt
 
@@ -52,6 +55,42 @@ class Seq2SeqTrain(object):
         plt.title('Training and validation loss')
         plt.legend()
         plt.savefig(os.path.join(self.report_folder, "loss_plot.png"))
+
+    def load_trained_model(self, path):
+        logger = logging.getLogger(__name__)
+
+        # load model from path
+        self.model = load_model(os.path.join(path, 'best_model.h5'))
+
+        logger.info(self.model.layers)
+        print("first layer {}".format(self.model.layers[1]))
+        print("second layer {}".format(self.model.layers[2]))
+
+        latent_dim = self.config.model.lstm_decoder_dim
+        encoder_inputs = self.model.input[0]  # input_1
+        dex = self.model.layers[2]
+
+        encoder_outputs, state_h_enc, state_c_enc = self.model.layers[3].output  # lstm_1
+        encoder_states = [state_h_enc, state_c_enc]
+        self.encoder_model = Model(encoder_inputs, encoder_states)
+
+        decoder_inputs = self.model.input[1]  # input_2
+        decoder_state_input_h = Input(shape=(latent_dim,), name='input_3')
+        decoder_state_input_c = Input(shape=(latent_dim,), name='input_4')
+        decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
+
+        dec_emb2 = dex(decoder_inputs)  # Get the embeddings of the decoder sequence
+
+        decoder_lstm = self.model.layers[4]
+        decoder_outputs, state_h_dec, state_c_dec = decoder_lstm(
+            dec_emb2, initial_state=decoder_states_inputs)
+        decoder_states = [state_h_dec, state_c_dec]
+
+        decoder_dense = self.model.layers[5]
+        decoder_outputs = decoder_dense(decoder_outputs)
+        self.decoder_model = Model(
+            [decoder_inputs] + decoder_states_inputs,
+            [decoder_outputs] + decoder_states)
 
 
     def predict(self, input_seq):
