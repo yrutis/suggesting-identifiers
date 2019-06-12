@@ -1,3 +1,4 @@
+import logging
 import re
 from collections import Counter
 from itertools import dropwhile
@@ -70,6 +71,25 @@ def clean_from_function_structure(method_body):
     method_body = list(filter(lambda x: x not in "()'{},.;\"", method_body))
     return method_body
 
+def remove_bad_naming_methods(df):
+    '''
+
+    :param df: before bad naming methods have been removed
+    :return: df: after bad naming methods have been removed
+    '''
+
+    logger = logging.getLogger(__name__)
+    i = 0
+    length_before_removing = df.shape[0]
+    logger.info("before removing get0 until get1000 {}".format(df.shape[0]))
+    while i < 1000:
+        #removed_methods = df[df['methodName'] == 'get'+str(i)]
+        #if removed_methods.shape[0] > 0:
+            #logger.info("this amount {} for the method get{} have just been removed".format(len(removed_methods['methodName'].tolist()), str(i)))
+        df = df[df['methodName'] != 'get'+str(i)]
+        i += 1
+    logger.info("after removing get0 until get1000 {}, difference {}".format(df.shape[0], length_before_removing-df.shape[0]))
+    return df
 
 def turn_all_to_lower(value):
     '''

@@ -3,6 +3,7 @@ import src.data.utils.helper_functions as helper_functions
 import logging
 import os
 import re
+import tensorflow as tf
 
 
 def split_camel_case_and_snake_case_target(y):
@@ -60,18 +61,48 @@ def main(filename):
         logger.info("{} Total Methods, {} Abstract Methods, {} Implemented Methods"
                     .format(all_methods_cnt, abstract_methods_cnt, impl_methods_cnt))
         return df
+
+
+
+    # load some flags
+    FLAGS = tf.app.flags.FLAGS
+
+    tf.app.flags.DEFINE_string('data', 'java-small-project-split',
+                               'must be in processed / intermediate')
+
+    tf.app.flags.DEFINE_string('type', 'test',
+                               'must be either training/ validation/ test')
+
+    data_processed_intermediate = FLAGS.data + '-processed'
+    type = FLAGS.type
+
     # get logger
     logger = logging.getLogger(__name__)
 
     data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
-    intermediate_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'), 'intermediate'),
-                                               filename + '.json')
+    intermediate_full_path = os.path.join(
+        os.path.join(os.path.join(os.path.join(os.path.join(data_folder, 'processed'),
+                                               'intermediate'), data_processed_intermediate), type),
+        data_processed_intermediate + '.json')
 
-    filename += '-subtoken'
 
-    processed_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'), 'decoded'),
-                                               filename + '.json')  # get decoded path
+    processed_decoded_project_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'),
+                                                               'decoded'), data_processed_intermediate)
 
+    processed_decoded_type_path = os.path.join(processed_decoded_project_path, type)
+
+    data_processed_intermediate += '-subtoken'
+
+
+    processed_decoded_full_path = os.path.join(processed_decoded_type_path, data_processed_intermediate + '.json')
+
+    # create folder if it doesn't exist
+    if not os.path.exists(processed_decoded_project_path):
+        os.mkdir(processed_decoded_project_path)
+
+    # create folder if it doesn't exist
+    if not os.path.exists(processed_decoded_type_path):
+        os.mkdir(processed_decoded_type_path)
 
     df = pd.read_json(intermediate_full_path, orient='records')
 
@@ -86,6 +117,8 @@ def main(filename):
     #clean from function structure
     df['methodBodyCleaned'] = df['methodBody'].apply(helper_functions.clean_from_function_structure)
 
+    #remove bad naming methods before splitting method names
+    df = helper_functions.remove_bad_naming_methods(df)
 
     df['methodName'] = df['methodName'].apply(split_camel_case_and_snake_case_target)
     df['methodBodySplitted'] = df['methodBodyCleaned'].apply(split_camel_case_and_snake_case_body)
@@ -103,8 +136,8 @@ def main(filename):
 
     # for consistency each method now has a methodName, methodBody, parameters, type
     df['methodBody'] = df['methodBodySplitted']
-    df.drop(['methodBodyCleaned'], axis=1)
-    df.drop(['methodBodySplitted'], axis=1)
+    df = df.drop(['methodBodyCleaned'], axis=1)
+    df = df.drop(['methodBodySplitted'], axis=1)
 
     export = df.to_json(processed_decoded_full_path, orient='records')
     logger.info('finished')
