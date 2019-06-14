@@ -19,7 +19,7 @@ class AbstractTrain(object):
         self.valX = data[2]
         self.valY = data[3]
         self.histories = Histories(report_folder, tokenizer)
-        self.es = EarlyStopping(monitor='val_loss', mode='min', verbose=1)
+        self.es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=10)
         self.mc = ModelCheckpoint(os.path.join(report_folder, "best_model.h5"), monitor='val_acc', mode='max', verbose=1, save_best_only=True)
         self.report_folder = report_folder
 
