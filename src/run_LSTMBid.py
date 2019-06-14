@@ -36,6 +36,8 @@ def main(config_path):
     tf.app.flags.DEFINE_integer('window_size_params', config.data_loader.window_size_params, 'must be between 2+')
     tf.app.flags.DEFINE_integer('epochs', config.trainer.num_epochs, 'must be between 1-100')
     tf.app.flags.DEFINE_integer('batch_size', config.trainer.batch_size, 'must be a power of 2 2^1 - 2^6')
+    tf.app.flags.DEFINE_float('remove_train_unk', config.data_loader.remove_train_unk, 'must be between 0 and 1')
+    tf.app.flags.DEFINE_float('remove_val_unk', config.data_loader.remove_val_unk, 'must be a between 0 and 1')
 
 
     config.data_loader.name = FLAGS.data
@@ -53,10 +55,18 @@ def main(config_path):
     config.trainer.batch_size = FLAGS.batch_size
     logger.info("batch size is {}".format(config.trainer.batch_size))
 
+    config.data_loader.remove_train_unk = FLAGS.remove_train_unk
+    logger.info("remove_train_unk is {}".format(config.data_loader.remove_train_unk))
+
+    config.data_loader.remove_val_unk = FLAGS.remove_val_unk
+    logger.info("remove_val_unk is {}".format(config.data_loader.remove_val_unk))
+
 
     #get data, UNK and other statistics
     trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test, window_size = \
-        prepare_data.main(config.data_loader.name, config.data_loader.window_size_params, config.data_loader.window_size_body)
+        prepare_data.main(config.data_loader.name, config.data_loader.window_size_params, config.data_loader.window_size_body,
+                          remove_train_unk=config.data_loader.remove_train_unk,
+                          remove_val_unk=config.data_loader.remove_val_unk)
 
     word_index = tokenizer.word_index
     logger.info('Found {} unique tokens.'.format(len(word_index) + 1))

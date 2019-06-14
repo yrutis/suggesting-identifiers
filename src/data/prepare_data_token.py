@@ -11,7 +11,7 @@ import os
 #%%
 
 
-def main(filename, window_size_params, window_size_body):
+def main(filename, window_size_params, window_size_body, remove_train_unk=0, remove_val_unk=0):
 
 
     # get logger
@@ -110,7 +110,9 @@ def main(filename, window_size_params, window_size_body):
 
 
     trainX, trainY, valX, valY, perc_unk_train, perc_unk_val = \
-        helper_functions.remove_some_unknowns(trainX, trainY, valX, valY, remove_train=0.5, remove_val=0.5)
+        helper_functions.remove_some_unknowns(trainX, trainY, valX, valY,
+                                              remove_train=remove_train_unk,
+                                              remove_val=remove_val_unk)
 
 
     return trainX, trainY, valX, valY, tokenizer, perc_unk_train, perc_unk_val, max_input_elemts

@@ -5,7 +5,9 @@
         "full_data": "all_methods_train",
         "local_data": "Android-Universal-Image-Loader",
         "window_size_body": 8,
-        "window_size_params": 2
+        "window_size_params": 2,
+        "remove_train_unk": 0.5,
+        "remove_val_unk": 0.5
     },
     "model": {
         "name": "model.GRU",

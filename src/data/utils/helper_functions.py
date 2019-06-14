@@ -177,14 +177,10 @@ def remove_some_unknowns(trainX, trainY, valX, valY, remove_train=0, remove_val=
     '''
 
     logger = logging.getLogger(__name__)
-
-    print("TRAINX before X: {}".format(trainX[:10]))
-    print("TRAINY before Y: {}".format(trainY[:10]))
+    logger.info("this is remove_train {}, this is remove_val {}".format(remove_train, remove_val))
 
     train_df = pd.DataFrame({'trainY': trainY, 'trainX': list(trainX)})
     logger.info(train_df.head())
-    #cnt_unk = len(train_df[(train_df['trainY'] == 1)])
-    #cnt_all = len(train_df.index)
     perc_unk_train = (len(train_df[(train_df['trainY'] == 1)])) / (len(train_df.index))
     print(perc_unk_train)
 
@@ -200,16 +196,10 @@ def remove_some_unknowns(trainX, trainY, valX, valY, remove_train=0, remove_val=
 
     trainX = np.array(train_df['trainX'].values.tolist())
     trainY = train_df['trainY'].values
-    logger.info("TRAINX after X: {}".format(trainX[:10]))
-    print("TRAINY after Y: {}".format(trainY[:10]))
-
-
-    print("VALX before X: {}".format(valX[:10]))
-    print("VALY before Y: {}".format(valY[:10]))
 
 
     val_df = pd.DataFrame({'valY': valY, 'valX': list(valX)})
-    print(val_df.head())
+
     perc_unk_val = len(val_df[(val_df['valY'] == 1)]) / len(val_df.index)
     logger.info("This is the percentage of UNK in Validation before removal {}".format(perc_unk_val))
 
@@ -225,8 +215,6 @@ def remove_some_unknowns(trainX, trainY, valX, valY, remove_train=0, remove_val=
 
     valX = np.array(val_df['valX'].values.tolist())
     valY = val_df['valY'].values
-    #print("VALX after X: {}".format(valX[:10]))
-    #print("VALY after Y: {}".format(valY[:10]))
 
 
     return trainX, trainY, valX, valY, perc_unk_train, perc_unk_val
