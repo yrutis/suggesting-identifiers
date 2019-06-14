@@ -69,19 +69,16 @@ def main(config_path):
     logger.info("remove_val_unk is {}".format(config.data_loader.remove_val_unk))
 
 
-    # get data, UNK and other statistics
+    # get trainX, trainY, valX, valY, tokenizer (dictionary), unknown statistics, window_size of X
     trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test, window_size = \
         prepare_data.main(config.data_loader.name, config.data_loader.window_size_params,
                           config.data_loader.window_size_body,
                           remove_train_unk=config.data_loader.remove_train_unk,
                           remove_val_unk=config.data_loader.remove_val_unk)
 
-    word_index = tokenizer.word_index
-    logger.info('Found {} unique tokens.'.format(len(word_index) + 1))
 
-    vocab_size = len(word_index) + 1
-
-    print(FLAGS.data)
+    vocab_size = len(tokenizer.word_index) + 1
+    logger.info('Found {} unique tokens.'.format(vocab_size))
 
     #create unique report folder
     random_nr = randint(0, 10000)
@@ -89,11 +86,6 @@ def main(config_path):
     report_folder = os.path.join(path_file.report_folder, 'reports-' + config.name + '-' + unique_folder_key)
 
     os.mkdir(report_folder)
-
-
-    # write in report folder
-    with open(os.path.join(report_folder, config.name+'.json'), 'w') as outfile:
-        json.dump(config, outfile, indent=4)
 
     if config.name == "GRU":
         # load specific graph settings for model
@@ -154,6 +146,10 @@ def main(config_path):
     evaluator2 = Evaluator(trainer2, report_folder)
     evaluator2.visualize(always_unknown_train, always_unknown_test)
     evaluator2.evaluate()
+
+    # write config in report folder
+    with open(os.path.join(report_folder, config.name + '.json'), 'w') as outfile:
+        json.dump(config, outfile, indent=4)
 
     tokenizer_path = os.path.join(report_folder, 'tokenizer.pkl')
     dump(tokenizer, open(tokenizer_path, 'wb'))
