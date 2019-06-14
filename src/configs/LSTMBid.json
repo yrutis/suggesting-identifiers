@@ -13,6 +13,7 @@
         "name": "model.LSTMBid",
         "embedding_dim": 64,
         "lstm_dim": 32,
+        "dense_activation_1": "sigmoid",
         "dense_dim": 50,
         "dropout_1": 0.5,
         "loss": "sparse_categorical_crossentropy",

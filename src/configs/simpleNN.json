@@ -13,6 +13,7 @@
         "name": "model.SimpleNN",
         "embedding_dim": 56,
         "dense_dim": 50,
+        "dense_activation_1": "sigmoid",
         "dropout_1": 0.5,
         "loss": "sparse_categorical_crossentropy",
         "metrics": [

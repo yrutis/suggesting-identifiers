@@ -13,7 +13,7 @@
         "name": "model.GRU",
         "embedding_dim": 128,
         "lstm_dim": 100,
-        "dense_dim_1": 70,
+        "dense_dim": 70,
         "dense_activation_1": "sigmoid",
         "dropout_1": 0.2,
         "dropout_2": 0.2,

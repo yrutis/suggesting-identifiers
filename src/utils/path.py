@@ -5,6 +5,10 @@ import os
 #------------------------------------------------------------------------------------------------------------------
 
 #JSON config files
+
+token_model_config_path = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            'configs'), "token_model.json")
+
 simpleNN_config_path = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                             'configs'), "simpleNN.json")
 
