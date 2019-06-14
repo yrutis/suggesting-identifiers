@@ -1,6 +1,5 @@
 import os
 
-from keras.engine.saving import load_model
 from keras.utils import plot_model
 
 from src.models.AbstractModel import AbstractModel

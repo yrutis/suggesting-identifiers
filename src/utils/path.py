@@ -8,6 +8,9 @@ import os
 simpleNN_config_path = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                             'configs'), "simpleNN.json")
 
+GRU_config_path = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            'configs'), "GRU.json")
+
 LSTM_config_path = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                                     'configs'), "LSTM.json")
 

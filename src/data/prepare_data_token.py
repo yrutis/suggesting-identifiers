@@ -13,147 +13,107 @@ import os
 
 def main(filename, window_size_params, window_size_body):
 
-    #%%
 
     # get logger
     logger = logging.getLogger(__name__)
 
+    filename += '-processed'
+
     data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
-    processed_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'), 'decoded'),
-                                               filename + '.json')  # get decoded path
+    training_processed_decoded_full_path = os.path.join(os.path.join(os.path.join(os.path.join(os.path.join(data_folder, 'processed'),
+                                                        'decoded'), filename), 'training'), filename + '-token.json')
+    validation_processed_decoded_full_path = os.path.join(os.path.join(os.path.join(os.path.join(os.path.join(data_folder, 'processed'),
+                                                            'decoded'), filename), 'validation'), filename + '-token.json')
 
-    #%%
-    df = pd.read_json(processed_decoded_full_path, orient='records')
+    df_train = pd.read_json(training_processed_decoded_full_path, orient='records')
+    df_val = pd.read_json(validation_processed_decoded_full_path, orient='records')
 
 
-    #%% only keep max first window_size_params params
-    # only keep max first window_size_body words in methodbody
+    # E.g. only keep the first 10 tokens in the method body,
+    # E.g. only keep the first 2 tokens in parameters
+    #concate parameters, method body, type
 
     max_input_elemts = 1 + window_size_params + window_size_body
 
+    df_train['parameters'] = df_train['parameters'].apply(helper_functions.get_first_x_elem, args=(window_size_params,))
+    df_train['methodBody'] = df_train['methodBody'].apply(helper_functions.get_first_x_elem, args=(window_size_body,))
+    df_train["concatMethodBodyCleaned"] = df_train['Type'].map(lambda x: [x]) + df_train["parameters"] + df_train["methodBody"]
 
-    df['parameters'] = df['parameters'].apply(helper_functions.get_first_x_elem, args=(window_size_params,))
-    df['methodBodyCleaned'] = df['methodBodyCleaned'].apply(helper_functions.get_first_x_elem, args=(window_size_body,))
-    df["concatMethodBodyCleaned"] = df['Type'].map(lambda x: [x]) + df["parameters"] + df["methodBodyCleaned"]
+    df_val['parameters'] = df_val['parameters'].apply(helper_functions.get_first_x_elem, args=(window_size_params,))
+    df_val['methodBody'] = df_val['methodBody'].apply(helper_functions.get_first_x_elem, args=(window_size_body,))
+    df_val["concatMethodBodyCleaned"] = df_val['Type'].map(lambda x: [x]) + df_val["parameters"] + df_val["methodBody"]
 
 
-    #%%
+    trainX = list(df_train['concatMethodBodyCleaned'])
+    trainY = list(df_train['methodName'])
 
-    def getFirstElem(x):
-        try:
-            return x[0]
-        except IndexError:
-            #if for some reason there is no method name (due to weird namings...) -> map it to unknown
-            logger.info(x)
-            return 1
-    #%%
 
-    x_train, x_test, y_train, y_test = train_test_split(df['concatMethodBodyCleaned'], df['methodName'], test_size=0.2, random_state=200)
-    method_body_cleaned_list_x = list(x_train)
-    method_name_x = list(y_train)
+    #create training vocab
+    training_vocab_x = helper_functions.get_training_vocab(trainX, is_for_x=True)
+    training_vocab_y = helper_functions.get_training_vocab(trainY, is_for_x=False)
 
-    training_vocab_x = helper_functions.get_training_vocab(method_body_cleaned_list_x, is_for_x=True)
-    training_vocab_y = helper_functions.get_training_vocab(method_name_x, is_for_x=False)
+    # fit on text words that appear at least 3x from trainX and trainY
+    tokenizer = Tokenizer(oov_token=True, filters='')
 
-    x_train = list(map(helper_functions.get_into_tokenizer_format, method_body_cleaned_list_x))
-    #print(x_train[:10])
-
-    # fit on text the most common words from trainX and trainY
-    tokenizer = Tokenizer(oov_token=True)
-      # actual training data gets mapped on text
-    tokenizer.fit_on_texts(training_vocab_y)  # actual training data gets mapped on text
-
-    word_index = tokenizer.word_index
-    logger.info('Found {} unique Y tokens.'.format(len(word_index) + 1))
-
+    # actual training data gets mapped on text
+    tokenizer.fit_on_texts(training_vocab_y)
+    logger.info('Found {} unique Y tokens.'.format(len(tokenizer.word_index) + 1))
     tokenizer.fit_on_texts(training_vocab_x)
+    logger.info('Found {} unique X+Y tokens.'.format(len(tokenizer.word_index) + 1))
 
-    word_index = tokenizer.word_index
-    logger.info('Found {} unique X+Y tokens.'.format(len(word_index) + 1))
+    # %% idx2word
 
-    # tokenize just trainX
-    vocab_size = len(word_index) + 1
+    # Creating a reverse dictionary
+    reverse_word_map = dict(map(reversed, tokenizer.word_index.items()))
+
+    # Function takes a tokenized sentence and returns the words
+    def sequence_to_text(list_of_indices):
+        # Looking up words in dictionary
+        words = [reverse_word_map.get(letter) for letter in list_of_indices]
+        return (words)
+
+    #%%
+
+    # tokenize trainX
+    x_train = list(map(helper_functions.get_into_tokenizer_format, trainX))
     sequences = tokenizer.texts_to_sequences(x_train)
     trainX = pad_sequences(sequences, maxlen=max_input_elemts, value=0)
 
-    # tokenize just trainY
-    y_train = list(y_train)
+    # tokenize trainY
+    y_train = list(df_train['methodName'])
     y_train_tokenized = tokenizer.texts_to_sequences(y_train)
     logger.info(y_train_tokenized[:5])
-    y_train_tokenized = list(map(getFirstElem, y_train_tokenized))
+    y_train_tokenized = list(map(helper_functions.getFirstElem, y_train_tokenized))
     logger.info(y_train_tokenized[:5])
     trainY = np.array(y_train_tokenized)
 
 
     # tokenize just valX
-    x_test_seq = tokenizer.texts_to_sequences(x_test)
+    valX_raw = list(df_val['concatMethodBodyCleaned'])
+    print(valX_raw[:3])
+    x_test_seq = tokenizer.texts_to_sequences(valX_raw)
     valX = pad_sequences(x_test_seq, maxlen=max_input_elemts, value=0)
+    print(valX[:3])
+    valX_decoded = list(map(sequence_to_text, valX))
+    print(valX_decoded[:3])
+
 
     # tokenize just testY
-    y_test = list(y_test)
+    y_test = list(df_val['methodName'])
+    print(y_test[:3])
     y_test_tokenized = tokenizer.texts_to_sequences(y_test)
-    y_test_tokenized = list(map(getFirstElem, y_test_tokenized))
+    print(y_test_tokenized[:3])
+    y_test_decoded = list(map(sequence_to_text, y_test_tokenized))
+    print(y_test_decoded[:3])
+    y_test_tokenized = list(map(helper_functions.getFirstElem, y_test_tokenized))
     valY = np.array(y_test_tokenized)
 
-    print("TRAINX before X: {}".format(trainX[:10]))
-    print("TRAINY before Y: {}".format(trainY[:10]))
+
+    trainX, trainY, valX, valY, perc_unk_train, perc_unk_val = \
+        helper_functions.remove_some_unknowns(trainX, trainY, valX, valY, remove_train=0.5, remove_val=0.5)
 
 
-    #hack to remove some unk from training
-    #----------------------------------------
-
-    train_df = pd.DataFrame({'trainY': trainY, 'trainX': list(trainX)})
-    print(train_df.head())
-    cnt_unk = len(train_df[(train_df['trainY'] == 1)])
-    cnt_all = len(train_df.index)
-    perc_unk = cnt_unk / cnt_all
-    print(perc_unk)
-
-    train_df = train_df.drop(train_df[train_df['trainY'] == 1].sample(frac=.5).index)
-    cnt_unk = len(train_df[(train_df['trainY'] == 1)])
-    cnt_all = len(train_df.index)
-    perc_unk_train = cnt_unk / cnt_all
-    print(perc_unk_train)
-
-    trainX = np.array(train_df['trainX'].values.tolist())
-    trainY = train_df['trainY'].values
-    print("TRAINX after X: {}".format(trainX[:10]))
-    print("TRAINY after Y: {}".format(trainY[:10]))
-
-    #-------------------------------------------
-
-    print("VALX before X: {}".format(valX[:10]))
-    print("VALY before Y: {}".format(valY[:10]))
-
-    #hack to remove some unk from validation
-    #----------------------------------------
-
-    val_df = pd.DataFrame({'valY': valY, 'valX': list(valX)})
-    print(val_df.head())
-    cnt_unk = len(val_df[(val_df['valY'] == 1)])
-    cnt_all = len(val_df.index)
-    perc_unk = cnt_unk / cnt_all
-    print(perc_unk)
-
-    val_df = val_df.drop(val_df[val_df['valY'] == 1].sample(frac=.5).index)
-    cnt_unk = len(val_df[(val_df['valY'] == 1)])
-    cnt_all = len(val_df.index)
-    perc_unk_test = cnt_unk / cnt_all
-    print(perc_unk_test)
-
-    #val_df['valX'] = val_df['valX'].apply(lambda x: np.array(x))
-    valX = np.array(val_df['valX'].values.tolist())
-    valY = val_df['valY'].values
-    print("VALX after X: {}".format(valX[:10]))
-    print("VALY after Y: {}".format(valY[:10]))
-
-    #-------------------------------------------
-
-
-    return trainX, trainY, valX, valY, tokenizer, perc_unk_train, perc_unk_test, max_input_elemts
-
-    # trainY = to_categorical(trainY, num_classes=vocab_size)
-    # valY = to_categorical(valY, num_classes=vocab_size)
+    return trainX, trainY, valX, valY, tokenizer, perc_unk_train, perc_unk_val, max_input_elemts
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

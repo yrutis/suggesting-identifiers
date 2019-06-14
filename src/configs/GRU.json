@@ -1,5 +1,5 @@
 {
-    "name": "simpleNN",
+    "name": "GRU",
     "data_loader": {
         "name": "Android-Universal-Image-Loader",
         "full_data": "all_methods_train",
@@ -8,17 +8,21 @@
         "window_size_params": 2
     },
     "model": {
-        "name": "model.SimpleNN",
-        "embedding_dim": 56,
-        "dense_dim": 50,
-        "dropout_1": 0.5,
+        "name": "model.GRU",
+        "embedding_dim": 128,
+        "lstm_dim": 100,
+        "dense_dim_1": 70,
+        "dense_activation_1": "sigmoid",
+        "dropout_1": 0.2,
+        "dropout_2": 0.2,
+        "dropout_3": 0.2,
         "loss": "sparse_categorical_crossentropy",
         "metrics": [
             "acc"
         ]
     },
     "trainer": {
-        "name": "trainer.SimpleNN",
+        "name": "trainer.GRU",
         "num_epochs": 15,
         "batch_size": 64
     }

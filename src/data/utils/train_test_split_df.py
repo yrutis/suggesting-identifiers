@@ -2,35 +2,41 @@ import os
 
 import pandas as pd
 
-def main():
-    filename = 'androidTest'
+def main(filename):
 
-    data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))), 'data')
+    # get data folder
+    data_folder = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))), 'data')
 
-    print(data_folder)
-    raw_original_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'raw'), 'original'),
-                                               filename + '.json')
+    intermediate = os.path.join(os.path.join(os.path.join(os.path.join(
+        os.path.join(data_folder, 'processed'), 'intermediate'), filename),
+        'training'),
+        filename+'.json')
 
-    print(raw_original_full_path)
 
-    raw_train_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'raw'), 'train'),
-                                               filename + '.json')
+    intermediate_train = os.path.join(os.path.join(os.path.join(os.path.join(
+        os.path.join(data_folder, 'processed'), 'intermediate'), filename),
+        'training'),
+        filename+'.json')
 
-    raw_test_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'raw'), 'test'),
-                                               filename + '.json')
+    intermediate_test = os.path.join(os.path.join(os.path.join(os.path.join(
+        os.path.join(data_folder, 'processed'), 'intermediate'), filename),
+        'training'),
+        filename+'-validation.json')
 
-    df = pd.read_json(raw_original_full_path, orient='records')
+    df = pd.read_json(intermediate, orient='records')
 
-    train = df.sample(frac=0.8, random_state=200)
+    train = df.sample(frac=0.9, random_state=200)
     test = df.drop(train.index)
 
     print(df.shape)
     print(train.shape)
     print(test.shape)
 
-    train.to_json(raw_train_full_path, orient='records')
-    test.to_json(raw_test_full_path, orient='records')
+    train.to_json(intermediate_train, orient='records')
+    test.to_json(intermediate_test, orient='records')
 
 
 if __name__ == '__main__':
-    main()
+    filename = 'java-small-project-split-processed'
+    main(filename)

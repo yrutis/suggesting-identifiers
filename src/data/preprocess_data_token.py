@@ -46,10 +46,10 @@ def main():
     # load some flags
     FLAGS = tf.app.flags.FLAGS
 
-    tf.app.flags.DEFINE_string('data', 'java-small-project-split',
+    tf.app.flags.DEFINE_string('data', 'Android-Universal-Image-Loader',
                                'must be in processed / intermediate')
 
-    tf.app.flags.DEFINE_string('type', 'training',
+    tf.app.flags.DEFINE_string('type', 'test',
                                'must be either training/ validation/ test')
 
     data_processed_intermediate = FLAGS.data + '-processed'
@@ -57,6 +57,8 @@ def main():
 
     # get logger
     logger = logging.getLogger(__name__)
+
+    logger.info("this is the data {}, type {}".format(data_processed_intermediate, type))
 
     data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
     intermediate_full_path = os.path.join(os.path.join(os.path.join(os.path.join(os.path.join(data_folder, 'processed'),

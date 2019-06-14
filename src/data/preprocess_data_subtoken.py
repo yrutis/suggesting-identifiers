@@ -120,13 +120,13 @@ def main(filename):
     #remove bad naming methods before splitting method names
     df = helper_functions.remove_bad_naming_methods(df)
 
+    #split the method names, parameters, type into subtokens
     df['methodName'] = df['methodName'].apply(split_camel_case_and_snake_case_target)
     df['methodBodySplitted'] = df['methodBodyCleaned'].apply(split_camel_case_and_snake_case_body)
     df['parameters'] = df['parameters'].apply(split_camel_case_and_snake_case_body)
 
-    df["parameters"] = df['parameters'].apply(helper_functions.turn_all_to_lower)
-
     #turn everything to lowercase
+    df["parameters"] = df['parameters'].apply(helper_functions.turn_all_to_lower)
     df["methodBody"] = df['methodBody'].apply(helper_functions.turn_all_to_lower)
     df["methodBodySplitted"] = df['methodBodySplitted'].apply(helper_functions.turn_all_to_lower)
     df['Type'] = df['Type'].apply(lambda x: x.lower())

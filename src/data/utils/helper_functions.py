@@ -3,6 +3,10 @@ import re
 from collections import Counter
 from itertools import dropwhile
 
+import pandas as pd
+import numpy as np
+
+
 def removeOptional(method_body):
     '''
     :param method_body: methodbody
@@ -159,3 +163,80 @@ def get_first_x_elem(elem_list, window_size):
         return elem_list
     else:
         return elem_list[:window_size]
+
+
+def remove_some_unknowns(trainX, trainY, valX, valY, remove_train=0, remove_val=0):
+    '''
+    :param trainX:
+    :param trainY:
+    :param valX:
+    :param valY:
+    :param remove_train: flag if some unknowns from training should be removed
+    :param remove_val: flag if some unknowns from validation should be removed
+    :return: trainX, trainY, valX, valY, percentage unknowns train, percentage unknowns val
+    '''
+
+    logger = logging.getLogger(__name__)
+
+    print("TRAINX before X: {}".format(trainX[:10]))
+    print("TRAINY before Y: {}".format(trainY[:10]))
+
+    train_df = pd.DataFrame({'trainY': trainY, 'trainX': list(trainX)})
+    logger.info(train_df.head())
+    #cnt_unk = len(train_df[(train_df['trainY'] == 1)])
+    #cnt_all = len(train_df.index)
+    perc_unk_train = (len(train_df[(train_df['trainY'] == 1)])) / (len(train_df.index))
+    print(perc_unk_train)
+
+    if remove_train > 0 and remove_train < 1:
+        train_df = train_df.drop(train_df[train_df['trainY'] == 1].sample(frac=remove_train).index)
+        perc_unk_train = (len(train_df[(train_df['trainY'] == 1)])) / (len(train_df.index))
+        logger.info("This is the Percentage of UNK during training {}".format(perc_unk_train))
+
+    elif remove_train == 1:
+        train_df = train_df.drop(train_df[train_df['trainY'] == 1].index)
+        perc_unk_train = len(train_df[(train_df['trainY'] == 1)]) / (len(train_df.index))
+        logger.info("This is the Percentage of UNK during training {}".format(perc_unk_train))
+
+    trainX = np.array(train_df['trainX'].values.tolist())
+    trainY = train_df['trainY'].values
+    logger.info("TRAINX after X: {}".format(trainX[:10]))
+    print("TRAINY after Y: {}".format(trainY[:10]))
+
+
+    print("VALX before X: {}".format(valX[:10]))
+    print("VALY before Y: {}".format(valY[:10]))
+
+
+    val_df = pd.DataFrame({'valY': valY, 'valX': list(valX)})
+    print(val_df.head())
+    perc_unk_val = len(val_df[(val_df['valY'] == 1)]) / len(val_df.index)
+    logger.info("This is the percentage of UNK in Validation before removal {}".format(perc_unk_val))
+
+    if remove_val > 0 and remove_val < 1:
+        val_df = val_df.drop(val_df[val_df['valY'] == 1].sample(frac=remove_val).index)
+        perc_unk_val = (len(val_df[(val_df['valY'] == 1)])) / (len(val_df.index))
+        logger.info("This is the percentage of UNK in Validation after removal {}".format(perc_unk_val))
+    elif remove_val == 1:
+        val_df = val_df.drop(val_df[val_df['valY'] == 1].index)
+        perc_unk_val = (len(val_df[(val_df['valY'] == 1)])) / (len(val_df.index))
+        logger.info("This is the percentage of UNK in Validation after removal {}".format(perc_unk_val))
+
+
+    valX = np.array(val_df['valX'].values.tolist())
+    valY = val_df['valY'].values
+    #print("VALX after X: {}".format(valX[:10]))
+    #print("VALY after Y: {}".format(valY[:10]))
+
+
+    return trainX, trainY, valX, valY, perc_unk_train, perc_unk_val
+
+
+def getFirstElem(x):
+    logger = logging.getLogger(__name__)
+    try:
+        return x[0]
+    except IndexError:
+        #if for some reason there is no method name (due to weird namings...) -> map it to unknown
+        logger.info(x)
+        return 1
