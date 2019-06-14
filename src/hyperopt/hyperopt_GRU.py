@@ -7,7 +7,7 @@ from datetime import datetime
 from random import randint
 
 from keras import Input, Model
-from keras.layers import Bidirectional
+from keras.layers import GRU
 from keras.optimizers import Adam
 
 import src.utils.path as path_file
@@ -18,29 +18,26 @@ from hyperas import optim
 from hyperas.distributions import choice, uniform
 from keras.layers.core import Dense, Dropout
 from keras.layers.embeddings import Embedding
-from keras.layers.recurrent import LSTM
 from keras.callbacks import EarlyStopping
-
 import tensorflow as tf
-
 
 def data():
 
-    LSTMBid_config_path = path_file.LSTMBid_config_path
-    LSTMBid_config = config_loader.get_config_from_json(LSTMBid_config_path)
+    GRU_config_path = path_file.GRU_config_path
+    GRU_config = config_loader.get_config_from_json(GRU_config_path)
 
     FLAGS = tf.app.flags.FLAGS
-    tf.app.flags.DEFINE_string('data', LSTMBid_config.data_loader.name,
+    tf.app.flags.DEFINE_string('data', GRU_config.data_loader.name,
                                'must be valid data')
 
-    LSTMBid_config.data_loader.name = FLAGS.data
-    print("data used is {}".format(LSTMBid_config.data_loader.name))
+    GRU_config.data_loader.name = FLAGS.data
+    print("data used is {}".format(GRU_config.data_loader.name))
 
     # get data
     trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test, window_size = \
-        prepare_data_token.main(LSTMBid_config.data_loader.name,
-                                LSTMBid_config.data_loader.window_size_params,
-                                LSTMBid_config.data_loader.window_size_body)
+        prepare_data_token.main(GRU_config.data_loader.name,
+                                GRU_config.data_loader.window_size_params,
+                                GRU_config.data_loader.window_size_body)
 
     vocab_size = len(tokenizer.word_index) + 1
     print('Found {} unique tokens.'.format(vocab_size))
@@ -49,17 +46,17 @@ def data():
     random_nr = randint(0, 10000)
     unique_folder_key = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S') + "-" + str(random_nr)
     report_folder = path_file.report_folder
-    report_folder_LSTMBid = os.path.join(report_folder, 'reports-' + LSTMBid_config.name + '-' + unique_folder_key)
+    report_folder_GRU = os.path.join(report_folder, 'reports-' + GRU_config.name + '-' + unique_folder_key)
 
-    os.mkdir(report_folder_LSTMBid)
-
-
-    return trainX, trainY, valX, valY, vocab_size, LSTMBid_config, report_folder_LSTMBid, window_size
+    os.mkdir(report_folder_GRU)
 
 
+    return trainX, trainY, valX, valY, vocab_size, GRU_config, report_folder_GRU, window_size
 
 
-def model(trainX, trainY, valX, valY, vocab_size, LSTMBid_config, report_folder_LSTMBid, window_size):
+
+
+def model(trainX, trainY, valX, valY, vocab_size, GRU_config, report_folder_GRU, window_size):
     logger = logging.getLogger(__name__)
 
 
@@ -69,7 +66,7 @@ def model(trainX, trainY, valX, valY, vocab_size, LSTMBid_config, report_folder_
     tensor = Input(shape=(window_size,))
     c = contextEmbedding(tensor)
     c = Dropout({{uniform(0, 0.5)}})(c)
-    c = Bidirectional(LSTM({{choice([30, 50, 100, 200])}}, recurrent_dropout={{uniform(0, 0.5)}}, dropout={{uniform(0, 0.5)}}))(c)
+    c = GRU({{choice([50, 100, 200, 400])}}, recurrent_dropout={{uniform(0, 0.5)}}, dropout={{uniform(0, 0.5)}})(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
     c = Dense({{choice([30, 50, 70, 100, 200, 300])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
@@ -81,7 +78,7 @@ def model(trainX, trainY, valX, valY, vocab_size, LSTMBid_config, report_folder_
 
     model = Model(tensor, answer)
     optimizer = Adam(lr={{choice([0.001, 3e-4])}})
-    model.compile(optimizer=optimizer, loss=LSTMBid_config.model.loss, metrics=LSTMBid_config.model.metrics)
+    model.compile(optimizer=optimizer, loss=GRU_config.model.loss, metrics=GRU_config.model.metrics)
 
     early_stopping = EarlyStopping(monitor='val_loss',
                                    mode= 'min',
@@ -100,9 +97,6 @@ def model(trainX, trainY, valX, valY, vocab_size, LSTMBid_config, report_folder_
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
-
-
-
     best_run, best_model = optim.minimize(model=model,
                                           data=data,
                                           algo=tpe.suggest,
@@ -110,11 +104,11 @@ if __name__ == '__main__':
                                           trials=Trials())
     print(best_run)
 
-    trainX, trainY, valX, valY, vocab_size, LSTMBid_config, report_folder_LSTM, window_size = data()
+    trainX, trainY, valX, valY, vocab_size, GRU_config, report_folder_GRU, window_size = data()
     print("Evalutation of best performing model:")
     print(best_model.evaluate(valX, valY))
     print("Best performing model chosen hyper-parameters:")
     print(best_run)
 
-    best_model.save(os.path.join(report_folder_LSTM, 'best_model.h5'))
-    json.dump(best_run, open(os.path.join(report_folder_LSTM, "best_run.txt"), 'w'))
+    best_model.save(os.path.join(report_folder_GRU, 'best_model.h5'))
+    json.dump(best_run, open(os.path.join(report_folder_GRU, "best_run.txt"), 'w'))

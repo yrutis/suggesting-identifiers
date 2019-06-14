@@ -7,7 +7,7 @@ from datetime import datetime
 from random import randint
 
 from keras import Input, Model
-from keras.optimizers import RMSprop, Adam
+from keras.optimizers import Adam
 
 import src.utils.path as path_file
 from src.data import prepare_data_token
@@ -15,28 +15,33 @@ import src.utils.config as config_loader
 from hyperopt import Trials, STATUS_OK, tpe
 from hyperas import optim
 from hyperas.distributions import choice, uniform
-from keras.layers.core import Dense, Dropout, Activation
+from keras.layers.core import Dense, Dropout
 from keras.layers.embeddings import Embedding
 from keras.layers.recurrent import LSTM
 from keras.callbacks import EarlyStopping
 
+import tensorflow as tf
 
 def data():
 
-
-    # load default settings
     LSTM_config_path = path_file.LSTM_config_path
     LSTM_config = config_loader.get_config_from_json(LSTM_config_path)
 
+    FLAGS = tf.app.flags.FLAGS
+    tf.app.flags.DEFINE_string('data', LSTM_config.data_loader.name,
+                               'must be valid data')
+
+    LSTM_config.data_loader.name = FLAGS.data
+    print("data used is {}".format(LSTM_config.data_loader.name))
+
     # get data
-    trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test = \
-        prepare_data_token.main(LSTM_config.data_loader.name, LSTM_config.data_loader.window_size)
+    trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test, window_size = \
+        prepare_data_token.main(LSTM_config.data_loader.name,
+                                LSTM_config.data_loader.window_size_params,
+                                LSTM_config.data_loader.window_size_body)
 
-    word_index = tokenizer.word_index
-    print('Found {} unique tokens.'.format(len(word_index) + 1))
-
-    vocab_size = len(word_index) + 1
-
+    vocab_size = len(tokenizer.word_index) + 1
+    print('Found {} unique tokens.'.format(vocab_size))
 
     #create unique report folder
     random_nr = randint(0, 10000)
@@ -47,28 +52,28 @@ def data():
     os.mkdir(report_folder_LSTM)
 
 
-    return trainX, trainY, valX, valY, vocab_size, LSTM_config, report_folder_LSTM
+    return trainX, trainY, valX, valY, vocab_size, LSTM_config, report_folder_LSTM, window_size
 
 
 
 
-def model(trainX, trainY, valX, valY, vocab_size, LSTM_config, report_folder_LSTM):
+def model(trainX, trainY, valX, valY, vocab_size, LSTM_config, report_folder_LSTM, window_size):
     logger = logging.getLogger(__name__)
 
 
-    contextEmbedding = Embedding(input_dim=vocab_size, output_dim={{choice([64, 128, 256])}},
-                                 input_length=8)
+    contextEmbedding = Embedding(input_dim=vocab_size, output_dim={{choice([64, 128, 256, 512])}},
+                                 input_length=window_size)
 
-    tensor = Input(shape=(LSTM_config.data_loader.window_size,))
+    tensor = Input(shape=(window_size,))
     c = contextEmbedding(tensor)
     c = Dropout({{uniform(0, 0.5)}})(c)
-    c = LSTM({{choice([60, 100, 220])}}, recurrent_dropout={{uniform(0, 0.2)}}, dropout={{uniform(0, 0.2)}})(c)
+    c = LSTM({{choice([30, 50, 100, 200])}}, recurrent_dropout={{uniform(0, 0.5)}}, dropout={{uniform(0, 0.5)}})(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
-    c = Dense({{choice([70, 100, 200])}}, activation={{choice(['sigmoid', 'elu', 'selu'])}})(c)
+    c = Dense({{choice([30, 50, 70, 100, 200, 300])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
 
     if {{choice(['three', 'four'])}} == 'four':
-        c = Dense({{choice([30, 50, 70])}}, activation={{choice(['sigmoid', 'elu', 'selu'])}})(c)
+        c = Dense({{choice([30, 50, 70, 100, 200, 300])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
         c = Dropout({{uniform(0, 0.5)}})(c)
     answer = Dense(vocab_size, activation='softmax')(c)
 
@@ -77,8 +82,8 @@ def model(trainX, trainY, valX, valY, vocab_size, LSTM_config, report_folder_LST
     model.compile(optimizer=optimizer, loss=LSTM_config.model.loss, metrics=LSTM_config.model.metrics)
 
     early_stopping = EarlyStopping(monitor='val_loss',
-                                   mode='min',
-                                   patience=4)
+                                   mode= 'min',
+                                   patience=5)
 
     model.fit(trainX, trainY,
               batch_size={{choice([64, 128])}},
@@ -100,7 +105,7 @@ if __name__ == '__main__':
                                           trials=Trials())
     print(best_run)
 
-    trainX, trainY, valX, valY, vocab_size, LSTM_config, report_folder_LSTM = data()
+    trainX, trainY, valX, valY, vocab_size, LSTM_config, report_folder_LSTM, window_size = data()
     print("Evalutation of best performing model:")
     print(best_model.evaluate(valX, valY))
     print("Best performing model chosen hyper-parameters:")

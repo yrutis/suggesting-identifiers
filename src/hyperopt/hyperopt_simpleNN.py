@@ -19,25 +19,31 @@ from keras.layers.core import Dense, Dropout, Flatten
 from keras.layers.embeddings import Embedding
 from keras.callbacks import EarlyStopping
 
+import tensorflow as tf
+
 
 def data():
 
-
-    # load default settings
     simpleNN_config_path = path_file.simpleNN_config_path
     simpleNN_config = config_loader.get_config_from_json(simpleNN_config_path)
 
-    # get data, UNK and other statistics
-    trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test = \
-        prepare_data_token.main(simpleNN_config.data_loader.name, simpleNN_config.data_loader.window_size)
+    FLAGS = tf.app.flags.FLAGS
+    tf.app.flags.DEFINE_string('data', simpleNN_config.data_loader.name,
+                               'must be valid data')
 
-    word_index = tokenizer.word_index
-    print('Found {} unique tokens.'.format(len(word_index) + 1))
+    simpleNN_config.data_loader.name = FLAGS.data
+    print("data used is {}".format(simpleNN_config.data_loader.name))
 
-    vocab_size = len(word_index) + 1
+    # get data
+    trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test, window_size = \
+        prepare_data_token.main(simpleNN_config.data_loader.name,
+                                simpleNN_config.data_loader.window_size_params,
+                                simpleNN_config.data_loader.window_size_body)
 
+    vocab_size = len(tokenizer.word_index) + 1
+    print('Found {} unique tokens.'.format(vocab_size))
 
-    # create unique report folder
+    #create unique report folder
     random_nr = randint(0, 10000)
     unique_folder_key = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S') + "-" + str(random_nr)
     report_folder = path_file.report_folder
@@ -46,29 +52,28 @@ def data():
     os.mkdir(report_folder_simpleNN)
 
 
-
-    return trainX, trainY, valX, valY, vocab_size, simpleNN_config, report_folder_simpleNN
-
+    return trainX, trainY, valX, valY, vocab_size, simpleNN_config, report_folder_simpleNN, window_size
 
 
 
-def model(trainX, trainY, valX, valY, vocab_size, simpleNN_config, report_folder_simpleNN):
+
+def model(trainX, trainY, valX, valY, vocab_size, simpleNN_config, report_folder_simpleNN, window_size):
     logger = logging.getLogger(__name__)
 
 
-    contextEmbedding = Embedding(input_dim=vocab_size, output_dim={{choice([64, 128, 256])}},
-                                 input_length=8)
+    contextEmbedding = Embedding(input_dim=vocab_size, output_dim={{choice([64, 128, 256, 512])}},
+                                 input_length=window_size)
 
-    tensor = Input(shape=(simpleNN_config.data_loader.window_size,))
+    tensor = Input(shape=(window_size,))
     c = contextEmbedding(tensor)
     c = Dropout({{uniform(0, 0.5)}})(c)
     c = Flatten()(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
-    c = Dense({{choice([30, 50, 70])}}, activation={{choice(['sigmoid', 'elu', 'selu'])}})(c)
+    c = Dense({{choice([50, 70, 100, 200, 300, 400, 500])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
 
     if {{choice(['three', 'four'])}} == 'four':
-        c = Dense({{choice([30, 50, 70])}}, activation={{choice(['sigmoid', 'elu', 'selu'])}})(c)
+        c = Dense({{choice([30, 50, 70, 100, 200, 300])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
         c = Dropout({{uniform(0, 0.5)}})(c)
     answer = Dense(vocab_size, activation='softmax')(c)
 
@@ -77,8 +82,8 @@ def model(trainX, trainY, valX, valY, vocab_size, simpleNN_config, report_folder
     model.compile(optimizer=optimizer, loss=simpleNN_config.model.loss, metrics=simpleNN_config.model.metrics)
 
     early_stopping = EarlyStopping(monitor='val_loss',
-                                   mode='min',
-                                   patience=4)
+                                   mode= 'min',
+                                   patience=5)
 
     model.fit(trainX, trainY,
               batch_size={{choice([64, 128])}},
@@ -100,11 +105,11 @@ if __name__ == '__main__':
                                           trials=Trials())
     print(best_run)
 
-    trainX, trainY, valX, valY, vocab_size, simpleNN_config, report_folder_LSTM = data()
+    trainX, trainY, valX, valY, vocab_size, simpleNN_config, report_folder_simpleNN, window_size = data()
     print("Evalutation of best performing model:")
     print(best_model.evaluate(valX, valY))
     print("Best performing model chosen hyper-parameters:")
     print(best_run)
 
-    best_model.save(os.path.join(report_folder_LSTM, 'best_model.h5'))
-    json.dump(best_run, open(os.path.join(report_folder_LSTM, "best_run.txt"), 'w'))
+    best_model.save(os.path.join(report_folder_simpleNN, 'best_model.h5'))
+    json.dump(best_run, open(os.path.join(report_folder_simpleNN, "best_run.txt"), 'w'))

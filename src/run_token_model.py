@@ -71,7 +71,8 @@ def main(config_path):
 
     # get trainX, trainY, valX, valY, tokenizer (dictionary), unknown statistics, window_size of X
     trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test, window_size = \
-        prepare_data.main(config.data_loader.name, config.data_loader.window_size_params,
+        prepare_data.main(config.data_loader.name,
+                          config.data_loader.window_size_params,
                           config.data_loader.window_size_body,
                           remove_train_unk=config.data_loader.remove_train_unk,
                           remove_val_unk=config.data_loader.remove_val_unk)
