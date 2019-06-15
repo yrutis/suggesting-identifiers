@@ -33,7 +33,9 @@ class Histories(keras.callbacks.Callback):
         logger = logging.getLogger(__name__)
         if epoch % 5 == 0:
             max_lenght = min(len(self.validation_data[0]) - 1, 1000)
-            logger.info("for")
+            logger.info("max_length is {} ".format(max_lenght))
+
+
             y_pred = self.model.predict(self.validation_data[0][0:max_lenght])
 
             current_dict = {}
