@@ -182,7 +182,8 @@ def remove_some_unknowns(trainX, trainY, valX, valY, remove_train=0, remove_val=
     train_df = pd.DataFrame({'trainY': trainY, 'trainX': list(trainX)})
     logger.info(train_df.head())
     perc_unk_train = (len(train_df[(train_df['trainY'] == 1)])) / (len(train_df.index))
-    print(perc_unk_train)
+    logger.info("This is the percentage of UNK in Training before removal {}".format(perc_unk_train))
+
 
     if remove_train > 0 and remove_train < 1:
         train_df = train_df.drop(train_df[train_df['trainY'] == 1].sample(frac=remove_train).index)
