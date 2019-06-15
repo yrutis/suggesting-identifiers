@@ -20,8 +20,6 @@ class Evaluator(object):
         if not self.__trained_model.history:
             raise Exception("You have to train the model first before evaluating")
 
-
-
         # Creating a reverse dictionary
         reverse_word_map = dict(map(reversed, self.__trained_model.tokenizer.word_index.items()))
 

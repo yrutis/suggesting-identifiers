@@ -5,7 +5,8 @@
         "window_size_body": 8,
         "window_size_params": 2,
         "remove_train_unk": 0.5,
-        "remove_val_unk": 0.5
+        "remove_val_unk": 0.5,
+        "remove_test_unk": 0.5
     },
     "trainer": {
         "name": "trainer.SimpleNN",

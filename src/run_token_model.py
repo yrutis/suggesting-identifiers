@@ -13,6 +13,9 @@ import tensorflow as tf
 
 
 import src.data.prepare_data_token as prepare_data
+import src.data.prepare_data_test_token as prepare_data_test
+
+
 from src.evaluator.Evaluator import Evaluator
 from src.models.SimpleNN import SimpleNNModel
 from src.models.LSTMModel import LSTMModel
@@ -43,6 +46,7 @@ def main(config_path):
     tf.app.flags.DEFINE_integer('batch_size', config.trainer.batch_size, 'must be a power of 2 2^1 - 2^6')
     tf.app.flags.DEFINE_float('remove_train_unk', config.data_loader.remove_train_unk, 'must be between 0 and 1')
     tf.app.flags.DEFINE_float('remove_val_unk', config.data_loader.remove_val_unk, 'must be a between 0 and 1')
+    tf.app.flags.DEFINE_float('remove_test_unk', config.data_loader.remove_test_unk, 'must be a between 0 and 1')
 
     config.name = FLAGS.model
     logger.info("model used is {}".format(config.name))
@@ -68,14 +72,25 @@ def main(config_path):
     config.data_loader.remove_val_unk = FLAGS.remove_val_unk
     logger.info("remove_val_unk is {}".format(config.data_loader.remove_val_unk))
 
+    config.data_loader.remove_test_unk = FLAGS.remove_test_unk
+    logger.info("remove_test_unk is {}".format(config.data_loader.remove_test_unk))
+
 
     # get trainX, trainY, valX, valY, tokenizer (dictionary), unknown statistics, window_size of X
-    trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test, window_size = \
+    trainX, trainY, valX, valY, tokenizer, perc_unk_train, perc_unk_val, window_size = \
         prepare_data.main(config.data_loader.name,
                           config.data_loader.window_size_params,
                           config.data_loader.window_size_body,
                           remove_train_unk=config.data_loader.remove_train_unk,
                           remove_val_unk=config.data_loader.remove_val_unk)
+
+
+    #load test data for evaluation
+    testX, testY, perc_unk_test = prepare_data_test.main(config.data_loader.name,
+                                                     config.data_loader.window_size_params,
+                                                     config.data_loader.window_size_body,
+                                                     tokenizer,
+                                                     remove_test_unk=config.data_loader.remove_test_unk)
 
 
     vocab_size = len(tokenizer.word_index) + 1
@@ -132,21 +147,22 @@ def main(config_path):
                               windows_size=window_size,
                               config=config, report_folder=report_folder)
 
-    data = [trainX, trainY, valX, valY]
+    data = [trainX, trainY, valX, valY, testX, testY]
 
 
     logger.info("create trainer...")
-    trainer2 = AbstractTrain(model=model.model, data=data,
+    trainer = AbstractTrain(model=model.model, data=data,
                              tokenizer=tokenizer, config=config,
                              report_folder=report_folder)
 
     logger.info("start training...")
-    trainer2.train()
+    trainer.train()
+    trainer.visualize_training(perc_unk_train, perc_unk_val)
 
     logger.info("save evaluation to file")
-    evaluator2 = Evaluator(trainer2, report_folder)
-    evaluator2.visualize(always_unknown_train, always_unknown_test)
+    evaluator2 = Evaluator(trainer, report_folder)
     evaluator2.evaluate()
+
 
     # write config in report folder
     with open(os.path.join(report_folder, config.name + '.json'), 'w') as outfile:

@@ -221,6 +221,39 @@ def remove_some_unknowns(trainX, trainY, valX, valY, remove_train=0, remove_val=
     return trainX, trainY, valX, valY, perc_unk_train, perc_unk_val
 
 
+def remove_some_unknowns_test(testX, testY, remove_test=0):
+    '''
+    :param testX:
+    :param testY:
+    :param remove_test: percentage between 0 and 1
+    :return: testX, testY, perc unk test
+    '''
+
+    logger = logging.getLogger(__name__)
+
+
+    test_df = pd.DataFrame({'testY': testY, 'testX': list(testX)})
+
+    perc_unk_test = len(test_df[(test_df['testY'] == 1)]) / len(test_df.index)
+    logger.info("This is the percentage of UNK in Test before removal {}".format(perc_unk_test))
+
+    if remove_test > 0 and remove_test < 1:
+        test_df = test_df.drop(test_df[test_df['testY'] == 1].sample(frac=remove_test).index)
+        perc_unk_test = (len(test_df[(test_df['testY'] == 1)])) / (len(test_df.index))
+        logger.info("This is the percentage of UNK in Test after removal {}".format(perc_unk_test))
+    elif remove_test == 1:
+        test_df = test_df.drop(test_df[test_df['testY'] == 1].index)
+        perc_unk_test = (len(test_df[(test_df['testY'] == 1)])) / (len(test_df.index))
+        logger.info("This is the percentage of UNK in Test after removal {}".format(perc_unk_test))
+
+
+    testX = np.array(test_df['testX'].values.tolist())
+    testY = test_df['testY'].values
+
+
+    return testX, testY, perc_unk_test
+
+
 def getFirstElem(x):
     logger = logging.getLogger(__name__)
     try:
