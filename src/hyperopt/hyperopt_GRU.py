@@ -27,8 +27,10 @@ def data():
     GRU_config = config_loader.get_config_from_json(GRU_config_path)
 
     FLAGS = tf.app.flags.FLAGS
+
     tf.app.flags.DEFINE_string('data', GRU_config.data_loader.name,
                                'must be valid data')
+
 
     GRU_config.data_loader.name = FLAGS.data
     print("data used is {}".format(GRU_config.data_loader.name))
@@ -37,7 +39,9 @@ def data():
     trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test, window_size = \
         prepare_data_token.main(GRU_config.data_loader.name,
                                 GRU_config.data_loader.window_size_params,
-                                GRU_config.data_loader.window_size_body)
+                                GRU_config.data_loader.window_size_body,
+                                remove_train_unk=0,
+                                remove_val_unk=0.7)
 
     vocab_size = len(tokenizer.word_index) + 1
     print('Found {} unique tokens.'.format(vocab_size))
