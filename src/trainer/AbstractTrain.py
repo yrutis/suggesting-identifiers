@@ -33,7 +33,7 @@ class AbstractTrain(object):
                             validation_data=[self.valX, self.valY],
                             batch_size=self.config.trainer.batch_size,
                             epochs=self.config.trainer.num_epochs,
-                            #verbose=0,
+                            verbose=2,
                             #callbacks=[#self.histories,
                                        #self.es,
                                        #self.mc]

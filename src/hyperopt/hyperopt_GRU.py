@@ -93,10 +93,12 @@ def model(trainX, trainY, valX, valY, vocab_size, GRU_config, report_folder_GRU,
               epochs={{choice([10, 15, 20, 30])}},
               verbose=2,
               validation_data=(valX, valY),
-              callbacks=[early_stopping])
+              #callbacks=[early_stopping]
+              )
     score, acc = model.evaluate(valX, valY, verbose=0)
     print('Test accuracy:', acc)
     return {'loss': -acc, 'status': STATUS_OK, 'model': model}
+
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
