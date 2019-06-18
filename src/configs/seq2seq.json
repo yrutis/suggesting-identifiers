@@ -1,7 +1,7 @@
 {
     "name": "seq2seq",
     "data_loader": {
-        "name": "Android-Universal-Image-Loader-subtoken",
+        "name": "Android-Universal-Image-Loader",
         "window_size_body": 8,
         "window_size_params": 2,
         "window_size_name": 2,

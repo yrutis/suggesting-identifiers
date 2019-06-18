@@ -8,6 +8,8 @@ import numpy as np
 from keras.engine.saving import load_model
 
 from matplotlib import pyplot as plt
+import tensorflow as tf
+from math import log
 
 
 class Seq2SeqTrain(object):
@@ -94,6 +96,31 @@ class Seq2SeqTrain(object):
 
 
     def predict(self, input_seq):
+
+
+        # Encode the input as state vectors.
+        states_value = self.encoder_model.predict(input_seq)
+
+        # Generate empty target sequence of length 1.
+        target_seq = np.zeros((1, 1))
+
+        # Populate the first character of target sequence with the start character.
+        start_token_idx = self.tokenizer.texts_to_sequences(['starttoken'])
+        start_token_idx_elem = start_token_idx[0][0]
+        target_seq[0, 0] = start_token_idx_elem
+
+        # Sampling loop for a batch of sequences
+        # (to simplify, here we assume a batch of size 1).
+
+        init_seq = [[list(), 1.0, False, target_seq, states_value]]
+        sequences = self.run_beam_search(init_seq)
+        return sequences
+
+
+    def run_beam_search(self, sequences):
+
+        #TODO add for any k
+
         # idx2word
         # Creating a reverse dictionary
         reverse_word_map = dict(map(reversed, self.tokenizer.word_index.items()))
@@ -104,45 +131,71 @@ class Seq2SeqTrain(object):
             words = [reverse_word_map.get(letter) for letter in list_of_indices]
             return (words)
 
-        # Encode the input as state vectors.
-        states_value = self.encoder_model.predict(input_seq)
-        # Generate empty target sequence of length 1.
-        target_seq = np.zeros((1, 1))
-        # Populate the first character of target sequence with the start character.
-        start_token_idx = self.tokenizer.texts_to_sequences(['starttoken'])
-        start_token_idx_elem = start_token_idx[0][0]
-        target_seq[0, 0] = start_token_idx_elem
 
-        # Sampling loop for a batch of sequences
-        # (to simplify, here we assume a batch of size 1).
-        stop_condition = False
-        decoded_sentence = ''
-        while not stop_condition:
-            output_tokens, h, c = self.decoder_model.predict(
-                [target_seq] + states_value)
+        #checks if all sequences have come to and end
+        stop_beam_search = True
 
-            # Sample a token
-            sampled_token_index = np.argmax(output_tokens[0, -1, :])
-            sampled_char = sequence_to_text([sampled_token_index])
-            sampled_char = str(sampled_char[0])  # in case of true which is oov
+        #all potential candidates
+        all_candidates = list()
 
-            decoded_sentence += ' ' + sampled_char
+        #loop through the existing sequences
+        for i in range(len(sequences)):
+            length_seq = len(sequences)
+            seq, score, stop_condition, target_seq, states_value = sequences[i]
 
-            # Exit condition: either hit max length
-            # or find stop token
-            # TODO figure out why stop condition
-            if (sampled_char == 'endtoken' or
-                    len(decoded_sentence) > self.config.data_loader.window_size_body):
-                stop_condition = True
+            # if no stop condition: expand beam search tree, else just add the candidate again
+            if not stop_condition:
+                stop_beam_search = False
 
-            # Update the target sequence (of length 1).
-            target_seq = np.zeros((1, 1))
-            target_seq[0, 0] = sampled_token_index
+                output_tokens, h, c = self.decoder_model.predict(
+                    [target_seq] + states_value)
+                states_value = [h, c]
 
-            # Update states
-            states_value = [h, c]
+                # Sample a token
+                prob_dist = output_tokens[0, -1, :]
+                top_k_idx = np.argpartition(prob_dist, -4)[-4:]  # argpartition runs in O(n + k log k) time
+                top_k_idx_sorted = top_k_idx[np.argsort(prob_dist[top_k_idx])]
+                tok_k_probs = prob_dist[top_k_idx]
+                tok_k_probs_sorted = prob_dist[top_k_idx_sorted]
 
-        return decoded_sentence
+                sampled_char = sequence_to_text(top_k_idx_sorted)
+                sampled_char = list(map(lambda x: str(x), sampled_char))  # in case of true which is oov
+
+                for i in range(top_k_idx_sorted.shape[0]):
+                    if (sampled_char[i] == 'endtoken' or
+                            len(seq) + 1 > self.config.data_loader.window_size_body):
+                        stop_condition = True
+
+                    else:
+                        stop_condition = False
+
+                    # Update the target sequence (of length 1).
+                    target_seq = np.zeros((1, 1))
+                    target_seq[0, 0] = top_k_idx_sorted[i]
+
+                    candidate = [seq + [sampled_char[i]],
+                                 score * -log(tok_k_probs_sorted[i]),
+                                 stop_condition,
+                                 target_seq,
+                                 states_value]  # log probability because of very small values
+                    all_candidates.append(candidate)
+
+            else:
+                all_candidates.append(sequences[i])  # add the candidate again to all candidates
+
+        #get the top k ones
+        ordered = sorted(all_candidates, key=lambda tup: tup[1])  # sort along the score
+        sequences = ordered[:4]  # keep 4 best ones
+
+
+        if stop_beam_search:
+            sequences = np.array(sequences)
+            sequences = sequences[:,0:2] #only return sequence and probability
+            return sequences
+
+        else:
+            return self.run_beam_search(sequences)
+
 
 
 

@@ -17,15 +17,22 @@ def add_start_end_token(y):
 def main(filename, window_size_params, window_size_body, window_size_name):
     # basic init
     # get logger
+    # get logger
     logger = logging.getLogger(__name__)
 
+    filename += '-processed'
+
     data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
-    processed_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'), 'decoded'),
-                                               filename + '.json')  # get decoded path
+    training_processed_decoded_full_path = os.path.join(
+        os.path.join(os.path.join(os.path.join(os.path.join(data_folder, 'processed'),
+                                               'decoded'), filename), 'training'), filename + '-subtoken.json')
+    validation_processed_decoded_full_path = os.path.join(
+        os.path.join(os.path.join(os.path.join(os.path.join(data_folder, 'processed'),
+                                               'decoded'), filename), 'validation'), filename + '-subtoken.json')
 
-    # %% load dataset
+    df_train = pd.read_json(training_processed_decoded_full_path, orient='records')
+    df_val = pd.read_json(validation_processed_decoded_full_path, orient='records')
 
-    df = pd.read_json(processed_decoded_full_path, orient='records')
 
     # %%
 
@@ -33,22 +40,30 @@ def main(filename, window_size_params, window_size_body, window_size_name):
     max_input_elemts = 1 + window_size_params + window_size_body + 2  # return type + ... + ... + startendtoken
     max_output_elemts = 2 + window_size_name  # startendtoken + ...
 
-    df['parameters'] = df['parameters'].apply(helper_functions.get_first_x_elem, args=(window_size_params,))
-    df['methodBody'] = df['methodBody'].apply(helper_functions.get_first_x_elem, args=(window_size_body,))
-    df["concatMethodBodyClean"] = df['Type'].map(lambda x: [x]) + df["parameters"] + df["methodBody"]
+    df_train['parameters'] = df_train['parameters'].apply(helper_functions.get_first_x_elem, args=(window_size_params,))
+    df_train['methodBody'] = df_train['methodBody'].apply(helper_functions.get_first_x_elem, args=(window_size_body,))
+    df_train["concatMethodBodyClean"] = df_train['Type'].map(lambda x: [x]) + df_train["parameters"] + df_train["methodBody"]
 
-    df['methodName'] = df['methodName'].apply(helper_functions.get_first_x_elem, args=(window_size_name,))
+    df_train['methodName'] = df_train['methodName'].apply(helper_functions.get_first_x_elem, args=(window_size_name,))
 
     # %% add start end token
-    df['concatMethodBodyClean'] = df['concatMethodBodyClean'].apply(add_start_end_token)
-    df['methodName'] = df['methodName'].apply(add_start_end_token)
+    df_train['concatMethodBodyClean'] = df_train['concatMethodBodyClean'].apply(add_start_end_token)
+    df_train['methodName'] = df_train['methodName'].apply(add_start_end_token)
 
-    # %% split dataset
-    x_train, x_test, y_train, y_test = train_test_split(df['concatMethodBodyClean'], df['methodName'],
-                                                        test_size=0.2,
-                                                        random_state=200)
-    method_body_cleaned_list_x = list(x_train)
-    method_name_x = list(y_train)
+
+    df_val['parameters'] = df_val['parameters'].apply(helper_functions.get_first_x_elem, args=(window_size_params,))
+    df_val['methodBody'] = df_val['methodBody'].apply(helper_functions.get_first_x_elem, args=(window_size_body,))
+    df_val["concatMethodBodyClean"] = df_val['Type'].map(lambda x: [x]) + df_val["parameters"] + df_val["methodBody"]
+
+    df_val['methodName'] = df_val['methodName'].apply(helper_functions.get_first_x_elem, args=(window_size_name,))
+
+    # %% add start end token
+    df_val['concatMethodBodyClean'] = df_val['concatMethodBodyClean'].apply(add_start_end_token)
+    df_val['methodName'] = df_val['methodName'].apply(add_start_end_token)
+
+
+    method_body_cleaned_list_x = list(df_train['concatMethodBodyClean'])
+    method_name_x = list(df_train['methodName'])
 
     # %%dataset in training vocab format
 
@@ -95,7 +110,7 @@ def main(filename, window_size_params, window_size_body, window_size_name):
     # %%
 
     # tokenize just trainY
-    y_train = list(y_train)
+    y_train = list(df_train['methodName'])
     print(y_train[:20])
     y_train_tokenized = tokenizer.texts_to_sequences(y_train)
     print(y_train_tokenized[:20])
@@ -104,8 +119,8 @@ def main(filename, window_size_params, window_size_body, window_size_name):
     # %%
 
     # tokenize just testX
-    x_test_tokenized = tokenizer.texts_to_sequences(x_test)
-    print(x_test[:10])
+    x_test_tokenized = tokenizer.texts_to_sequences(df_val['concatMethodBodyClean'])
+    print(df_val['concatMethodBodyClean'][:10])
     print(x_test_tokenized[:10])
     x_test_rev = list(map(sequence_to_text, x_test_tokenized))
     print(x_test_rev[:10])
@@ -113,7 +128,7 @@ def main(filename, window_size_params, window_size_body, window_size_name):
     # %%
 
     # tokenize just testY
-    y_test = list(y_test)
+    y_test = list(df_val['methodName'])
     print(y_test[:20])
     y_test_tokenized = tokenizer.texts_to_sequences(y_test)
     print(y_test_tokenized[:20])

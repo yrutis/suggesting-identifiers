@@ -25,7 +25,7 @@ def split_camel_case_and_snake_case_body(y):
     return splitted_list
 
 
-def main(filename):
+def main():
     def delete_abstract_methods(df):
         all_methods_cnt = df.shape[0]
         # remove all abstract methods
@@ -67,7 +67,7 @@ def main(filename):
     # load some flags
     FLAGS = tf.app.flags.FLAGS
 
-    tf.app.flags.DEFINE_string('data', 'java-small-project-split',
+    tf.app.flags.DEFINE_string('data', 'Android-Universal-Image-Loader',
                                'must be in processed / intermediate')
 
     tf.app.flags.DEFINE_string('type', 'test',
@@ -147,4 +147,4 @@ def main(filename):
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
-    main("Android-Universal-Image-Loader")
+    main()
