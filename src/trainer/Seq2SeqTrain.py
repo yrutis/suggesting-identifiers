@@ -36,7 +36,7 @@ class Seq2SeqTrain(object):
         self.history = self.model.fit(self.trainX, self.trainY,
                             batch_size=self.config.trainer.batch_size,
                             epochs=self.config.trainer.num_epochs,
-                            verbose=0,
+                            verbose=2,
                             validation_data=[self.valX, self.valY],
                             callbacks=[self.es, self.mc])
 
