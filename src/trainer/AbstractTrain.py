@@ -34,9 +34,9 @@ class AbstractTrain(object):
                             batch_size=self.config.trainer.batch_size,
                             epochs=self.config.trainer.num_epochs,
                             verbose=2,
-                            #callbacks=[#self.histories,
-                                       #self.es,
-                                       #self.mc]
+                            callbacks=[self.histories,
+                                       self.es,
+                                       self.mc]
                                       )
 
         val_score, val_acc = self.model.evaluate(self.valX, self.valY, verbose=0)
