@@ -63,7 +63,7 @@ def model(trainX, trainY, valX, valY, vocab_size, LSTMBid_config, report_folder_
     logger = logging.getLogger(__name__)
 
 
-    contextEmbedding = Embedding(input_dim=vocab_size, output_dim={{choice([64, 128, 256, 512])}},
+    contextEmbedding = Embedding(input_dim=vocab_size, output_dim={{choice([64, 128, 256])}},
                                  input_length=window_size)
 
     tensor = Input(shape=(window_size,))
@@ -71,11 +71,11 @@ def model(trainX, trainY, valX, valY, vocab_size, LSTMBid_config, report_folder_
     c = Dropout({{uniform(0, 0.5)}})(c)
     c = Bidirectional(LSTM({{choice([30, 50, 100, 200])}}, recurrent_dropout={{uniform(0, 0.5)}}, dropout={{uniform(0, 0.5)}}))(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
-    c = Dense({{choice([30, 50, 70, 100, 200, 300])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
+    c = Dense({{choice([30, 50, 70, 100, 200])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
 
     if {{choice(['three', 'four'])}} == 'four':
-        c = Dense({{choice([30, 50, 70, 100, 200, 300])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
+        c = Dense({{choice([30, 50, 70, 100, 200])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
         c = Dropout({{uniform(0, 0.5)}})(c)
     answer = Dense(vocab_size, activation='softmax')(c)
 

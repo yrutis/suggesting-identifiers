@@ -158,5 +158,6 @@ class Evaluator(object):
         subtoken_list = list(filter(lambda x: x != "starttoken", subtoken_list))
         subtoken_list = list(filter(lambda x: x != "endtoken", subtoken_list))
         subtoken_list = list(filter(lambda x: x != "True", subtoken_list))  # oov
+        subtoken_list = list(filter(lambda x: x != '1', subtoken_list))  # oov
         return subtoken_list
 

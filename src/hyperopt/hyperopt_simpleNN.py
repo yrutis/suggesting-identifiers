@@ -61,7 +61,7 @@ def model(trainX, trainY, valX, valY, vocab_size, simpleNN_config, report_folder
     logger = logging.getLogger(__name__)
 
 
-    contextEmbedding = Embedding(input_dim=vocab_size, output_dim={{choice([64, 128, 256, 512])}},
+    contextEmbedding = Embedding(input_dim=vocab_size, output_dim={{choice([64, 128, 256])}},
                                  input_length=window_size)
 
     tensor = Input(shape=(window_size,))
@@ -69,11 +69,11 @@ def model(trainX, trainY, valX, valY, vocab_size, simpleNN_config, report_folder
     c = Dropout({{uniform(0, 0.5)}})(c)
     c = Flatten()(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
-    c = Dense({{choice([50, 70, 100, 200, 300, 400, 500])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
+    c = Dense({{choice([50, 70, 100, 200])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
 
     if {{choice(['three', 'four'])}} == 'four':
-        c = Dense({{choice([30, 50, 70, 100, 200, 300])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
+        c = Dense({{choice([30, 50, 70, 100, 200])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
         c = Dropout({{uniform(0, 0.5)}})(c)
     answer = Dense(vocab_size, activation='softmax')(c)
 
@@ -106,7 +106,7 @@ if __name__ == '__main__':
     print(best_run)
 
     trainX, trainY, valX, valY, vocab_size, simpleNN_config, report_folder_simpleNN, window_size = data()
-    print("Evalutation of best performing model:")
+    print("Evaluation of best performing model:")
     print(best_model.evaluate(valX, valY))
     print("Best performing model chosen hyper-parameters:")
     print(best_run)

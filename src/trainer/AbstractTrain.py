@@ -5,7 +5,7 @@ from src.trainer.Callbacks.Callback import Histories
 
 import pandas as pd
 from matplotlib import pyplot as plt
-
+import tensorflow as tf
 
 class AbstractTrain(object):
 
@@ -36,7 +36,7 @@ class AbstractTrain(object):
                             verbose=2,
                             callbacks=[self.histories,
                                        self.es,
-                                       self.mc]
+                                       self.mc],
                                       )
 
         val_score, val_acc = self.model.evaluate(self.valX, self.valY, verbose=0)

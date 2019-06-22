@@ -21,6 +21,7 @@ from keras.layers.embeddings import Embedding
 from keras.callbacks import EarlyStopping
 import tensorflow as tf
 
+
 def data():
 
     GRU_config_path = path_file.GRU_config_path
@@ -64,15 +65,15 @@ def model(trainX, trainY, valX, valY, vocab_size, GRU_config, report_folder_GRU,
     logger = logging.getLogger(__name__)
 
 
-    contextEmbedding = Embedding(input_dim=vocab_size, output_dim={{choice([64, 128, 256, 512])}},
+    contextEmbedding = Embedding(input_dim=vocab_size, output_dim={{choice([64, 128, 256])}},
                                  input_length=window_size)
 
     tensor = Input(shape=(window_size,))
     c = contextEmbedding(tensor)
     c = Dropout({{uniform(0, 0.5)}})(c)
-    c = GRU({{choice([50, 100, 200, 400])}}, recurrent_dropout={{uniform(0, 0.5)}}, dropout={{uniform(0, 0.5)}})(c)
+    c = GRU({{choice([50, 100, 200])}}, recurrent_dropout={{uniform(0, 0.5)}}, dropout={{uniform(0, 0.5)}})(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
-    c = Dense({{choice([30, 50, 70, 100, 200, 300])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
+    c = Dense({{choice([30, 50, 70, 100, 200])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
 
     if {{choice(['three', 'four'])}} == 'four':
@@ -91,9 +92,9 @@ def model(trainX, trainY, valX, valY, vocab_size, GRU_config, report_folder_GRU,
     model.fit(trainX, trainY,
               batch_size={{choice([64, 128])}},
               epochs={{choice([1, 2])}},
-              verbose=1,
+              verbose=2,
               validation_data=(valX, valY),
-              #callbacks=[early_stopping]
+              callbacks=[early_stopping]
               )
     score, acc = model.evaluate(valX, valY, verbose=0)
     print('Test accuracy:', acc)
@@ -106,7 +107,7 @@ if __name__ == '__main__':
     best_run, best_model = optim.minimize(model=model,
                                           data=data,
                                           algo=tpe.suggest,
-                                          max_evals=3,
+                                          max_evals=10,
                                           trials=Trials())
     print(best_run)
 

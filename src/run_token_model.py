@@ -10,13 +10,14 @@ import logging
 import os
 import json
 import tensorflow as tf
+import numpy as np
 
 
 import src.data.prepare_data_token as prepare_data
 import src.data.prepare_data_test_token as prepare_data_test
 
 
-from src.evaluator.Evaluator import Evaluator
+from src.evaluator.EvaluatorSubtoken import Evaluator
 from src.models.SimpleNN import SimpleNNModel
 from src.models.LSTMModel import LSTMModel
 from src.models.LSTMBidModel import LSTMModelBid
@@ -147,11 +148,9 @@ def main(config_path):
                               windows_size=window_size,
                               config=config, report_folder=report_folder)
 
-    data = [trainX, trainY, valX, valY, testX, testY]
-
 
     logger.info("create trainer...")
-    trainer = AbstractTrain(model=model.model, data=data,
+    trainer = AbstractTrain(model=model.model, data=[trainX, trainY, valX, valY, testX, testY],
                              tokenizer=tokenizer, config=config,
                              report_folder=report_folder)
 
@@ -160,8 +159,30 @@ def main(config_path):
     trainer.visualize_training(perc_unk_train, perc_unk_val)
 
     logger.info("save evaluation to file")
-    evaluator2 = Evaluator(trainer, report_folder)
-    evaluator2.evaluate()
+    evaluator = Evaluator(trainer.model, report_folder)
+
+    # %% idx2word
+
+    # Creating a reverse dictionary
+    reverse_word_map = dict(map(reversed, tokenizer.word_index.items()))
+
+    # Function takes a tokenized sentence and returns the words
+    def sequence_to_text(list_of_indices):
+        # Looking up words in dictionary
+        words = [reverse_word_map.get(letter) for letter in list_of_indices]
+        return (words)
+
+
+
+    predictions = trainer.model.predict(testX) #get prob dist
+    predictions_idx = np.argmax(predictions, axis=1).tolist() #get highest idx for each X
+    predictions_idx = [[item] for item in predictions_idx]
+    correct = testY.tolist()
+    correct = [[item] for item in correct]
+
+    #evaluator.evaluate()
+    acc, prec, rec, f1 = evaluator.get_accuracy_precision_recall_f1_score(correct, predictions_idx, 'token')
+
 
 
     # write config in report folder
