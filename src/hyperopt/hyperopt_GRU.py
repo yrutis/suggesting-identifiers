@@ -91,7 +91,7 @@ def model(trainX, trainY, valX, valY, vocab_size, GRU_config, report_folder_GRU,
 
     model.fit(trainX, trainY,
               batch_size={{choice([64, 128])}},
-              epochs={{choice([1, 2])}},
+              epochs={{choice([10, 15, 20, 30])}},
               verbose=2,
               validation_data=(valX, valY),
               callbacks=[early_stopping]
