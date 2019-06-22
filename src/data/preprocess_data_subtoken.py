@@ -67,7 +67,7 @@ def main():
     # load some flags
     FLAGS = tf.app.flags.FLAGS
 
-    tf.app.flags.DEFINE_string('data', 'Android-Universal-Image-Loader',
+    tf.app.flags.DEFINE_string('data', 'java-small',
                                'must be in processed / intermediate')
 
     tf.app.flags.DEFINE_string('type', 'test',

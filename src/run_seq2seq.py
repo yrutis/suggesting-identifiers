@@ -24,6 +24,100 @@ from src.trainer.Seq2SeqTrain import Seq2SeqTrain
 
 import numpy as np
 
+def train_model(config, report_folder):
+    # get logger
+    logger = logging.getLogger(__name__)
+
+    # get data
+    trainX, trainY, valX, valY, tokenizer, vocab_size, \
+    window_size, max_output_elemts = prepare_data.main(config.data_loader.name,
+                                                       config.data_loader.window_size_body,
+                                                       config.data_loader.window_size_params,
+                                                       config.data_loader.window_size_name)
+
+    vocab_size = len(tokenizer.word_index) + 1
+    logger.info('Found {} unique tokens.'.format(vocab_size))
+
+    logger.info("create seq2seq Model...")
+    model = Seq2SeqModel(context_vocab_size=vocab_size,
+                         windows_size=window_size,
+                         config=config, report_folder=report_folder)
+
+    # build graph
+    model.build_model()
+
+    data = [trainX, trainY, valX, valY]
+
+    logger.info("create trainer...")
+    trainer = Seq2SeqTrain(model=model.model,
+                           encoder_model=model.encoder_model,
+                           decoder_model=model.decoder_model,
+                           tokenizer=tokenizer, config=config,
+                           report_folder=report_folder)
+
+    logger.info("start seq2seq training...")
+    trainer.train(trainX, trainY, valX, valY)
+
+    return trainer
+
+
+
+
+def eval_model(config, report_folder, trainer:Seq2SeqTrain):
+    testX, testY = prepare_data_test.main(config.data_loader.name,
+                                          trainer.tokenizer,
+                                          config.data_loader.window_size_body,
+                                          config.data_loader.window_size_params,
+                                          config.data_loader.window_size_name)
+
+    # %% idx2word
+
+    # Creating a reverse dictionary
+    reverse_word_map = dict(map(reversed, trainer.tokenizer.word_index.items()))
+
+    # Function takes a tokenized sentence and returns the words
+    def sequence_to_text(list_of_indices):
+        # Looking up words in dictionary
+        words = [reverse_word_map.get(letter) for letter in list_of_indices]
+        return (words)
+
+    # %% generate some method names
+
+    correct = []
+    predictions_k_1 = []
+    predictions_k_100 = []
+
+    i = 0
+    while i < testX.shape[0]:
+        input_seq = testX[i: i + 1]
+        input_seq_list = input_seq.tolist()[0]  # get in right format for tokenizer
+        correct_output = testY[i: i + 1]
+        correct_output_list = correct_output.tolist()[0]  # get in right format for tokenizer
+        decoded_correct_output_list = sequence_to_text(correct_output_list)
+
+        input_enc = sequence_to_text(input_seq_list)
+
+        print("this is the input seq decoded: {}".format(input_enc))
+        decoded_sentence_k_100 = trainer.predict(input_seq, k=100, return_top_n=1)
+        decoded_sentence = trainer.predict(input_seq, k=1, return_top_n=1)
+
+        print("Predicted: {}".format(decoded_sentence[0]))
+        predictions_k_1.append(decoded_sentence[0])
+
+        print("Predicted k 100: {}".format(decoded_sentence_k_100[0]))
+        predictions_k_100.append(decoded_sentence_k_100[0])
+
+        print("Correct: {}".format(decoded_correct_output_list))
+        correct.append(decoded_correct_output_list)
+
+        i += 1
+
+    evaluator = Evaluator(trained_model=trainer.model,
+                          report_folder=report_folder)
+
+    evaluator.get_accuracy_precision_recall_f1_score(correct, predictions_k_1, 'k1')
+    evaluator.get_accuracy_precision_recall_f1_score(correct, predictions_k_100, 'k100')
+
 
 def main(config_path):
     # get logger
@@ -62,28 +156,6 @@ def main(config_path):
     logger.info("batch size is {}".format(config.trainer.batch_size))
 
 
-    #get data
-    trainX, trainY, valX, valY, tokenizer, vocab_size, \
-    window_size, max_output_elemts = prepare_data.main(config.data_loader.name,
-                                                  config.data_loader.window_size_body,
-                                                  config.data_loader.window_size_params,
-                                                  config.data_loader.window_size_name)
-
-    testX, testY = prepare_data_test.main(config.data_loader.name,
-                                          tokenizer,
-                                          config.data_loader.window_size_body,
-                                          config.data_loader.window_size_params,
-                                          config.data_loader.window_size_name)
-
-
-
-    word_index = tokenizer.word_index
-    logger.info('Found {} unique tokens.'.format(len(word_index) + 1))
-
-    vocab_size = len(word_index) + 1
-
-    print(FLAGS.data)
-
     #create unique report folder
     random_nr = randint(0, 10000)
     unique_folder_key = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S') + "-" + str(random_nr)
@@ -91,89 +163,21 @@ def main(config_path):
 
     os.mkdir(report_folder)
 
-
     # write in report folder
     with open(os.path.join(report_folder, config.name+'.json'), 'w') as outfile:
         json.dump(config, outfile, indent=4)
+        
 
-    logger.info("create seq2seq Model...")
-    model = Seq2SeqModel(context_vocab_size=vocab_size,
-                       windows_size=window_size,
-                       config=config, report_folder=report_folder)
-
-    #build graph
-    model.build_model()
-
-    data = [trainX, trainY, valX, valY]
-
-
-    logger.info("create trainer...")
-    trainer = Seq2SeqTrain(model=model.model,
-                            encoder_model=model.encoder_model,
-                            decoder_model=model.decoder_model,
-                            data=data,
-                            tokenizer=tokenizer, config=config,
-                            report_folder=report_folder)
-
-    logger.info("start seq2seq training...")
-    trainer.train()
-
-
-    # %% idx2word
-
-    # Creating a reverse dictionary
-    reverse_word_map = dict(map(reversed, tokenizer.word_index.items()))
-
-    # Function takes a tokenized sentence and returns the words
-    def sequence_to_text(list_of_indices):
-        # Looking up words in dictionary
-        words = [reverse_word_map.get(letter) for letter in list_of_indices]
-        return (words)
-
-
-    # %% generate some method names
-
-    correct = []
-    predictions_k_1 = []
-    predictions_k_100 = []
-
-    i = 0
-    while i < testX.shape[0]:
-        input_seq = testX[i: i + 1]
-        input_seq_list = input_seq.tolist()[0]  # get in right format for tokenizer
-        correct_output = testY[i: i + 1]
-        correct_output_list = correct_output.tolist()[0]  # get in right format for tokenizer
-        decoded_correct_output_list = sequence_to_text(correct_output_list)
-
-        input_enc = sequence_to_text(input_seq_list)
-
-        print("this is the input seq decoded: {}".format(input_enc))
-        decoded_sentence_k_100 = trainer.predict(input_seq, k=100, return_top_n=1)
-        decoded_sentence = trainer.predict(input_seq, k=1, return_top_n=1)
-
-        print("Predicted: {}".format(decoded_sentence[0]))
-        predictions_k_1.append(decoded_sentence[0])
-
-
-        print("Predicted k 100: {}".format(decoded_sentence_k_100[0]))
-        predictions_k_100.append(decoded_sentence_k_100[0])
-
-        print("Correct: {}".format(decoded_correct_output_list))
-        correct.append(decoded_correct_output_list)
-
-
-        i += 1
-
-
-    evaluator = Evaluator(trained_model=trainer.model,
-                          report_folder=report_folder)
-
-    evaluator.get_accuracy_precision_recall_f1_score(correct, predictions_k_1, 'k1')
-    evaluator.get_accuracy_precision_recall_f1_score(correct, predictions_k_100, 'k100')
+    trainer = train_model(config=config, report_folder=report_folder)
 
     # safe tokenizer
     tokenizer_path = os.path.join(report_folder, 'tokenizer.pkl')
-    dump(tokenizer, open(tokenizer_path, 'wb'))
+    dump(trainer.tokenizer, open(tokenizer_path, 'wb'))
+
+
+    eval_model(config=config,
+               report_folder=report_folder,
+               trainer=trainer)
 
 
 

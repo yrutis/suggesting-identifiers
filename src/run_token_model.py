@@ -27,6 +27,101 @@ import src.utils.config as config_loader
 import src.utils.path as path_file
 from src.trainer.AbstractTrain import AbstractTrain
 
+def train_model(config, report_folder):
+    # get logger
+    logger = logging.getLogger(__name__)
+
+    # get trainX, trainY, valX, valY, tokenizer (dictionary), unknown statistics, window_size of X
+    trainX, trainY, valX, valY, tokenizer, perc_unk_train, perc_unk_val, window_size = \
+        prepare_data.main(config.data_loader.name,
+                          config.data_loader.window_size_params,
+                          config.data_loader.window_size_body,
+                          remove_train_unk=config.data_loader.remove_train_unk,
+                          remove_val_unk=config.data_loader.remove_val_unk)
+
+
+    vocab_size = len(tokenizer.word_index) + 1
+    logger.info('Found {} unique tokens.'.format(vocab_size))
+
+    if config.name == "GRU":
+        # load specific graph settings for model
+        model_config = config_loader.get_config_from_json(path_file.GRU_config_path)
+        config.model = model_config.model
+
+        # create the model
+        logger.info("create GRU Model...")
+        model = GRUModel(context_vocab_size=vocab_size,
+                           windows_size=window_size,
+                           config=config, report_folder=report_folder)
+
+    elif config.name == "LSTM":
+        # load specific graph settings for model
+        model_config = config_loader.get_config_from_json(path_file.LSTM_config_path)
+        config.model = model_config.model
+
+        # create the model
+        logger.info("create LSTM Model...")
+        model = LSTMModel(context_vocab_size=vocab_size,
+                              windows_size=window_size,
+                              config=config, report_folder=report_folder)
+
+    elif config.name == "LSTMBid":
+        # load specific graph settings for model
+        model_config = config_loader.get_config_from_json(path_file.LSTMBid_config_path)
+        config.model = model_config.model
+
+        #create the model
+        logger.info("create LSTM Model...")
+        model = LSTMModelBid(context_vocab_size=vocab_size,
+                              windows_size=window_size,
+                              config=config, report_folder=report_folder)
+
+    else:
+        #load specific graph settings for model
+        model_config = config_loader.get_config_from_json(path_file.simpleNN_config_path)
+        config.model = model_config.model
+
+        #create the model
+        logger.info("create simpleNN Model...")
+        model = SimpleNNModel(context_vocab_size=vocab_size,
+                              windows_size=window_size,
+                              config=config, report_folder=report_folder)
+
+
+    logger.info("create trainer...")
+    trainer = AbstractTrain(model=model.model,
+                             tokenizer=tokenizer, config=config,
+                             report_folder=report_folder)
+
+    logger.info("start training...")
+    trainer.train(trainX, trainY, valX, valY)
+    trainer.visualize_training(perc_unk_train, perc_unk_val)
+
+    return trainer
+
+
+
+def eval_model(config, report_folder, trainer:AbstractTrain):
+    # get logger
+    logger = logging.getLogger(__name__)
+    # load test data for evaluation
+    testX, testY, perc_unk_test = prepare_data_test.main(config.data_loader.name,
+                                                         config.data_loader.window_size_params,
+                                                         config.data_loader.window_size_body,
+                                                         trainer.tokenizer,
+                                                         remove_test_unk=config.data_loader.remove_test_unk)
+    logger.info("save evaluation to file")
+    evaluator = Evaluator(trainer.model, report_folder)
+
+    predictions = trainer.model.predict(testX, batch_size=8)  # get prob dist
+    predictions_idx = np.argmax(predictions, axis=1).tolist()  # get highest idx for each X
+    predictions_idx = [[item] for item in predictions_idx]
+    correct = testY.tolist()
+    correct = [[item] for item in correct]
+
+    # evaluator.evaluate()
+    acc, prec, rec, f1 = evaluator.get_accuracy_precision_recall_f1_score(correct, predictions_idx, 'token')
+
 
 def main(config_path):
     # get logger
@@ -76,27 +171,6 @@ def main(config_path):
     config.data_loader.remove_test_unk = FLAGS.remove_test_unk
     logger.info("remove_test_unk is {}".format(config.data_loader.remove_test_unk))
 
-
-    # get trainX, trainY, valX, valY, tokenizer (dictionary), unknown statistics, window_size of X
-    trainX, trainY, valX, valY, tokenizer, perc_unk_train, perc_unk_val, window_size = \
-        prepare_data.main(config.data_loader.name,
-                          config.data_loader.window_size_params,
-                          config.data_loader.window_size_body,
-                          remove_train_unk=config.data_loader.remove_train_unk,
-                          remove_val_unk=config.data_loader.remove_val_unk)
-
-
-    #load test data for evaluation
-    testX, testY, perc_unk_test = prepare_data_test.main(config.data_loader.name,
-                                                     config.data_loader.window_size_params,
-                                                     config.data_loader.window_size_body,
-                                                     tokenizer,
-                                                     remove_test_unk=config.data_loader.remove_test_unk)
-
-
-    vocab_size = len(tokenizer.word_index) + 1
-    logger.info('Found {} unique tokens.'.format(vocab_size))
-
     #create unique report folder
     random_nr = randint(0, 10000)
     unique_folder_key = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S') + "-" + str(random_nr)
@@ -104,94 +178,13 @@ def main(config_path):
 
     os.mkdir(report_folder)
 
-    if config.name == "GRU":
-        # load specific graph settings for model
-        model_config = config_loader.get_config_from_json(path_file.GRU_config_path)
-        config.model = model_config.model
+    trainer = train_model(config=config, report_folder=report_folder)
 
-        # create the model
-        logger.info("create GRU Model...")
-        model = GRUModel(context_vocab_size=vocab_size,
-                           windows_size=window_size,
-                           config=config, report_folder=report_folder)
-
-    elif config.name == "LSTM":
-        # load specific graph settings for model
-        model_config = config_loader.get_config_from_json(path_file.LSTM_config_path)
-        config.model = model_config.model
-
-        # create the model
-        logger.info("create LSTM Model...")
-        model = LSTMModel(context_vocab_size=vocab_size,
-                              windows_size=window_size,
-                              config=config, report_folder=report_folder)
-
-    elif config.name == "LSTMBid":
-        # load specific graph settings for model
-        model_config = config_loader.get_config_from_json(path_file.LSTMBid_config_path)
-        config.model = model_config.model
-
-        #create the model
-        logger.info("create LSTM Model...")
-        model = LSTMModelBid(context_vocab_size=vocab_size,
-                              windows_size=window_size,
-                              config=config, report_folder=report_folder)
-
-    else:
-        #load specific graph settings for model
-        model_config = config_loader.get_config_from_json(path_file.simpleNN_config_path)
-        config.model = model_config.model
-
-        #create the model
-        logger.info("create simpleNN Model...")
-        model = SimpleNNModel(context_vocab_size=vocab_size,
-                              windows_size=window_size,
-                              config=config, report_folder=report_folder)
-
-
-    logger.info("create trainer...")
-    trainer = AbstractTrain(model=model.model, data=[trainX, trainY, valX, valY, testX, testY],
-                             tokenizer=tokenizer, config=config,
-                             report_folder=report_folder)
-
-    logger.info("start training...")
-    trainer.train()
-    trainer.visualize_training(perc_unk_train, perc_unk_val)
-
-    logger.info("save evaluation to file")
-    evaluator = Evaluator(trainer.model, report_folder)
-
-    # write config in report folder
-    with open(os.path.join(report_folder, config.name + '.json'), 'w') as outfile:
-        json.dump(config, outfile, indent=4)
-
+    # safe tokenizer
     tokenizer_path = os.path.join(report_folder, 'tokenizer.pkl')
-    dump(tokenizer, open(tokenizer_path, 'wb'))
+    dump(trainer.tokenizer, open(tokenizer_path, 'wb'))
 
-    # %% idx2word
-
-    # Creating a reverse dictionary
-    reverse_word_map = dict(map(reversed, tokenizer.word_index.items()))
-
-    # Function takes a tokenized sentence and returns the words
-    def sequence_to_text(list_of_indices):
-        # Looking up words in dictionary
-        words = [reverse_word_map.get(letter) for letter in list_of_indices]
-        return (words)
-
-
-
-    predictions = trainer.model.predict(testX, batch_size=8) #get prob dist
-    predictions_idx = np.argmax(predictions, axis=1).tolist() #get highest idx for each X
-    predictions_idx = [[item] for item in predictions_idx]
-    correct = testY.tolist()
-    correct = [[item] for item in correct]
-
-    #evaluator.evaluate()
-    acc, prec, rec, f1 = evaluator.get_accuracy_precision_recall_f1_score(correct, predictions_idx, 'token')
-
-
-
+    eval_model(config=config, report_folder=report_folder, trainer=trainer)
 
 
 

@@ -14,7 +14,7 @@ from math import log
 
 class Seq2SeqTrain(object):
 
-    def __init__(self, model, encoder_model, decoder_model, data, tokenizer, config, report_folder):
+    def __init__(self, model, encoder_model, decoder_model, tokenizer, config, report_folder):
         self.model = model
         self.encoder_model = encoder_model
         self.decoder_model = decoder_model
@@ -22,22 +22,18 @@ class Seq2SeqTrain(object):
         self.history = None
         self.type = None
         self.tokenizer = tokenizer
-        self.trainX = data[0]
-        self.trainY = data[1]
-        self.valX = data[2]
-        self.valY = data[3]
         self.report_folder = report_folder
         self.es = EarlyStopping(monitor='val_loss', mode='min', verbose=1)
         self.mc = ModelCheckpoint(os.path.join(report_folder, "best_model.h5"), monitor='val_acc', mode='max',
                                   verbose=1, save_best_only=True)
 
-    def train(self):
+    def train(self, trainX, trainY, valX, valY):
         logger = logging.getLogger(__name__)
-        self.history = self.model.fit(self.trainX, self.trainY,
+        self.history = self.model.fit(trainX, trainY,
                             batch_size=self.config.trainer.batch_size,
                             epochs=self.config.trainer.num_epochs,
                             verbose=2,
-                            validation_data=[self.valX, self.valY],
+                            validation_data=[valX, valY],
                             callbacks=[self.es, self.mc])
 
         acc = self.history.history['acc']

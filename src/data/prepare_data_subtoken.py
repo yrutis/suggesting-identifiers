@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 
 from keras.preprocessing.text import Tokenizer
-from sklearn.model_selection import train_test_split
 import src.data.utils.helper_functions as helper_functions
 import logging
 import os
@@ -80,12 +79,12 @@ def main(filename, window_size_params, window_size_body, window_size_name):
     tokenizer.fit_on_texts(training_vocab_y)  # actual training data gets mapped on text
 
     word_index = tokenizer.word_index
-    print('Found {} unique Y tokens.'.format(len(word_index) + 1))
+    logger.info('Found {} unique Y tokens.'.format(len(word_index) + 1))
 
     tokenizer.fit_on_texts(training_vocab_x)
 
     word_index = tokenizer.word_index
-    print('Found {} unique X+Y tokens.'.format(len(word_index) + 1))
+    logger.info('Found {} unique X+Y tokens.'.format(len(word_index) + 1))
     # %% idx2word
 
     # Creating a reverse dictionary
@@ -118,26 +117,27 @@ def main(filename, window_size_params, window_size_body, window_size_name):
     print(y_train_rev[:20])
     # %%
 
-    # tokenize just testX
-    x_test_tokenized = tokenizer.texts_to_sequences(df_val['concatMethodBodyClean'])
+    # tokenize just valX
+    x_val_tokenized = tokenizer.texts_to_sequences(df_val['concatMethodBodyClean'])
     print(df_val['concatMethodBodyClean'][:10])
-    print(x_test_tokenized[:10])
-    x_test_rev = list(map(sequence_to_text, x_test_tokenized))
-    print(x_test_rev[:10])
+    print(x_val_tokenized[:10])
+    x_val_rev = list(map(sequence_to_text, x_val_tokenized))
+    print(x_val_rev[:10])
 
     # %%
 
-    # tokenize just testY
-    y_test = list(df_val['methodName'])
-    print(y_test[:20])
-    y_test_tokenized = tokenizer.texts_to_sequences(y_test)
-    print(y_test_tokenized[:20])
-    y_test_rev = list(map(sequence_to_text, y_test_tokenized))
-    print(y_test_rev[:20])
+    # tokenize just valY
+    y_val = list(df_val['methodName'])
+    print(y_val[:20])
+    y_val_tokenized = tokenizer.texts_to_sequences(y_val)
+    print(y_val_tokenized[:20])
+    y_val_rev = list(map(sequence_to_text, y_val_tokenized))
+    print(y_val_rev[:20])
 
     # %%
 
-    print(len(y_train_tokenized), len(x_train_tokenized))
+    logger.info("len Y Train Tokenized {}, len X Train Tokenized {}"
+                    .format(len(y_train_tokenized), len(x_train_tokenized)))
 
 
     encoder_input_data = np.zeros(
@@ -167,21 +167,22 @@ def main(filename, window_size_params, window_size_body, window_size_name):
 
 
     # %%
-    print(len(y_test_tokenized), len(x_test_tokenized))
+    logger.info("len Y val tokenized {}, len X val toknized {}"
+                .format(len(y_val_tokenized), len(x_val_tokenized)))
 
     val_encoder_input_data = np.zeros(
-        (len(x_test_tokenized), max_input_elemts),
+        (len(x_val_tokenized), max_input_elemts),
         dtype='float32')
     val_decoder_input_data = np.zeros(
-        (len(y_test_tokenized), max_output_elemts),
+        (len(y_val_tokenized), max_output_elemts),
         dtype='float32')
     val_decoder_target_data = np.zeros(
-        (len(y_test_tokenized), max_output_elemts, vocab_size),
+        (len(y_val_tokenized), max_output_elemts, vocab_size),
         dtype='float32')
 
     # %%
 
-    for i, (input_text, target_text) in enumerate(zip(x_test_tokenized, y_test_tokenized)):
+    for i, (input_text, target_text) in enumerate(zip(x_val_tokenized, y_val_tokenized)):
         for t, word in enumerate(input_text):
             if t < max_input_elemts:
                 val_encoder_input_data[i, t] = input_text[t]
@@ -197,8 +198,8 @@ def main(filename, window_size_params, window_size_body, window_size_name):
 
 
     # print(encoder_input_data[:100])
-    print(decoder_input_data[:10])
-    print(decoder_target_data[:10])
+    #print(decoder_input_data[:10])
+    #print(decoder_target_data[:10])
 
     trainX = [encoder_input_data, decoder_input_data]
     trainY = decoder_target_data
