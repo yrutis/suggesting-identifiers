@@ -42,7 +42,7 @@ def data():
                                 GRU_config.data_loader.window_size_params,
                                 GRU_config.data_loader.window_size_body,
                                 remove_train_unk=0,
-                                remove_val_unk=0.7)
+                                remove_val_unk=0.5)
 
     vocab_size = len(tokenizer.word_index) + 1
     print('Found {} unique tokens.'.format(vocab_size))

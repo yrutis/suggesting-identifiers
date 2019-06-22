@@ -40,7 +40,8 @@ def data():
     trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test, window_size = \
         prepare_data_token.main(LSTMBid_config.data_loader.name,
                                 LSTMBid_config.data_loader.window_size_params,
-                                LSTMBid_config.data_loader.window_size_body)
+                                LSTMBid_config.data_loader.window_size_body,
+                                remove_val_unk=0.5)
 
     vocab_size = len(tokenizer.word_index) + 1
     print('Found {} unique tokens.'.format(vocab_size))
