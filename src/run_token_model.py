@@ -161,6 +161,13 @@ def main(config_path):
     logger.info("save evaluation to file")
     evaluator = Evaluator(trainer.model, report_folder)
 
+    # write config in report folder
+    with open(os.path.join(report_folder, config.name + '.json'), 'w') as outfile:
+        json.dump(config, outfile, indent=4)
+
+    tokenizer_path = os.path.join(report_folder, 'tokenizer.pkl')
+    dump(tokenizer, open(tokenizer_path, 'wb'))
+
     # %% idx2word
 
     # Creating a reverse dictionary
@@ -174,7 +181,7 @@ def main(config_path):
 
 
 
-    predictions = trainer.model.predict(testX) #get prob dist
+    predictions = trainer.model.predict(testX, batch_size=8) #get prob dist
     predictions_idx = np.argmax(predictions, axis=1).tolist() #get highest idx for each X
     predictions_idx = [[item] for item in predictions_idx]
     correct = testY.tolist()
@@ -185,12 +192,7 @@ def main(config_path):
 
 
 
-    # write config in report folder
-    with open(os.path.join(report_folder, config.name + '.json'), 'w') as outfile:
-        json.dump(config, outfile, indent=4)
 
-    tokenizer_path = os.path.join(report_folder, 'tokenizer.pkl')
-    dump(tokenizer, open(tokenizer_path, 'wb'))
 
 
 if __name__ == '__main__':
