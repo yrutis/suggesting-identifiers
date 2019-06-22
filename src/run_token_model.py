@@ -158,6 +158,7 @@ def eval_model(config, report_folder, trainer:AbstractTrain):
     df = pd.DataFrame([metrics], columns=['Description', 'Accuracy', 'AccuracySelf', 'Top-5-Acc', 'Precision', 'Recall', 'F1'])
 
     report_file = os.path.join(report_folder, 'f1_report.csv')
+    logger.info("this is the length of testX {}".format(len(testX)))
 
     df.to_csv(report_file, index=False)
 
