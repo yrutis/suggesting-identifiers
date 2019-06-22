@@ -39,7 +39,7 @@ def data():
         prepare_data_token.main(LSTM_config.data_loader.name,
                                 LSTM_config.data_loader.window_size_params,
                                 LSTM_config.data_loader.window_size_body,
-                                remove_val_unk=0.5)
+                                remove_val_unk=0.8)
 
     vocab_size = len(tokenizer.word_index) + 1
     print('Found {} unique tokens.'.format(vocab_size))
