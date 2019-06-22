@@ -95,7 +95,7 @@ class Seq2SeqTrain(object):
             [decoder_outputs] + decoder_states)
 
 
-    def predict(self, input_seq):
+    def predict(self, input_seq, k, return_top_n):
 
 
         # Encode the input as state vectors.
@@ -112,14 +112,15 @@ class Seq2SeqTrain(object):
         # Sampling loop for a batch of sequences
         # (to simplify, here we assume a batch of size 1).
 
-        init_seq = [[list(), 1.0, False, target_seq, states_value]]
-        sequences = self.run_beam_search(init_seq)
+        #sequences = [decoded so far, neg-loglikelihood, eos reached, last word, newest states value]
+        init_seq = [[[], 1.0, False, target_seq, states_value]]
+        sequences = self.run_beam_search(init_seq, k)
+
+        sequences = sequences[:return_top_n] #only return top n
         return sequences
 
 
-    def run_beam_search(self, sequences):
-
-        #TODO add for any k
+    def run_beam_search(self, sequences, k):
 
         # idx2word
         # Creating a reverse dictionary
@@ -153,9 +154,8 @@ class Seq2SeqTrain(object):
 
                 # Sample a token
                 prob_dist = output_tokens[0, -1, :]
-                top_k_idx = np.argpartition(prob_dist, -4)[-4:]  # argpartition runs in O(n + k log k) time
-                top_k_idx_sorted = top_k_idx[np.argsort(prob_dist[top_k_idx])]
-                tok_k_probs = prob_dist[top_k_idx]
+                top_k_idx = np.argpartition(prob_dist, -k)[-k:]  # argpartition runs in O(n + k log k) time
+                top_k_idx_sorted = top_k_idx[np.argsort(prob_dist[top_k_idx])] #sort
                 tok_k_probs_sorted = prob_dist[top_k_idx_sorted]
 
                 sampled_char = sequence_to_text(top_k_idx_sorted)
@@ -185,16 +185,17 @@ class Seq2SeqTrain(object):
 
         #get the top k ones
         ordered = sorted(all_candidates, key=lambda tup: tup[1])  # sort along the score
-        sequences = ordered[:4]  # keep 4 best ones
+        sequences = ordered[:k]  # keep k best ones
 
 
         if stop_beam_search:
             sequences = np.array(sequences)
             sequences = sequences[:,0:2] #only return sequence and probability
+            sequences = sequences.tolist()[0]
             return sequences
 
         else:
-            return self.run_beam_search(sequences)
+            return self.run_beam_search(sequences, k)
 
 
 

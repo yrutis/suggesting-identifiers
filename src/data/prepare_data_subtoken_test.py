@@ -1,13 +1,7 @@
-import pickle
-from keras import Input, Model
-from keras.engine.saving import load_model
 import pandas as pd
 import numpy as np
 import logging
 import os
-
-# loading
-from sklearn.model_selection import train_test_split
 from src.data.utils import helper_functions
 
 
@@ -17,20 +11,20 @@ def add_start_end_token(y):
 
 #%%
 
-def main(filename, dictionary_path, window_size_body, window_size_params, window_size_name):
+def main(filename, tokenizer, window_size_body, window_size_params, window_size_name):
     #basic init
-    filename = 'Android-Universal-Image-Loader-subtoken'
-    with open(dictionary_path+'/tokenizer.pkl', 'rb') as handle:
-        tokenizer = pickle.load(handle)
 
     # get logger
     logger = logging.getLogger(__name__)
 
-    data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
-    processed_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'), 'decoded'),
-                                               filename + '.json')  # get decoded path
+    filename += '-processed'
 
-    df = pd.read_json(processed_decoded_full_path, orient='records')
+    data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
+    test_processed_decoded_full_path = os.path.join(
+        os.path.join(os.path.join(os.path.join(os.path.join(data_folder, 'processed'),
+                                               'decoded'), filename), 'test'), filename + '-subtoken.json')
+
+    df = pd.read_json(test_processed_decoded_full_path, orient='records')
 
     max_input_elemts = 1 + window_size_params + window_size_body + 2  # return type + ... + ... + startendtoken
     max_output_elemts = 2 + window_size_name  # startendtoken + ...
@@ -42,11 +36,11 @@ def main(filename, dictionary_path, window_size_body, window_size_params, window
     df['methodName'] = df['methodName'].apply(helper_functions.get_first_x_elem, args=(window_size_name,))
 
     # %% add start end token
-    df['methodBody'] = df['methodBody'].apply(add_start_end_token)
+    df['concatMethodBodyClean'] = df['concatMethodBodyClean'].apply(add_start_end_token)
     df['methodName'] = df['methodName'].apply(add_start_end_token)
 
     # %% split dataset
-    x_test, y_test = df['methodBody'], df['methodName']
+    x_test, y_test = df['concatMethodBodyClean'], df['methodName']
     method_body_cleaned_list_x = list(x_test)
     method_name_x = list(y_test)
 
@@ -93,18 +87,12 @@ def main(filename, dictionary_path, window_size_body, window_size_params, window
 
     for i, (input_text, target_text) in enumerate(zip(x_test_tokenized, y_test_tokenized)):
         for t, word in enumerate(input_text):
-            # 20 is the maximum length
+            # max_input_elements is the maximum length
             if t < max_input_elemts:
                 encoder_input_data[i, t] = input_text[t]
 
         for t, word in enumerate(target_text):
             decoder_input_data[i, t] = target_text[t]
 
-    return encoder_input_data, decoder_input_data, tokenizer, vocab_size, max_input_elemts, max_output_elemts
+    return encoder_input_data, decoder_input_data
 
-
-if __name__ == '__main__':
-    filename = ""
-    dictionary_path = ""
-    window_size_body, window_size_params, window_size_name = 12, 4, 2
-    main(filename, dictionary_path, window_size_body, window_size_params, window_size_name)
