@@ -1,5 +1,5 @@
 {
-    "name": "LSTMBid",
+    "name": "simpleNN",
     "data_loader": {
         "name": "Android-Universal-Image-Loader",
         "window_size_body": 16,

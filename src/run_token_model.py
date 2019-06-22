@@ -1,3 +1,4 @@
+import pandas as pd
 from numpy.random import seed
 seed(1)
 from tensorflow import set_random_seed
@@ -11,6 +12,7 @@ import os
 import json
 import tensorflow as tf
 import numpy as np
+from src.Vocabulary.Vocabulary import Vocabulary
 
 
 import src.data.prepare_data_token as prepare_data
@@ -104,6 +106,7 @@ def train_model(config, report_folder):
 def eval_model(config, report_folder, trainer:AbstractTrain):
     # get logger
     logger = logging.getLogger(__name__)
+
     # load test data for evaluation
     testX, testY, perc_unk_test = prepare_data_test.main(config.data_loader.name,
                                                          config.data_loader.window_size_params,
@@ -113,15 +116,50 @@ def eval_model(config, report_folder, trainer:AbstractTrain):
     logger.info("save evaluation to file")
     evaluator = Evaluator(trainer.model, report_folder)
 
+    loss_acc_list_of_metrics = trainer.model.evaluate(testX, testY)
+
+    acc = loss_acc_list_of_metrics[1]
+    top_5_acc = loss_acc_list_of_metrics[2]
+
+
     predictions = trainer.model.predict(testX, batch_size=8)  # get prob dist
-    predictions_idx = np.argmax(predictions, axis=1).tolist()  # get highest idx for each X
-    predictions_idx = [[item] for item in predictions_idx]
-    correct = testY.tolist()
-    correct = [[item] for item in correct]
+    predictions_idx = np.argmax(predictions, axis=1)  # get highest idx for each X
+    #predictions_prob = predictions[predictions_idx]
+    predictions_prob = np.take(predictions, predictions_idx).tolist()
+    predictions_decoded = Vocabulary.revert_back(tokenizer=trainer.tokenizer, sequence=predictions_idx)
+    testX = testX.tolist()
+    testX = [Vocabulary.revert_back(tokenizer=trainer.tokenizer, sequence=x) for x in testX]
+    testY = Vocabulary.revert_back(tokenizer=trainer.tokenizer, sequence=testY)
+
+    # save model data
+    model_data = {'Input': testX,
+                  'Correct': testY,
+                  'Prediction': predictions_decoded,
+                  'PredictionProb': predictions_prob}
+
+
+    df = pd.DataFrame(model_data, columns=['Input', 'Correct', 'Prediction', 'PredictionProb'])
+    df.to_csv(os.path.join(report_folder, 'predictions_test.csv'))
+
+    predictions_decoded = [[item] for item in predictions_decoded]
+    correct = [[item] for item in testY]
 
     # evaluator.evaluate()
-    acc, prec, rec, f1 = evaluator.get_accuracy_precision_recall_f1_score(correct, predictions_idx, 'token')
+    acc2, prec, rec, f1 = evaluator.get_accuracy_precision_recall_f1_score(correct, predictions_decoded, 'token')
+    # save metrics
+    metrics = {'Description': 'token',
+               'Accuracy': acc,
+               'AccuracySelf': acc2,
+               'Top-5-Acc': top_5_acc,
+               'Precision': prec,
+               'Recall': rec,
+               'F1': f1}
 
+    df = pd.DataFrame([metrics], columns=['Description', 'Accuracy', 'AccuracySelf', 'Top-5-Acc', 'Precision', 'Recall', 'F1'])
+
+    report_file = os.path.join(report_folder, 'f1_report.csv')
+
+    df.to_csv(report_file, index=False)
 
 def main(config_path):
     # get logger
@@ -135,10 +173,10 @@ def main(config_path):
     tf.app.flags.DEFINE_string('model', config.name,
                                'must be a valid token model simpleNN/ GRU/ LSTM/ LSTMBid')
     tf.app.flags.DEFINE_string('data', config.data_loader.name,
-                               'must be either Android-Universal-Image-Loader or all_methods_train')
-    tf.app.flags.DEFINE_integer('window_size_body', config.data_loader.window_size_body, 'must be between 2+')
-    tf.app.flags.DEFINE_integer('window_size_params', config.data_loader.window_size_params, 'must be between 2+')
-    tf.app.flags.DEFINE_integer('epochs', config.trainer.num_epochs, 'must be between 1-100')
+                               'must be ...')
+    tf.app.flags.DEFINE_integer('window_size_body', config.data_loader.window_size_body, 'somewhere between 2 and 30')
+    tf.app.flags.DEFINE_integer('window_size_params', config.data_loader.window_size_params, 'somewhere between 2 and 10')
+    tf.app.flags.DEFINE_integer('epochs', config.trainer.num_epochs, 'somewhere between 1 and 50')
     tf.app.flags.DEFINE_integer('batch_size', config.trainer.batch_size, 'must be a power of 2 2^1 - 2^6')
     tf.app.flags.DEFINE_float('remove_train_unk', config.data_loader.remove_train_unk, 'must be between 0 and 1')
     tf.app.flags.DEFINE_float('remove_val_unk', config.data_loader.remove_val_unk, 'must be a between 0 and 1')

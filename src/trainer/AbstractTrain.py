@@ -33,8 +33,8 @@ class AbstractTrain(object):
                                        self.mc],
                                       )
 
-        val_score, val_acc = self.model.evaluate(valX, valY, verbose=0)
-        logger.info('Validation accuracy: {}' .format(val_acc))
+        #val_score, val_acc = self.model.evaluate(valX, valY, verbose=0)
+        #logger.info('Validation accuracy: {}' .format(val_acc))
 
         
     

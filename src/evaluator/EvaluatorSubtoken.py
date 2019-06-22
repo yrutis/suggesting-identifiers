@@ -11,7 +11,9 @@ class Evaluator(object):
     def __init__(self, trained_model, report_folder):
         self.__trained_model = trained_model
         self.report_folder = report_folder
-        self.report_file = os.path.join(report_folder, 'f1_report.csv')
+
+
+
 
 
     def get_accuracy_precision_recall_f1_score(self, correct, predictions, type):
@@ -28,25 +30,6 @@ class Evaluator(object):
         accuracy, precision, recall, f1 = self.calculate_results(complete_true, total, true_positive, false_positive,
                                                             false_negative)
         logger.info("Accuracy {}, Precision {}, Recall {}, F1 {}".format(accuracy, precision, recall, f1))
-
-
-        # save metrics
-        metrics = {'Description': type,
-                      'Accuracy': accuracy,
-                      'Precision': precision,
-                      'Recall': recall,
-                      'F1': f1}
-
-        df = pd.DataFrame([metrics], columns=['Description', 'Accuracy', 'Precision', 'Recall', 'F1'])
-
-        #if report folder already exists: append, else: create new
-        if os.path.exists(self.report_file):
-            report_file = pd.read_csv(self.report_file)
-            report_file = report_file.append(df, sort=False, ignore_index=True)
-        else:
-            report_file = df
-
-        report_file.to_csv(self.report_file, index=False)
 
 
         return accuracy, precision, recall, f1
