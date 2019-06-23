@@ -141,118 +141,103 @@ def main(filename, window_size_params, window_size_body, window_size_name, repor
     logger.info("len Y Train Tokenized {}, len X Train Tokenized {}"
                     .format(len(y_train_tokenized), len(x_train_tokenized)))
 
+    data_storage = os.path.join(data_folder, 'trainingValidationChunks')
+    if not os.path.exists(data_storage):
+        os.mkdir(data_storage)
+    else:
+        # raise Exception("Folder already exists!")
+        pass
 
     encoder_input_data = np.zeros(
-        (len(x_train_tokenized), max_input_elemts),
+        (1, max_input_elemts),
         dtype='float32')
     decoder_input_data = np.zeros(
-        (len(y_train_tokenized), max_output_elemts),
+        (1, max_output_elemts),
         dtype='float32')
     decoder_target_data = np.zeros(
-        (len(y_train_tokenized), max_output_elemts, vocab_size),
+        (1, max_output_elemts, vocab_size),
         dtype='float32')
 
     # %%
 
+    all_train = []
+
     for i, (input_text, target_text) in enumerate(zip(x_train_tokenized, y_train_tokenized)):
         for t, word in enumerate(input_text):
             if t < max_input_elemts:
-                encoder_input_data[i, t] = input_text[t]
+                encoder_input_data[0, t] = input_text[t]
 
         for t, word in enumerate(target_text):
             # decoder_target_data is ahead of decoder_input_data by one timestep
-            decoder_input_data[i, t] = target_text[t]
+            decoder_input_data[0, t] = target_text[t]
             if t > 0:
                 # decoder_target_data will be ahead by one timestep (t=0 is always start)
                 # and will not include the start character.
-                decoder_target_data[i, t - 1, target_text[t]] = 1.
+                decoder_target_data[0, t - 1, target_text[t]] = 1
+
+        trainX1 = encoder_input_data[0]
+        trainX2 = decoder_input_data[0]
+        trainY = decoder_target_data[0]
+        np.save(os.path.join(data_storage, 'trainX1-' + str(i)), trainX1)
+        np.save(os.path.join(data_storage, 'trainX2-' + str(i)), trainX2)
+        np.save(os.path.join(data_storage, 'trainY-' + str(i)), trainY)
+
+        all_train.append(i)
 
 
     # %%
     logger.info("len Y val tokenized {}, len X val toknized {}"
                 .format(len(y_val_tokenized), len(x_val_tokenized)))
 
-    val_encoder_input_data = np.zeros(
-        (len(x_val_tokenized), max_input_elemts),
-        dtype='float32')
-    val_decoder_input_data = np.zeros(
-        (len(y_val_tokenized), max_output_elemts),
-        dtype='float32')
-    val_decoder_target_data = np.zeros(
-        (len(y_val_tokenized), max_output_elemts, vocab_size),
-        dtype='float32')
+
 
     # %%
 
+    all_val = []
+
+    val_encoder_input_data = np.zeros(
+        (1, max_input_elemts),
+        dtype='float32')
+    val_decoder_input_data = np.zeros(
+        (1, max_output_elemts),
+        dtype='float32')
+    val_decoder_target_data = np.zeros(
+        (1, max_output_elemts, vocab_size),
+        dtype='float32')
+
     for i, (input_text, target_text) in enumerate(zip(x_val_tokenized, y_val_tokenized)):
+
         for t, word in enumerate(input_text):
             if t < max_input_elemts:
-                val_encoder_input_data[i, t] = input_text[t]
+                val_encoder_input_data[0, t] = input_text[t]
 
         for t, word in enumerate(target_text):
             # decoder_target_data is ahead of decoder_input_data by one timestep
-            val_decoder_input_data[i, t] = target_text[t]
+            val_decoder_input_data[0, t] = target_text[t]
             if t > 0:
                 # decoder_target_data will be ahead by one timestep (t=0 is always start)
                 # and will not include the start character.
-                val_decoder_target_data[i, t - 1, target_text[t]] = 1.
+                val_decoder_target_data[0, t - 1, target_text[t]] = 1
 
 
+        valX1 = val_encoder_input_data[0]
+        valX2 = val_decoder_input_data[0]
+        valY = val_decoder_target_data[0]
+        np.save(os.path.join(data_storage, 'valX1-' + str(i)), valX1)
+        np.save(os.path.join(data_storage, 'valX2-' + str(i)), valX2)
+        np.save(os.path.join(data_storage, 'valY-' + str(i)), valY)
+        all_val.append(i)
 
-    # print(encoder_input_data[:100])
-    #print(decoder_input_data[:10])
-    #print(decoder_target_data[:10])
+    #to check if all has been saved
+    assert (len(all_val) == len(x_val_tokenized) == len(y_val_tokenized))
 
-    trainX = [encoder_input_data, decoder_input_data]
-    trainY = decoder_target_data
-    valX = [val_encoder_input_data, val_decoder_input_data]
-    valY = val_decoder_target_data
+    vocab_size = len(tokenizer.word_index) + 1
 
-    if not using_generator:
-        return trainX, trainY, valX, valY, tokenizer, vocab_size, max_input_elemts, max_output_elemts
+    # safe tokenizer
+    tokenizer_path = os.path.join(report_folder, 'tokenizer.pkl')
+    dump(tokenizer, open(tokenizer_path, 'wb'))
 
-
-
-
-    else:
-
-        def save_to_chunks(X1: np.ndarray, X2:np.ndarray, Y:np.ndarray, folder, type: str):
-
-            i = 0
-            list_of_elements = []
-            assert(X1.shape[0] == X2.shape[0] == Y.shape[0])
-            while i < X1.shape[0]:
-                current_name_x1 = type + 'X1-' + str(i)
-                current_name_x2 = type + 'X2-' + str(i)
-                current_name_y = type + 'Y-' + str(i)
-                np.save(os.path.join(folder, current_name_x1), X1[i:i + 1])
-                np.save(os.path.join(folder, current_name_x2), X2[i:i + 1])
-                np.save(os.path.join(folder, current_name_y), Y[i:i + 1])
-                list_of_elements.append(i)
-                i += 1
-
-            return list_of_elements
-
-        data_storage = os.path.join(report_folder, 'trainingValidationChunks')
-        if not os.path.exists(data_storage):
-            os.mkdir(data_storage)
-        else:
-            raise Exception("Folder already exists!")
-
-        all_train = save_to_chunks(trainX[0], trainX[1], trainY, data_storage, 'train')
-        all_val = save_to_chunks(valX[0], valX[1], valY, data_storage, 'val')
-
-
-        vocab_size = len(tokenizer.word_index) + 1
-
-        assert(trainY.shape[0] == len(all_train)) #to check if all was saved correctly
-        assert(valY.shape[0] == len(all_val))
-
-        # safe tokenizer
-        tokenizer_path = os.path.join(report_folder, 'tokenizer.pkl')
-        dump(tokenizer, open(tokenizer_path, 'wb'))
-
-        return all_train, all_val, vocab_size, max_input_elemts, max_output_elemts, data_storage
+    return all_train, all_val, vocab_size, max_input_elemts, max_output_elemts, data_storage
 
 
 
@@ -260,4 +245,4 @@ def main(filename, window_size_params, window_size_body, window_size_name, repor
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
-    main("Android-Universal-Image-Loader-subtoken", 2, 8, 3)
+    main("Android-Universal-Image-Loader", 2, 8, 3)
