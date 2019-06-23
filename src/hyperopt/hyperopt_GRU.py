@@ -44,6 +44,7 @@ def data():
                                 remove_train_unk=0,
                                 remove_val_unk=0.8)
 
+
     vocab_size = len(tokenizer.word_index) + 1
     print('Found {} unique tokens.'.format(vocab_size))
 
@@ -83,7 +84,7 @@ def model(trainX, trainY, valX, valY, vocab_size, GRU_config, report_folder_GRU,
 
     model = Model(tensor, answer)
     optimizer = Adam(lr={{choice([0.001, 3e-4])}})
-    model.compile(optimizer=optimizer, loss=GRU_config.model.loss, metrics=GRU_config.model.metrics)
+    model.compile(optimizer=optimizer, loss=GRU_config.model.loss, metrics=['acc'])
 
     early_stopping = EarlyStopping(monitor='val_loss',
                                    mode= 'min',
@@ -107,7 +108,7 @@ if __name__ == '__main__':
     best_run, best_model = optim.minimize(model=model,
                                           data=data,
                                           algo=tpe.suggest,
-                                          max_evals=10,
+                                          max_evals=20,
                                           trials=Trials())
     print(best_run)
 

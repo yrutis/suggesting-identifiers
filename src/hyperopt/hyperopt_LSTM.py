@@ -68,9 +68,9 @@ def model(trainX, trainY, valX, valY, vocab_size, LSTM_config, report_folder_LST
     tensor = Input(shape=(window_size,))
     c = contextEmbedding(tensor)
     c = Dropout({{uniform(0, 0.5)}})(c)
-    c = LSTM({{choice([30, 50, 100, 200])}}, recurrent_dropout={{uniform(0, 0.5)}}, dropout={{uniform(0, 0.5)}})(c)
+    c = LSTM({{choice([50, 100, 200])}}, recurrent_dropout={{uniform(0, 0.5)}}, dropout={{uniform(0, 0.5)}})(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
-    c = Dense({{choice([30, 50, 70, 100, 200])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
+    c = Dense({{choice([50, 70, 100, 200])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
 
     if {{choice(['three', 'four'])}} == 'four':
@@ -80,7 +80,7 @@ def model(trainX, trainY, valX, valY, vocab_size, LSTM_config, report_folder_LST
 
     model = Model(tensor, answer)
     optimizer = Adam(lr={{choice([0.001, 3e-4])}})
-    model.compile(optimizer=optimizer, loss=LSTM_config.model.loss, metrics=LSTM_config.model.metrics)
+    model.compile(optimizer=optimizer, loss=LSTM_config.model.loss, metrics=['acc'])
 
     early_stopping = EarlyStopping(monitor='val_loss',
                                    mode= 'min',
@@ -102,7 +102,7 @@ if __name__ == '__main__':
     best_run, best_model = optim.minimize(model=model,
                                           data=data,
                                           algo=tpe.suggest,
-                                          max_evals=30,
+                                          max_evals=20,
                                           trials=Trials())
     print(best_run)
 

@@ -11,7 +11,7 @@ import os
 #%%
 
 
-def main(filename, window_size_params, window_size_body, remove_train_unk=0, remove_val_unk=0):
+def main(filename, window_size_params, window_size_body, remove_train_unk=0, remove_val_unk=0, using_generator=False):
 
 
     # get logger
@@ -121,28 +121,36 @@ def main(filename, window_size_params, window_size_body, remove_train_unk=0, rem
                                               remove_val=remove_val_unk)
 
 
-    def save_to_chunks(numpy_array:np.ndarray, folder, type:str):
-        i = 0
-        list_of_elements = []
-        while i < numpy_array.shape[0]:
-            current_name = type+ '-'+str(i)
-            np.save(os.path.join(folder, current_name), numpy_array[i:i+1])
-            list_of_elements.append(i)
-            i+=1
 
 
-        return list_of_elements
+    if not using_generator:
+
+        return trainX, trainY, valX, valY, tokenizer, perc_unk_train, perc_unk_val, max_input_elemts
 
 
-    all_trainX = save_to_chunks(trainX, training_processed_decoded, 'trainX')
-    all_trainY = save_to_chunks(trainY, training_processed_decoded, 'trainY')
-    all_valX = save_to_chunks(valX, validation_processed_decoded, 'valX')
-    all_valY = save_to_chunks(valY, validation_processed_decoded, 'valY')
+    else:
 
-    vocab_size = len(tokenizer.word_index) + 1
+        def save_to_chunks(numpy_array: np.ndarray, folder, type: str):
+            i = 0
+            list_of_elements = []
+            while i < numpy_array.shape[0]:
+                current_name = type + '-' + str(i)
+                np.save(os.path.join(folder, current_name), numpy_array[i:i + 1])
+                list_of_elements.append(i)
+                i += 1
 
-    return all_trainX, all_trainY, all_valX, all_valY, vocab_size, max_input_elemts, training_processed_decoded, validation_processed_decoded
-    #return trainX, trainY, valX, valY, tokenizer, perc_unk_train, perc_unk_val, max_input_elemts
+            return list_of_elements
+
+
+        all_trainX = save_to_chunks(trainX, training_processed_decoded, 'trainX')
+        all_trainY = save_to_chunks(trainY, training_processed_decoded, 'trainY')
+        all_valX = save_to_chunks(valX, validation_processed_decoded, 'valX')
+        all_valY = save_to_chunks(valY, validation_processed_decoded, 'valY')
+
+        vocab_size = len(tokenizer.word_index) + 1
+
+        return all_trainX, all_trainY, all_valX, all_valY, vocab_size, max_input_elemts, training_processed_decoded, validation_processed_decoded
+
 
 
 if __name__ == '__main__':

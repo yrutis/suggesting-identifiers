@@ -11,7 +11,7 @@ from src.data.Datagenerator import DataGenerator
 from src.data.prepare_data_token import main as prepare_data
 
 all_trainX, all_trainY, all_valX, all_valY, vocab_size, window_size, \
-training_processed_decoded, validation_processed_decoded = prepare_data("java-med", 8, 2)
+training_processed_decoded, validation_processed_decoded = prepare_data("Android-Universal-Image-Loader", 8, 2, using_generator=True)
 
 params = {'dim': window_size,
           'batch_size': 64,

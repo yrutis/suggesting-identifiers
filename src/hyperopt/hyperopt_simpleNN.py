@@ -80,7 +80,7 @@ def model(trainX, trainY, valX, valY, vocab_size, simpleNN_config, report_folder
 
     model = Model(tensor, answer)
     optimizer = Adam(lr={{choice([0.001, 3e-4])}})
-    model.compile(optimizer=optimizer, loss=simpleNN_config.model.loss, metrics=simpleNN_config.model.metrics)
+    model.compile(optimizer=optimizer, loss=simpleNN_config.model.loss, metrics=['acc'])
 
     early_stopping = EarlyStopping(monitor='val_loss',
                                    mode= 'min',
@@ -102,7 +102,7 @@ if __name__ == '__main__':
     best_run, best_model = optim.minimize(model=model,
                                           data=data,
                                           algo=tpe.suggest,
-                                          max_evals=30,
+                                          max_evals=20,
                                           trials=Trials())
     print(best_run)
 
