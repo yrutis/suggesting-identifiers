@@ -23,6 +23,10 @@ class AbstractTrain(object):
 
     def train(self, trainX, trainY, valX, valY):
         logger = logging.getLogger(__name__)
+
+        logger.info("Shape: trainX {}, trainY {}, valX {}, valY {}"
+                    .format(trainX.shape, trainY.shape, valX.shape, valY.shape))
+
         self.history = self.model.fit(trainX, trainY,
                             validation_data=[valX, valY],
                             batch_size=self.config.trainer.batch_size,

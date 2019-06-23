@@ -41,7 +41,8 @@ def train_model(config, report_folder):
                           remove_train_unk=config.data_loader.remove_train_unk,
                           remove_val_unk=config.data_loader.remove_val_unk)
 
-
+    logger.info("Shape: trainX {}, trainY {}, valX {}, valY {}"
+                .format(trainX.shape, trainY.shape, valX.shape, valY.shape))
     vocab_size = len(tokenizer.word_index) + 1
     logger.info('Found {} unique tokens.'.format(vocab_size))
 
@@ -116,13 +117,13 @@ def eval_model(config, report_folder, trainer:AbstractTrain):
     logger.info("save evaluation to file")
     evaluator = Evaluator(trainer.model, report_folder)
 
-    loss_acc_list_of_metrics = trainer.model.evaluate(testX, testY)
+    loss_acc_list_of_metrics = trainer.model.evaluate(testX, testY, verbose=0)
 
     acc = loss_acc_list_of_metrics[1]
     top_5_acc = loss_acc_list_of_metrics[2]
 
 
-    predictions = trainer.model.predict(testX, batch_size=8)  # get prob dist
+    predictions = trainer.model.predict(testX, batch_size=8, verbose=0)  # get prob dist
     predictions_idx = np.argmax(predictions, axis=1)  # get highest idx for each X
     #predictions_prob = predictions[predictions_idx]
     predictions_prob = np.take(predictions, predictions_idx).tolist()

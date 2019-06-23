@@ -67,7 +67,7 @@ def main():
     # load some flags
     FLAGS = tf.app.flags.FLAGS
 
-    tf.app.flags.DEFINE_string('data', 'java-small',
+    tf.app.flags.DEFINE_string('data', 'java-small-project-split',
                                'must be in processed / intermediate')
 
     tf.app.flags.DEFINE_string('type', 'test',
