@@ -23,6 +23,7 @@ class DataGenerator(keras.utils.Sequence):
         'Generate one batch of data'
         # Generate indexes of the batch
         indexes = self.indexes[index*self.batch_size:(index+1)*self.batch_size]
+        #print("this are the indexes {}".format(indexes))
 
         # Find list of IDs
         list_IDs_temp = [self.list_IDs[k] for k in indexes]
@@ -44,8 +45,13 @@ class DataGenerator(keras.utils.Sequence):
         X = np.empty([self.batch_size, self.dim])
         y = np.empty((self.batch_size), dtype=int)
 
-        print("first element of list id temp {}, last element {}".format(list_IDs_temp[0], list_IDs_temp[-1]))
-        print("amount of steps per epoch {}".format(int(np.floor(len(self.list_IDs) / self.batch_size))))
+        smallest_idx = min(list_IDs_temp)
+        max_idx = max(list_IDs_temp)
+
+
+
+        #print("first element of list id temp {}, last element {}".format(list_IDs_temp[0], list_IDs_temp[-1]))
+        #print("amount of steps per epoch {}".format(int(np.floor(len(self.list_IDs) / self.batch_size))))
 
         # Generate data
         for i, ID in enumerate(list_IDs_temp):

@@ -15,7 +15,7 @@ training_processed_decoded, validation_processed_decoded = prepare_data("Android
 
 params = {'dim': window_size,
           'batch_size': 64,
-          'shuffle': True}
+          'shuffle': False}
 
 # Datasets
 partition_train = {'train': all_trainX}
@@ -48,4 +48,5 @@ model.fit_generator(generator=training_generator,
                     validation_data=validation_generator,
                     use_multiprocessing=True,
                     workers=6,
-                    epochs=2)
+                    epochs=2,
+                    verbose=2)

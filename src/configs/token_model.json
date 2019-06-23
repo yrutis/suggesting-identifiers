@@ -1,5 +1,5 @@
 {
-    "name": "simpleNN",
+    "name": "LSTMBid",
     "data_loader": {
         "name": "Android-Universal-Image-Loader",
         "window_size_body": 16,
@@ -10,7 +10,7 @@
     },
     "trainer": {
         "name": "trainer.SimpleNN",
-        "num_epochs": 15,
+        "num_epochs": 4,
         "batch_size": 64
     }
 }

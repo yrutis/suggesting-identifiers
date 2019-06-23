@@ -21,45 +21,7 @@ from keras.layers.embeddings import Embedding
 from keras.callbacks import EarlyStopping
 import tensorflow as tf
 
-
-def data():
-
-    GRU_config_path = path_file.GRU_config_path
-    GRU_config = config_loader.get_config_from_json(GRU_config_path)
-
-    FLAGS = tf.app.flags.FLAGS
-
-    tf.app.flags.DEFINE_string('data', GRU_config.data_loader.name,
-                               'must be valid data')
-
-
-    GRU_config.data_loader.name = FLAGS.data
-    print("data used is {}".format(GRU_config.data_loader.name))
-
-    # get data
-    trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test, window_size = \
-        prepare_data_token.main(GRU_config.data_loader.name,
-                                GRU_config.data_loader.window_size_params,
-                                GRU_config.data_loader.window_size_body,
-                                remove_train_unk=0,
-                                remove_val_unk=0.8)
-
-
-    vocab_size = len(tokenizer.word_index) + 1
-    print('Found {} unique tokens.'.format(vocab_size))
-
-    #create unique report folder
-    random_nr = randint(0, 10000)
-    unique_folder_key = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S') + "-" + str(random_nr)
-    report_folder = path_file.report_folder
-    report_folder_GRU = os.path.join(report_folder, 'reports-' + GRU_config.name + '-' + unique_folder_key)
-
-    os.mkdir(report_folder_GRU)
-
-
-    return trainX, trainY, valX, valY, vocab_size, GRU_config, report_folder_GRU, window_size
-
-
+from src.hyperopt.hyperopt_data import data
 
 
 def model(trainX, trainY, valX, valY, vocab_size, GRU_config, report_folder_GRU, window_size):
@@ -84,7 +46,7 @@ def model(trainX, trainY, valX, valY, vocab_size, GRU_config, report_folder_GRU,
 
     model = Model(tensor, answer)
     optimizer = Adam(lr={{choice([0.001, 3e-4])}})
-    model.compile(optimizer=optimizer, loss=GRU_config.model.loss, metrics=['acc'])
+    model.compile(optimizer=optimizer, loss="sparse_categorical_crossentropy", metrics=['acc'])
 
     early_stopping = EarlyStopping(monitor='val_loss',
                                    mode= 'min',
@@ -108,7 +70,7 @@ if __name__ == '__main__':
     best_run, best_model = optim.minimize(model=model,
                                           data=data,
                                           algo=tpe.suggest,
-                                          max_evals=20,
+                                          max_evals=1,
                                           trials=Trials())
     print(best_run)
 

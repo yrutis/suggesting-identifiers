@@ -1,6 +1,8 @@
 import os
 import logging
 from keras.callbacks import EarlyStopping, ModelCheckpoint
+
+from src.data.Datagenerator import DataGenerator
 from src.trainer.Callbacks.Callback import Histories
 
 import pandas as pd
@@ -9,36 +11,39 @@ import tensorflow as tf
 
 class AbstractTrain(object):
 
-    def __init__(self, model, tokenizer, config, report_folder):
+    def __init__(self, model, config, report_folder):
         self.model = model
         self.config = config
         self.history = None
         self.type = None
-        self.tokenizer = tokenizer
-        self.histories = Histories(report_folder, tokenizer)
+        #self.tokenizer = tokenizer
+        #self.histories = Histories(report_folder, tokenizer)
         self.es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=10)
-        self.mc = ModelCheckpoint(os.path.join(report_folder, "best_model.h5"), monitor='val_acc', mode='max', verbose=1, save_best_only=True)
+        self.mc = ModelCheckpoint(os.path.join(report_folder, "Model_weights-improvement-epoch-{epoch:02d}-val_acc-{val_acc:.4f}.hdf5"), monitor='val_acc', mode='max', verbose=1, save_best_only=True)
         self.report_folder = report_folder
 
 
-    def train(self, trainX, trainY, valX, valY):
+    def train(self, all_train, all_val, data_storage, window_size):
         logger = logging.getLogger(__name__)
 
-        logger.info("Shape: trainX {}, trainY {}, valX {}, valY {}"
-                    .format(trainX.shape, trainY.shape, valX.shape, valY.shape))
+        params = {'dim': window_size,
+                  'batch_size': self.config.trainer.num_epochs,
+                  'shuffle': False}
 
-        self.history = self.model.fit(trainX, trainY,
-                            validation_data=[valX, valY],
-                            batch_size=self.config.trainer.batch_size,
-                            epochs=self.config.trainer.num_epochs,
-                            verbose=2,
-                            callbacks=[self.histories,
-                                       self.es,
-                                       self.mc],
-                                      )
+        # Generators
+        training_generator = DataGenerator(all_train, data_storage, 'train', **params)
+        validation_generator = DataGenerator(all_val, data_storage, 'val', **params)
 
-        #val_score, val_acc = self.model.evaluate(valX, valY, verbose=0)
-        #logger.info('Validation accuracy: {}' .format(val_acc))
+        self.history = self.model.fit_generator(generator=training_generator,
+                    validation_data=validation_generator,
+                    use_multiprocessing=True,
+                    workers=6,
+                    epochs=self.config.trainer.num_epochs,
+                    verbose=2,
+                    callbacks=[self.es, self.mc
+                               ])
+
+
 
         
     

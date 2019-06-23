@@ -23,44 +23,10 @@ from keras.callbacks import EarlyStopping
 
 import tensorflow as tf
 
-
-def data():
-
-    LSTMBid_config_path = path_file.LSTMBid_config_path
-    LSTMBid_config = config_loader.get_config_from_json(LSTMBid_config_path)
-
-    FLAGS = tf.app.flags.FLAGS
-    tf.app.flags.DEFINE_string('data', LSTMBid_config.data_loader.name,
-                               'must be valid data')
-
-    LSTMBid_config.data_loader.name = FLAGS.data
-    print("data used is {}".format(LSTMBid_config.data_loader.name))
-
-    # get data
-    trainX, trainY, valX, valY, tokenizer, always_unknown_train, always_unknown_test, window_size = \
-        prepare_data_token.main(LSTMBid_config.data_loader.name,
-                                LSTMBid_config.data_loader.window_size_params,
-                                LSTMBid_config.data_loader.window_size_body,
-                                remove_val_unk=0.8)
-
-    vocab_size = len(tokenizer.word_index) + 1
-    print('Found {} unique tokens.'.format(vocab_size))
-
-    #create unique report folder
-    random_nr = randint(0, 10000)
-    unique_folder_key = datetime.utcnow().strftime('%Y-%m-%d-%H-%M-%S') + "-" + str(random_nr)
-    report_folder = path_file.report_folder
-    report_folder_LSTMBid = os.path.join(report_folder, 'reports-' + LSTMBid_config.name + '-' + unique_folder_key)
-
-    os.mkdir(report_folder_LSTMBid)
+from src.hyperopt.hyperopt_data import data
 
 
-    return trainX, trainY, valX, valY, vocab_size, LSTMBid_config, report_folder_LSTMBid, window_size
-
-
-
-
-def model(trainX, trainY, valX, valY, vocab_size, LSTMBid_config, report_folder_LSTMBid, window_size):
+def model(trainX, trainY, valX, valY, vocab_size, report_folder_LSTMBid, window_size):
     logger = logging.getLogger(__name__)
 
 
@@ -82,7 +48,7 @@ def model(trainX, trainY, valX, valY, vocab_size, LSTMBid_config, report_folder_
 
     model = Model(tensor, answer)
     optimizer = Adam(lr={{choice([0.001, 3e-4])}})
-    model.compile(optimizer=optimizer, loss=LSTMBid_config.model.loss, metrics=['acc'])
+    model.compile(optimizer=optimizer, loss="sparse_categorical_crossentropy", metrics=['acc'])
 
     early_stopping = EarlyStopping(monitor='val_loss',
                                    mode= 'min',
@@ -107,11 +73,13 @@ if __name__ == '__main__':
     best_run, best_model = optim.minimize(model=model,
                                           data=data,
                                           algo=tpe.suggest,
-                                          max_evals=20,
+                                          max_evals=1,
                                           trials=Trials())
     print(best_run)
 
-    trainX, trainY, valX, valY, vocab_size, LSTMBid_config, report_folder_LSTM, window_size = data()
+
+
+    trainX, trainY, valX, valY, vocab_size, token_model_config, report_folder_LSTM, window_size = data()
     print("Evalutation of best performing model:")
     print(best_model.evaluate(valX, valY))
     print("Best performing model chosen hyper-parameters:")
@@ -119,3 +87,4 @@ if __name__ == '__main__':
 
     best_model.save(os.path.join(report_folder_LSTM, 'best_model.h5'))
     json.dump(best_run, open(os.path.join(report_folder_LSTM, "best_run.txt"), 'w'))
+    json.dump(token_model_config, open(os.path.join(report_folder_LSTM, "config.json"), 'w'))

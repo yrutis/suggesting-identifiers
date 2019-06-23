@@ -1,3 +1,5 @@
+from pickle import dump
+
 import pandas as pd
 import numpy as np
 
@@ -11,7 +13,7 @@ import os
 #%%
 
 
-def main(filename, window_size_params, window_size_body, remove_train_unk=0, remove_val_unk=0, using_generator=False):
+def main(filename, window_size_params, window_size_body, report_folder, remove_train_unk=0, remove_val_unk=0, using_generator=False):
 
 
     # get logger
@@ -96,21 +98,21 @@ def main(filename, window_size_params, window_size_body, remove_train_unk=0, rem
 
     # tokenize just valX
     valX_raw = list(df_val['concatMethodBodyCleaned'])
-    print(valX_raw[:3])
+    logger.info(valX_raw[:3])
     x_test_seq = tokenizer.texts_to_sequences(valX_raw)
     valX = pad_sequences(x_test_seq, maxlen=max_input_elemts, value=0)
-    print(valX[:3])
+    logger.info(valX[:3])
     valX_decoded = list(map(sequence_to_text, valX))
-    print(valX_decoded[:3])
+    logger.info(valX_decoded[:3])
 
 
     # tokenize just testY
     y_test = list(df_val['methodName'])
-    print(y_test[:3])
+    logger.info(y_test[:3])
     y_test_tokenized = tokenizer.texts_to_sequences(y_test)
-    print(y_test_tokenized[:3])
+    logger.info(y_test_tokenized[:3])
     y_test_decoded = list(map(sequence_to_text, y_test_tokenized))
-    print(y_test_decoded[:3])
+    logger.info(y_test_decoded[:3])
     y_test_tokenized = list(map(helper_functions.getFirstElem, y_test_tokenized))
     valY = np.array(y_test_tokenized)
 
@@ -130,30 +132,45 @@ def main(filename, window_size_params, window_size_body, remove_train_unk=0, rem
 
     else:
 
-        def save_to_chunks(numpy_array: np.ndarray, folder, type: str):
+        def save_to_chunks(X: np.ndarray, Y:np.ndarray, folder, type: str):
+
             i = 0
             list_of_elements = []
-            while i < numpy_array.shape[0]:
-                current_name = type + '-' + str(i)
-                np.save(os.path.join(folder, current_name), numpy_array[i:i + 1])
+            assert(X.shape[0] == Y.shape[0])
+            while i < X.shape[0]:
+                current_name_x = type + 'X-' + str(i)
+                current_name_y = type + 'Y-' + str(i)
+                np.save(os.path.join(folder, current_name_x), X[i:i + 1])
+                np.save(os.path.join(folder, current_name_y), Y[i:i + 1])
                 list_of_elements.append(i)
                 i += 1
 
             return list_of_elements
 
+        data_storage = os.path.join(report_folder, 'trainingValidationChunks')
+        if not os.path.exists(data_storage):
+            os.mkdir(data_storage)
+        else:
+            raise Exception("Folder already exists!")
 
-        all_trainX = save_to_chunks(trainX, training_processed_decoded, 'trainX')
-        all_trainY = save_to_chunks(trainY, training_processed_decoded, 'trainY')
-        all_valX = save_to_chunks(valX, validation_processed_decoded, 'valX')
-        all_valY = save_to_chunks(valY, validation_processed_decoded, 'valY')
+        all_train = save_to_chunks(trainX, trainY, data_storage, 'train')
+        all_val = save_to_chunks(valX, valY, data_storage, 'val')
+
 
         vocab_size = len(tokenizer.word_index) + 1
 
-        return all_trainX, all_trainY, all_valX, all_valY, vocab_size, max_input_elemts, training_processed_decoded, validation_processed_decoded
+        assert(trainX.shape[0] == len(all_train)) #to check if all was saved correctly
+        assert(valX.shape[0] == len(all_val))
+
+        # safe tokenizer
+        tokenizer_path = os.path.join(report_folder, 'tokenizer.pkl')
+        dump(tokenizer, open(tokenizer_path, 'wb'))
+
+        return all_train, all_val, vocab_size, max_input_elemts, data_storage, perc_unk_train, perc_unk_val
 
 
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
-    main("Android-Universal-Image-Loader", 2, 8)
+    main("Android-Universal-Image-Loader", 2, 8, '')

@@ -1,3 +1,5 @@
+import shutil
+
 import pandas as pd
 from numpy.random import seed
 seed(1)
@@ -6,7 +8,7 @@ set_random_seed(2)
 
 from datetime import datetime
 from random import randint
-from pickle import dump
+from pickle import dump, load
 import logging
 import os
 import json
@@ -34,16 +36,15 @@ def train_model(config, report_folder):
     logger = logging.getLogger(__name__)
 
     # get trainX, trainY, valX, valY, tokenizer (dictionary), unknown statistics, window_size of X
-    trainX, trainY, valX, valY, tokenizer, perc_unk_train, perc_unk_val, window_size = \
-        prepare_data.main(config.data_loader.name,
+    all_train, all_val, vocab_size, window_size, data_storage, perc_unk_train, perc_unk_val\
+        = prepare_data.main(config.data_loader.name,
                           config.data_loader.window_size_params,
                           config.data_loader.window_size_body,
+                          report_folder=report_folder,
                           remove_train_unk=config.data_loader.remove_train_unk,
-                          remove_val_unk=config.data_loader.remove_val_unk)
+                          remove_val_unk=config.data_loader.remove_val_unk,
+                          using_generator=True)
 
-    logger.info("Shape: trainX {}, trainY {}, valX {}, valY {}"
-                .format(trainX.shape, trainY.shape, valX.shape, valY.shape))
-    vocab_size = len(tokenizer.word_index) + 1
     logger.info('Found {} unique tokens.'.format(vocab_size))
 
     if config.name == "GRU":
@@ -92,13 +93,16 @@ def train_model(config, report_folder):
 
 
     logger.info("create trainer...")
-    trainer = AbstractTrain(model=model.model,
-                             tokenizer=tokenizer, config=config,
+    trainer = AbstractTrain(model=model.model, config=config,
                              report_folder=report_folder)
 
     logger.info("start training...")
-    trainer.train(trainX, trainY, valX, valY)
+    trainer.train(all_train=all_train, all_val=all_val, data_storage=data_storage, window_size=window_size)
     trainer.visualize_training(perc_unk_train, perc_unk_val)
+
+    logger.info("deleting temp files...")
+    shutil.rmtree(data_storage)
+
 
     return trainer
 
@@ -108,11 +112,14 @@ def eval_model(config, report_folder, trainer:AbstractTrain):
     # get logger
     logger = logging.getLogger(__name__)
 
+    with open(os.path.join(report_folder, 'tokenizer.pkl'), "rb") as input_file:
+        tokenizer = load(input_file)
+
     # load test data for evaluation
     testX, testY, perc_unk_test = prepare_data_test.main(config.data_loader.name,
                                                          config.data_loader.window_size_params,
                                                          config.data_loader.window_size_body,
-                                                         trainer.tokenizer,
+                                                         tokenizer,
                                                          remove_test_unk=config.data_loader.remove_test_unk)
     logger.info("save evaluation to file")
     evaluator = Evaluator(trainer.model, report_folder)
@@ -127,10 +134,10 @@ def eval_model(config, report_folder, trainer:AbstractTrain):
     predictions_idx = np.argmax(predictions, axis=1)  # get highest idx for each X
     #predictions_prob = predictions[predictions_idx]
     predictions_prob = np.take(predictions, predictions_idx).tolist()
-    predictions_decoded = Vocabulary.revert_back(tokenizer=trainer.tokenizer, sequence=predictions_idx)
+    predictions_decoded = Vocabulary.revert_back(tokenizer=tokenizer, sequence=predictions_idx)
     testX = testX.tolist()
-    testX = [Vocabulary.revert_back(tokenizer=trainer.tokenizer, sequence=x) for x in testX]
-    testY = Vocabulary.revert_back(tokenizer=trainer.tokenizer, sequence=testY)
+    testX = [Vocabulary.revert_back(tokenizer=tokenizer, sequence=x) for x in testX]
+    testY = Vocabulary.revert_back(tokenizer=tokenizer, sequence=testY)
 
     # save model data
     model_data = {'Input': testX,
@@ -219,10 +226,6 @@ def main(config_path):
     os.mkdir(report_folder)
 
     trainer = train_model(config=config, report_folder=report_folder)
-
-    # safe tokenizer
-    tokenizer_path = os.path.join(report_folder, 'tokenizer.pkl')
-    dump(trainer.tokenizer, open(tokenizer_path, 'wb'))
 
     eval_model(config=config, report_folder=report_folder, trainer=trainer)
 

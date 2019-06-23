@@ -177,10 +177,8 @@ def remove_some_unknowns(trainX, trainY, valX, valY, remove_train=0, remove_val=
     '''
 
     logger = logging.getLogger(__name__)
-    logger.info("this is remove_train {}, this is remove_val {}".format(remove_train, remove_val))
 
     train_df = pd.DataFrame({'trainY': trainY, 'trainX': list(trainX)})
-    logger.info(train_df.head())
     perc_unk_train = (len(train_df[(train_df['trainY'] == 1)])) / (len(train_df.index))
     logger.info("This is the percentage of UNK in Training before removal {}".format(perc_unk_train))
 
