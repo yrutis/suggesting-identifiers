@@ -1,3 +1,5 @@
+from pickle import dump
+
 import pandas as pd
 import numpy as np
 
@@ -13,7 +15,7 @@ def add_start_end_token(y):
     return _list
 
 
-def main(filename, window_size_params, window_size_body, window_size_name):
+def main(filename, window_size_params, window_size_body, window_size_name, report_folder='', using_generator=False):
     # basic init
     # get logger
     # get logger
@@ -206,7 +208,53 @@ def main(filename, window_size_params, window_size_body, window_size_name):
     valX = [val_encoder_input_data, val_decoder_input_data]
     valY = val_decoder_target_data
 
-    return trainX, trainY, valX, valY, tokenizer, vocab_size, max_input_elemts, max_output_elemts
+    if not using_generator:
+        return trainX, trainY, valX, valY, tokenizer, vocab_size, max_input_elemts, max_output_elemts
+
+
+
+
+    else:
+
+        def save_to_chunks(X1: np.ndarray, X2:np.ndarray, Y:np.ndarray, folder, type: str):
+
+            i = 0
+            list_of_elements = []
+            assert(X1.shape[0] == X2.shape[0] == Y.shape[0])
+            while i < X1.shape[0]:
+                current_name_x1 = type + 'X1-' + str(i)
+                current_name_x2 = type + 'X2-' + str(i)
+                current_name_y = type + 'Y-' + str(i)
+                np.save(os.path.join(folder, current_name_x1), X1[i:i + 1])
+                np.save(os.path.join(folder, current_name_x2), X2[i:i + 1])
+                np.save(os.path.join(folder, current_name_y), Y[i:i + 1])
+                list_of_elements.append(i)
+                i += 1
+
+            return list_of_elements
+
+        data_storage = os.path.join(report_folder, 'trainingValidationChunks')
+        if not os.path.exists(data_storage):
+            os.mkdir(data_storage)
+        else:
+            raise Exception("Folder already exists!")
+
+        all_train = save_to_chunks(trainX[0], trainX[1], trainY, data_storage, 'train')
+        all_val = save_to_chunks(valX[0], valX[1], valY, data_storage, 'val')
+
+
+        vocab_size = len(tokenizer.word_index) + 1
+
+        assert(trainY.shape[0] == len(all_train)) #to check if all was saved correctly
+        assert(valY.shape[0] == len(all_val))
+
+        # safe tokenizer
+        tokenizer_path = os.path.join(report_folder, 'tokenizer.pkl')
+        dump(tokenizer, open(tokenizer_path, 'wb'))
+
+        return all_train, all_val, vocab_size, max_input_elemts, max_output_elemts, data_storage
+
+
 
 
 if __name__ == '__main__':

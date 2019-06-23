@@ -8,7 +8,7 @@ set_random_seed(2)
 
 from datetime import datetime
 from random import randint
-from pickle import dump
+from pickle import dump, load
 import logging
 import os
 import json
@@ -29,13 +29,13 @@ def train_model(config, report_folder):
     logger = logging.getLogger(__name__)
 
     # get data
-    trainX, trainY, valX, valY, tokenizer, vocab_size, \
-    window_size, max_output_elemts = prepare_data.main(config.data_loader.name,
-                                                       config.data_loader.window_size_body,
-                                                       config.data_loader.window_size_params,
-                                                       config.data_loader.window_size_name)
+    all_train, all_val, vocab_size, window_size, max_output_elemts, data_storage\
+        = prepare_data.main(config.data_loader.name,
+                            config.data_loader.window_size_body,
+                            config.data_loader.window_size_params,
+                            config.data_loader.window_size_name,
+                            report_folder=report_folder, using_generator=True)
 
-    vocab_size = len(tokenizer.word_index) + 1
     logger.info('Found {} unique tokens.'.format(vocab_size))
 
     logger.info("create seq2seq Model...")
@@ -46,17 +46,16 @@ def train_model(config, report_folder):
     # build graph
     model.build_model()
 
-    data = [trainX, trainY, valX, valY]
 
     logger.info("create trainer...")
     trainer = Seq2SeqTrain(model=model.model,
                            encoder_model=model.encoder_model,
                            decoder_model=model.decoder_model,
-                           tokenizer=tokenizer, config=config,
+                            config=config,
                            report_folder=report_folder)
 
     logger.info("start seq2seq training...")
-    trainer.train(trainX, trainY, valX, valY)
+    trainer.train(all_train, all_val, window_size, max_output_elemts, vocab_size, data_storage)
 
     return trainer
 
@@ -64,8 +63,12 @@ def train_model(config, report_folder):
 
 
 def eval_model(config, report_folder, trainer:Seq2SeqTrain):
+    with open(os.path.join(report_folder, 'tokenizer.pkl'), "rb") as input_file:
+        tokenizer = load(input_file)
+
+
     testX, testY = prepare_data_test.main(config.data_loader.name,
-                                          trainer.tokenizer,
+                                          tokenizer,
                                           config.data_loader.window_size_body,
                                           config.data_loader.window_size_params,
                                           config.data_loader.window_size_name)
@@ -73,7 +76,7 @@ def eval_model(config, report_folder, trainer:Seq2SeqTrain):
     # %% idx2word
 
     # Creating a reverse dictionary
-    reverse_word_map = dict(map(reversed, trainer.tokenizer.word_index.items()))
+    reverse_word_map = dict(map(reversed, tokenizer.word_index.items()))
 
     # Function takes a tokenized sentence and returns the words
     def sequence_to_text(list_of_indices):
@@ -98,8 +101,8 @@ def eval_model(config, report_folder, trainer:Seq2SeqTrain):
         input_enc = sequence_to_text(input_seq_list)
 
         print("this is the input seq decoded: {}".format(input_enc))
-        decoded_sentence_k_100 = trainer.predict(input_seq, k=100, return_top_n=1)
-        decoded_sentence = trainer.predict(input_seq, k=1, return_top_n=1)
+        decoded_sentence_k_100 = trainer.predict(tokenizer=tokenizer, input_seq=input_seq, k=100, return_top_n=1)
+        decoded_sentence = trainer.predict(tokenizer=tokenizer, input_seq=input_seq, k=1, return_top_n=1)
 
         print("Predicted: {}".format(decoded_sentence[0]))
         predictions_k_1.append(decoded_sentence[0])
@@ -170,14 +173,8 @@ def main(config_path):
 
     trainer = train_model(config=config, report_folder=report_folder)
 
-    # safe tokenizer
-    tokenizer_path = os.path.join(report_folder, 'tokenizer.pkl')
-    dump(trainer.tokenizer, open(tokenizer_path, 'wb'))
 
-
-    eval_model(config=config,
-               report_folder=report_folder,
-               trainer=trainer)
+    eval_model(config=config, report_folder=report_folder, trainer=trainer)
 
 
 

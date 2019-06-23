@@ -11,30 +11,43 @@ from matplotlib import pyplot as plt
 import tensorflow as tf
 from math import log
 
+from src.data.DataGeneratorSubtoken import DataGenerator
+
 
 class Seq2SeqTrain(object):
 
-    def __init__(self, model, encoder_model, decoder_model, tokenizer, config, report_folder):
+    def __init__(self, model, encoder_model, decoder_model, config, report_folder):
         self.model = model
         self.encoder_model = encoder_model
         self.decoder_model = decoder_model
         self.config = config
         self.history = None
         self.type = None
-        self.tokenizer = tokenizer
         self.report_folder = report_folder
         self.es = EarlyStopping(monitor='val_loss', mode='min', verbose=1)
         self.mc = ModelCheckpoint(os.path.join(report_folder, "best_model.h5"), monitor='val_acc', mode='max',
                                   verbose=1, save_best_only=True)
 
-    def train(self, trainX, trainY, valX, valY):
+    def train(self, all_train, all_val, max_input_elemts, max_output_elemts, vocab_size, data_storage):
         logger = logging.getLogger(__name__)
-        self.history = self.model.fit(trainX, trainY,
-                            batch_size=self.config.trainer.batch_size,
-                            epochs=self.config.trainer.num_epochs,
-                            verbose=2,
-                            validation_data=[valX, valY],
-                            callbacks=[self.es, self.mc])
+
+
+        params = {'input_dim': max_input_elemts,
+                  'output_dim': max_output_elemts,
+                  'batch_size': 64,
+                  'shuffle': False}
+
+        # Generators
+        training_generator = DataGenerator(all_train, data_storage, 'train', vocab_size, **params)
+        validation_generator = DataGenerator(all_val, data_storage, 'val', vocab_size, **params)
+
+        # Train model on dataset
+        self.history = self.model.fit_generator(generator=training_generator,
+                            validation_data=validation_generator,
+                            use_multiprocessing=True,
+                            workers=6,
+                            epochs=2,
+                            verbose=2)
 
         acc = self.history.history['acc']
         val_acc = self.history.history['val_acc']
@@ -91,7 +104,7 @@ class Seq2SeqTrain(object):
             [decoder_outputs] + decoder_states)
 
 
-    def predict(self, input_seq, k, return_top_n):
+    def predict(self, tokenizer, input_seq, k, return_top_n):
 
 
         # Encode the input as state vectors.
@@ -101,7 +114,7 @@ class Seq2SeqTrain(object):
         target_seq = np.zeros((1, 1))
 
         # Populate the first character of target sequence with the start character.
-        start_token_idx = self.tokenizer.texts_to_sequences(['starttoken'])
+        start_token_idx = tokenizer.texts_to_sequences(['starttoken'])
         start_token_idx_elem = start_token_idx[0][0]
         target_seq[0, 0] = start_token_idx_elem
 
@@ -110,17 +123,17 @@ class Seq2SeqTrain(object):
 
         #sequences = [decoded so far, neg-loglikelihood, eos reached, last word, newest states value]
         init_seq = [[[], 1.0, False, target_seq, states_value]]
-        sequences = self.run_beam_search(init_seq, k)
+        sequences = self.run_beam_search(tokenizer, init_seq, k)
 
         sequences = sequences[:return_top_n] #only return top n
         return sequences
 
 
-    def run_beam_search(self, sequences, k):
+    def run_beam_search(self, tokenizer, sequences, k):
 
         # idx2word
         # Creating a reverse dictionary
-        reverse_word_map = dict(map(reversed, self.tokenizer.word_index.items()))
+        reverse_word_map = dict(map(reversed, tokenizer.word_index.items()))
 
         # Function takes a tokenized sentence and returns the words
         def sequence_to_text(list_of_indices):
@@ -191,7 +204,7 @@ class Seq2SeqTrain(object):
             return sequences
 
         else:
-            return self.run_beam_search(sequences, k)
+            return self.run_beam_search(tokenizer, sequences, k)
 
 
 
