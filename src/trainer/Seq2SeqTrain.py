@@ -1,6 +1,7 @@
 import os
 import logging
 
+import pandas as pd
 from keras import Model, Input
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 
@@ -34,7 +35,7 @@ class Seq2SeqTrain(object):
 
         params = {'input_dim': max_input_elemts,
                   'output_dim': max_output_elemts,
-                  'batch_size': 64,
+                  'batch_size': self.config.trainer.batch_size,
                   'shuffle': False}
 
         # Generators
@@ -43,17 +44,37 @@ class Seq2SeqTrain(object):
 
         # Train model on dataset
         self.history = self.model.fit_generator(generator=training_generator,
-                            validation_data=validation_generator,
-                            use_multiprocessing=True,
-                            workers=6,
-                            epochs=2,
-                            verbose=2)
+                                                validation_data=validation_generator,
+                                                use_multiprocessing=True,
+                                                workers=6,
+                                                epochs=self.config.trainer.num_epochs,
+                                                callbacks=[self.es, self.mc],
+                                                verbose=2
+                                                )
 
-        acc = self.history.history['acc']
-        val_acc = self.history.history['val_acc']
+
+
+    def visualize_training(self):
+        if not self.history:
+            raise Exception("You have to train the model first before visualizing")
+
+        acc = self.history.history[self.config.model.metrics[0]]
+        val_acc = self.history.history['val_'+self.config.model.metrics[0]]
         loss = self.history.history['loss']
         val_loss = self.history.history['val_loss']
         epochs = range(1, len(acc) + 1)
+
+        acc_loss = os.path.join(self.report_folder, 'acc_loss.csv')
+
+        # save model data
+        model_data = {'acc': acc,
+                      'val_acc': val_acc,
+                      'loss': loss,
+                      'val_loss': val_loss}
+
+        df = pd.DataFrame(model_data, columns=['acc', 'val_acc', 'unk_acc', 'unk_val_acc', 'loss', 'val_loss'])
+        df.to_csv(acc_loss)
+
 
         plt.plot(epochs, acc, 'bo', label='Training acc')
         plt.plot(epochs, val_acc, 'b', label='Validation acc')
@@ -170,9 +191,13 @@ class Seq2SeqTrain(object):
                 sampled_char = sequence_to_text(top_k_idx_sorted)
                 sampled_char = list(map(lambda x: str(x), sampled_char))  # in case of true which is oov
 
+                #iterates over new potential characters and sets stop_cond=true
+                #for each candidate if the char is endtoken or the seq > window size name
                 for i in range(top_k_idx_sorted.shape[0]):
-                    if (sampled_char[i] == 'endtoken' or
-                            len(seq) + 1 > self.config.data_loader.window_size_body):
+                    if (sampled_char[i] == 'endtoken'):
+                        stop_condition = True
+
+                    elif ((len(seq) + 1) > self.config.data_loader.window_size_name):
                         stop_condition = True
 
                     else:
@@ -181,6 +206,8 @@ class Seq2SeqTrain(object):
                     # Update the target sequence (of length 1).
                     target_seq = np.zeros((1, 1))
                     target_seq[0, 0] = top_k_idx_sorted[i]
+
+                    #print("seq so far {}, adding char {}, stop condition {}".format(seq, sampled_char[i], stop_condition))
 
                     candidate = [seq + [sampled_char[i]],
                                  score * -log(tok_k_probs_sorted[i]),

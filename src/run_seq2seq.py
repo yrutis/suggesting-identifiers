@@ -23,6 +23,7 @@ from src.models.Seq2SeqModel import Seq2SeqModel
 import src.utils.config as config_loader
 import src.utils.path as path_file
 from src.trainer.Seq2SeqTrain import Seq2SeqTrain
+from src.Vocabulary.Vocabulary import Vocabulary
 
 import numpy as np
 
@@ -69,6 +70,7 @@ def train_model(config, report_folder):
 
 
 def eval_model(config, report_folder, trainer:Seq2SeqTrain):
+    logger = logging.getLogger(__name__)
     with open(os.path.join(report_folder, 'tokenizer.pkl'), "rb") as input_file:
         tokenizer = load(input_file)
 
@@ -79,16 +81,7 @@ def eval_model(config, report_folder, trainer:Seq2SeqTrain):
                                           config.data_loader.window_size_params,
                                           config.data_loader.window_size_name)
 
-    # %% idx2word
 
-    # Creating a reverse dictionary
-    reverse_word_map = dict(map(reversed, tokenizer.word_index.items()))
-
-    # Function takes a tokenized sentence and returns the words
-    def sequence_to_text(list_of_indices):
-        # Looking up words in dictionary
-        words = [reverse_word_map.get(letter) for letter in list_of_indices]
-        return (words)
 
     # %% generate some method names
 
@@ -96,36 +89,16 @@ def eval_model(config, report_folder, trainer:Seq2SeqTrain):
     predictions_k_1 = []
     predictions_k_100 = []
 
-    i = 0
-    while i < testX.shape[0]:
-        input_seq = testX[i: i + 1]
-        input_seq_list = input_seq.tolist()[0]  # get in right format for tokenizer
-        correct_output = testY[i: i + 1]
-        correct_output_list = correct_output.tolist()[0]  # get in right format for tokenizer
-        decoded_correct_output_list = sequence_to_text(correct_output_list)
-
-        input_enc = sequence_to_text(input_seq_list)
-
-        print("this is the input seq decoded: {}".format(input_enc))
-        decoded_sentence_k_100 = trainer.predict(tokenizer=tokenizer, input_seq=input_seq, k=100, return_top_n=1)
-        decoded_sentence = trainer.predict(tokenizer=tokenizer, input_seq=input_seq, k=1, return_top_n=1)
-
-        print("Predicted: {}".format(decoded_sentence[0]))
-        predictions_k_1.append(decoded_sentence[0])
-
-        print("Predicted k 100: {}".format(decoded_sentence_k_100[0]))
-        predictions_k_100.append(decoded_sentence_k_100[0])
-
-        print("Correct: {}".format(decoded_correct_output_list))
-        correct.append(decoded_correct_output_list)
-
-        i += 1
 
     evaluator = Evaluator(trained_model=trainer.model,
                           report_folder=report_folder)
 
-    evaluator.get_accuracy_precision_recall_f1_score(correct, predictions_k_1, 'k1')
-    evaluator.get_accuracy_precision_recall_f1_score(correct, predictions_k_100, 'k100')
+    accuracy, precision, recall, f1 = evaluator.evaluate(testX=testX, testY=testY, Vocabulary=Vocabulary, tokenizer=tokenizer, trainer=trainer)
+
+    logger.info("acc {} prec {} recall {} f1 {}".format(accuracy, precision, recall, f1))
+
+    #evaluator.get_accuracy_precision_recall_f1_score(correct, predictions_k_1, 'k1')
+    #evaluator.get_accuracy_precision_recall_f1_score(correct, predictions_k_100, 'k100')
 
 
 def main(config_path):
