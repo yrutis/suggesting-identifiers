@@ -63,7 +63,6 @@ def train_model(config, report_folder):
     logger.info("deleting temp files...")
     shutil.rmtree(data_storage)
 
-
     return trainer
 
 
@@ -80,14 +79,6 @@ def eval_model(config, report_folder, trainer:Seq2SeqTrain):
                                           config.data_loader.window_size_body,
                                           config.data_loader.window_size_params,
                                           config.data_loader.window_size_name)
-
-
-
-    # %% generate some method names
-
-    correct = []
-    predictions_k_1 = []
-    predictions_k_100 = []
 
 
     evaluator = Evaluator(trained_model=trainer.model,

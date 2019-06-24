@@ -1,4 +1,21 @@
-from __future__ import print_function
+import logging
+
+import talos as ta
+import wrangle as wr
+from keras import Model, Input
+from talos.metrics.keras_metrics import fmeasure_acc
+from talos import live
+
+import pandas as pd
+
+from keras.models import Sequential
+from keras.layers import Dropout, Dense, Embedding, LSTM
+
+# Keras items
+from keras.optimizers import Adam, Nadam
+from keras.activations import relu, elu
+from keras.losses import binary_crossentropy
+
 
 import json
 import logging
@@ -10,7 +27,7 @@ from keras import Input, Model
 from keras.optimizers import Adam
 
 import src.utils.path as path_file
-from src.data import prepare_data_subtoken
+from src.data import prepare_data_subtoken_no_generator
 import src.utils.config as config_loader
 from hyperopt import Trials, STATUS_OK, tpe
 from hyperas import optim
@@ -37,7 +54,7 @@ def data():
     logger.info("data used is {}".format(seq2seq_config.data_loader.name))
 
     trainX, trainY, valX, valY, tokenizer, vocab_size, max_input_elemts, max_output_elemts = \
-        prepare_data_subtoken.main(seq2seq_config.data_loader.name,
+        prepare_data_subtoken_no_generator.main(seq2seq_config.data_loader.name,
                                 seq2seq_config.data_loader.window_size_params,
                                 seq2seq_config.data_loader.window_size_body,
                                    seq2seq_config.data_loader.window_size_name
@@ -53,60 +70,57 @@ def data():
 
     os.mkdir(report_folder_seq2seq)
 
-    trainX = {'x1': trainX[0], 'x2': trainX[1]}
-    valX = {'x1': valX[0], 'x2': valY[1]}
 
     return trainX, trainY, valX, valY, vocab_size, seq2seq_config, report_folder_seq2seq, max_input_elemts
 
 
 
+trainX, trainY, valX, valY, vocab_size, seq2seq_config, report_folder_seq2seq, max_input_elemts = data()
 
-def model(trainX, trainY, valX, valY, vocab_size, seq2seq_config, report_folder_seq2seq, max_input_elemts):
-    logger = logging.getLogger(__name__)
 
-    e = Embedding(vocab_size, {{choice([64, 128, 256])}})
+# first we have to make sure to input data and params into the function
+def seq2seq(x_train, y_train, x_val, y_val, params):
+
+    e = Embedding(vocab_size, params['embedding'])
     encoder_inputs = Input(shape=(None,), name="encoder_input")
     en_x = e(encoder_inputs)
-    encoder = LSTM({{choice([60, 100, 250])}}, return_state=True)
+    encoder = LSTM(20, return_state=True)
     encoder_outputs, state_h, state_c = encoder(en_x)
     encoder_states = [state_h, state_c]
     decoder_inputs = Input(shape=(None,), name='decoder_input')
     dex = e
     final_dex = dex(decoder_inputs)
-    decoder_lstm = LSTM({{choice([50, 100, 200])}}, return_sequences=True, return_state=True)
+    decoder_lstm = LSTM(20, return_sequences=True, return_state=True)
     decoder_outputs, _, _ = decoder_lstm(final_dex, initial_state=encoder_states)
+
     decoder_dense = Dense(vocab_size, activation='softmax')
     decoder_outputs = decoder_dense(decoder_outputs)
     model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
     model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['acc'])
     print(model.summary())
 
+    history = model.fit({"encoder_input": x_train[0], "decoder_input": x_train[1]},
+                        y_train,
+                        batch_size=32,
+                        epochs=params["epochs"],
+                        validation_data=({"encoder_input": x_val[0], "decoder_input": x_val[1]}, y_val),
+                        verbose=2)
 
-    model.fit({'x1': trainX['x1'], 'x2': trainX['x2']}, trainY,
-                        batch_size={{choice([50, 100, 200])}},
-                        epochs=2,
-                        validation_data=[{'x1': valX['x1'], 'x2': valX['x2']}, valY])
 
-    score, acc = model.evaluate({'x1': valX['x1'], 'x2': valX['x2']}, valY, verbose=0)
+    return history, model
 
-    print('Test accuracy:', acc)
-    return {'loss': -acc, 'status': STATUS_OK, 'model': model}
+# then we can go ahead and set the parameter space
+p = {'embedding':[32, 64, 128, 256],
+     'LSTM1':[0, 1, 2],
+     'epochs': [2, 4, 6],
+     'dropout': [0]}
 
-if __name__ == '__main__':
-    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(level=logging.INFO, format=log_fmt)
-    best_run, best_model = optim.minimize(model=model,
-                                          data=data,
-                                          algo=tpe.suggest,
-                                          max_evals=2,
-                                          trials=Trials())
-    print(best_run)
-
-    trainX, trainY, valX, valY, vocab_size, seq2seq_config, report_folder_seq2seq, max_input_elemts = data()
-    print("Evalutation of best performing model:")
-    print(best_model.evaluate(valX, valY))
-    print("Best performing model chosen hyper-parameters:")
-    print(best_run)
-
-    best_model.save(os.path.join(report_folder_seq2seq, 'best_model.h5'))
-    json.dump(best_run, open(os.path.join(report_folder_seq2seq, "best_run.txt"), 'w'))
+# and run the experiment
+t = ta.Scan(x=trainX,
+            y=trainY,
+            x_val=valX,
+            y_val=valY,
+            model=seq2seq,
+            params=p,
+            dataset_name='seq2seq_eval',
+            experiment_no='1')
