@@ -2,6 +2,9 @@ import pandas as pd
 import numpy as np
 import logging
 import os
+
+from keras_preprocessing.sequence import pad_sequences
+
 from src.data.utils import helper_functions
 
 
@@ -64,6 +67,9 @@ def main(filename, tokenizer, window_size_body, window_size_params, window_size_
     # tokenize just trainX
     vocab_size = len(word_index) + 1
     x_test_tokenized = tokenizer.texts_to_sequences(x_test)
+    x_test_tokenized = pad_sequences(x_test_tokenized, maxlen=max_input_elemts,
+                                     padding='post', truncating='post')
+
     #print(x_test[:10])
     #print(x_test_tokenized[:10])
     x_test_rev = list(map(sequence_to_text, x_test_tokenized))
@@ -73,6 +79,10 @@ def main(filename, tokenizer, window_size_body, window_size_params, window_size_
     y_test = list(y_test)
     #print(y_test[:20])
     y_test_tokenized = tokenizer.texts_to_sequences(y_test)
+    y_test_tokenized = pad_sequences(y_test_tokenized, maxlen=max_output_elemts,
+                                    padding='post', truncating='post')
+
+
     #print(y_test_tokenized[:20])
     y_test_rev = list(map(sequence_to_text, y_test_tokenized))
     #print(y_test_rev[:20])
@@ -80,16 +90,17 @@ def main(filename, tokenizer, window_size_body, window_size_params, window_size_
 
     encoder_input_data = np.zeros(
         (len(x_test_tokenized), max_input_elemts),
-        dtype='float32')
+        dtype='int')
     decoder_input_data = np.zeros(
         (len(y_test_tokenized), max_output_elemts),
-        dtype='float32')
+        dtype='int')
 
     for i, (input_text, target_text) in enumerate(zip(x_test_tokenized, y_test_tokenized)):
+        assert (len(input_text) == max_input_elemts)  # make sure always whole matrix is filled
+        assert (len(target_text) == max_output_elemts)
         for t, word in enumerate(input_text):
             # max_input_elements is the maximum length
-            if t < max_input_elemts:
-                encoder_input_data[i, t] = input_text[t]
+            encoder_input_data[i, t] = input_text[t]
 
         for t, word in enumerate(target_text):
             decoder_input_data[i, t] = target_text[t]
