@@ -36,11 +36,7 @@ def train_model(config, report_folder):
 
     # get data
     all_train, all_val, vocab_size, window_size, max_output_elemts, data_storage\
-        = prepare_data.main(config.data_loader.name,
-                            config.data_loader.window_size_body,
-                            config.data_loader.window_size_params,
-                            config.data_loader.window_size_name,
-                            report_folder=report_folder, using_generator=True)
+        = prepare_data.main(config=config, report_folder=report_folder, using_generator=True)
 
     start_token = get_start_token(report_folder)
 

@@ -17,13 +17,18 @@ def add_start_end_token(y):
     return _list
 
 
-def main(filename, window_size_params, window_size_body, window_size_name, report_folder='', using_generator=False):
+def main(config, report_folder='', using_generator=False):
     # basic init
     # get logger
     # get logger
     logger = logging.getLogger(__name__)
 
+    filename, window_size_body, window_size_params, window_size_name = \
+        config.data_loader.name, config.data_loader.window_size_body, \
+        config.data_loader.window_size_params, config.data_loader.window_size_name,
+
     filename += '-processed'
+
 
     data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
     training_processed_decoded_full_path = os.path.join(
@@ -46,7 +51,7 @@ def main(filename, window_size_params, window_size_body, window_size_name, repor
 
 
     if not os.path.exists(data_storage):
-        logger.info("folder is created...")
+        logger.info("folder created: {}".format(data_storage))
         os.mkdir(data_storage)
 
 
@@ -260,7 +265,7 @@ def main(filename, window_size_params, window_size_body, window_size_name, repor
         dump(tokenizer, open(tokenizer_path, 'wb'))
 
     else:
-        logger.info("folder already exists!")
+        logger.info("folder exists: {}".format(data_storage))
 
         all_train_files = [f for f in listdir(data_storage) if f.startswith('train')]
         all_val_files = [f for f in listdir(data_storage) if f.startswith('val')]
