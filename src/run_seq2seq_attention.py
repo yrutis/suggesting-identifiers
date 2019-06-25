@@ -56,7 +56,10 @@ def train_model(config, report_folder):
                                     data_storage=data_storage)
 
     logger.info("start training...")
-    trainer.train()
+    with open(os.path.join(report_folder, 'tokenizer.pkl'), "rb") as input_file:
+        tokenizer = load(input_file)
+
+    trainer.train(tokenizer)
 
     logger.info("deleting temp files...")
 

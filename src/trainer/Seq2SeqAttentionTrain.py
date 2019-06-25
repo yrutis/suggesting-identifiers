@@ -39,7 +39,7 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
         loss_ = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=real, logits=pred) * mask
         return tf.reduce_mean(loss_)
 
-    def train(self):
+    def train(self, tokenizer):
         logger = logging.getLogger(__name__)
 
         logger.info("Training on {}".format(self.n_batches*self.batch_size))
@@ -113,7 +113,12 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
 
                 if batch % 100 == 0:
                     logger.info("first trainX in current batch {}".format(trainX[0]))
+                    logger.info(
+                        "first trainX in current batch {}".format(Vocabulary.revert_back(tokenizer, np.array(trainX[0]))))
+
                     logger.info("first trainY in current batch {}".format(trainY[0]))
+                    logger.info(
+                        "first trainY in current batch {}".format(Vocabulary.revert_back(tokenizer, np.array(trainY[0]))))
                     logger.info('Training Epoch {} Batch {} / {} Loss {:.4f}'
                                 .format(epoch + 1, batch, self.n_batches, batch_loss.numpy()))
 
@@ -165,7 +170,11 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
 
                 if batch % 100 == 0:
                     logger.info("first valX in current batch {}".format(valX[0]))
+                    logger.info("first valX in current batch {}".format(Vocabulary.revert_back(tokenizer, np.array(valX[0]))))
+
                     logger.info("first valY in current batch {}".format(valY[0]))
+                    logger.info("first valY in current batch {}".format(Vocabulary.revert_back(tokenizer, np.array(valY[0]))))
+
                     logger.info('Validation! Epoch {} Batch {} of {} Loss {:.4f}'.format(epoch + 1,
                                                                        batch, self.val_n_batches,
                                                                        batch_loss.numpy()))
@@ -202,35 +211,35 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
 
         stop_condition = False
 
-        if k==1:
-            while not stop_condition:
+        #if k==1:
+        while not stop_condition:
 
-                predictions, dec_hidden, attention_weights = self.decoder(dec_input, dec_hidden, enc_out)
+            predictions, dec_hidden, attention_weights = self.decoder(dec_input, dec_hidden, enc_out)
 
-                # storing the attention weights to plot later on
-                #attention_weights = tf.reshape(attention_weights, (-1,))
-                #attention_plot[t] = attention_weights.numpy()
+            # storing the attention weights to plot later on
+            #attention_weights = tf.reshape(attention_weights, (-1,))
+            #attention_plot[t] = attention_weights.numpy()
 
 
-                predicted_id = int(tf.argmax(predictions[0]).numpy())
+            predicted_id = int(tf.argmax(predictions[0]).numpy())
 
-                # the predicted ID is fed back into the model
-                dec_input = tf.expand_dims([predicted_id], 0)
+            # the predicted ID is fed back into the model
+            dec_input = tf.expand_dims([predicted_id], 0)
 
-                result.append(Vocabulary.revert_back(tokenizer, predicted_id))
+            result.append(Vocabulary.revert_back(tokenizer, predicted_id))
 
-                if (Vocabulary.revert_back(tokenizer, predicted_id) == 'endtoken'
-                        or len(result) >= self.config.data_loader.window_size_name):
+            if (Vocabulary.revert_back(tokenizer, predicted_id) == 'endtoken'
+                    or len(result) >= self.config.data_loader.window_size_name):
 
-                    stop_condition = True
+                stop_condition = True
 
-        else:
+        #else:
             # sequences = [decoded so far, neg-loglikelihood, eos reached, last word, newest states value]
-            init_seq = [[[], 1.0, False, enc_out, dec_input, dec_hidden]]
-            sequences = self.run_beam_search(tokenizer, init_seq, k)
+            #init_seq = [[[], 1.0, False, enc_out, dec_input, dec_hidden]]
+            #sequences = self.run_beam_search(tokenizer, init_seq, k)
 
-            sequences = sequences[:return_top_n]  # only return top n
-            return sequences
+            #sequences = sequences[:return_top_n]  # only return top n
+            #return sequences
 
 
         return [result]

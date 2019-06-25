@@ -17,7 +17,7 @@ class Vocabulary():
             words = words
             return words
         else:
-            raise Exception("Cannot convert type because type is not list / int / np.ndarray")
+            raise Exception("Cannot convert type is {} and is not list / int / np.ndarray".format(type(sequence)))
 
 
 
