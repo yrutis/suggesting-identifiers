@@ -49,17 +49,23 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
 
             for batch in range(0, self.n_batches):
 
+                print(self.n_batches)
+
                 trainX = np.empty([self.batch_size, self.window_size])
                 trainY = np.empty([self.batch_size, self.max_output_elements])
-
 
                 load_from = batch * self.batch_size
                 load_until = (batch + 1) * self.batch_size
 
+                print("loading from {} to {}".format(load_from, load_until))
+
                 i = 0  # to always load in matrix place 0 to 64
+
+
                 while load_from < load_until:
-                    trainX[i,] = np.load(os.path.join(self.data_storage, 'trainX1-' + str(i) + '.npy'))
-                    trainY[i,] = np.load(os.path.join(self.data_storage, 'trainX2-' + str(i) + '.npy'))
+
+                    trainX[i,] = np.load(os.path.join(self.data_storage, 'trainX1-' + str(load_from) + '.npy'))
+                    trainY[i,] = np.load(os.path.join(self.data_storage, 'trainX2-' + str(load_from) + '.npy'))
                     i += 1
                     load_from += 1
 
@@ -68,6 +74,11 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
 
                 trainX = tf.convert_to_tensor(trainX)
                 trainY = tf.convert_to_tensor(trainY)
+
+                print(trainX)
+                print(trainY)
+
+
                 loss = 0
 
                 with tf.GradientTape() as tape:
@@ -97,11 +108,12 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
 
                 self.optimizer.apply_gradients(zip(gradients, variables)) #apply gradients
 
-                if batch % 100 == 0:
+                if batch % 5 == 0:
                     logger.info('Training Epoch {} Batch {} Loss {:.4f}'.format(epoch + 1,
                                                                  batch,
                                                                  self.n_batches,
                                                                  batch_loss.numpy()))
+
 
 
             for batch in range(0, self.val_n_batches):
@@ -152,6 +164,8 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
                     logger.info('Validation! Epoch {} Batch {} of {} Loss {:.4f}'.format(epoch + 1,
                                                                        batch, self.val_n_batches,
                                                                        batch_loss.numpy()))
+                                                                       
+
 
             # saving (checkpoint) the model every 2 epochs
             if (epoch + 1) % 2 == 0:
@@ -159,7 +173,8 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
 
             logger.info('Epoch {} Loss {:.4f} Val Loss {:.4f}'.format(epoch + 1,
                                                 total_loss / self.n_batches,
-                                                val_total_loss / self.val_n_batches))
+                                                val_total_loss / self.val_n_batches
+                                                                          ))
             logger.info('Time taken for 1 epoch {} sec\n'.format(time.time() - start))
 
 
