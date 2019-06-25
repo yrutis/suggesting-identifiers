@@ -51,7 +51,7 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
 
             for batch in range(0, self.n_batches):
 
-                print(self.n_batches)
+
 
                 trainX = np.empty([self.batch_size, self.window_size])
                 trainY = np.empty([self.batch_size, self.max_output_elements])
@@ -59,11 +59,8 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
                 load_from = batch * self.batch_size
                 load_until = (batch + 1) * self.batch_size
 
-                print("loading from {} to {}".format(load_from, load_until))
 
                 i = 0  # to always load in matrix place 0 to 64
-
-
                 while load_from < load_until:
 
                     trainX[i,] = np.load(os.path.join(self.data_storage, 'trainX1-' + str(load_from) + '.npy'))
