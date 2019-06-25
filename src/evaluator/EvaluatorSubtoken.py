@@ -46,12 +46,16 @@ class Evaluator(object):
 
 
             current_complete_true, current_true_positive, \
-            current_false_positive, current_false_negative = self.get_subtoken_stats(decoded_correct_output_list, decoded_sentence_k_100)
+            current_false_positive, current_false_negative = \
+                self.get_subtoken_stats(decoded_correct_output_list, decoded_sentence_k_100)
 
             complete_true += current_complete_true
             true_positive += current_true_positive
             false_positive += current_false_positive
             false_negative += current_false_negative
+
+            if (complete_true == 1 and len(decoded_correct_output_list)>0): #not just unk
+                logger.info("Complete True! input: {} \n correct: {}\n prediction: {}".format(input_seq_dec, decoded_correct_output_list, decoded_sentence_k_100))
 
             i += 1
 

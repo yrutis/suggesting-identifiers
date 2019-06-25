@@ -5,6 +5,8 @@ import numpy as np
 import os
 import time
 
+from math import log
+
 from src.Vocabulary.Vocabulary import Vocabulary
 from src.trainer.AbstractTrainSubtoken import AbstractTrainSubtoken
 
@@ -194,25 +196,107 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
         dec_input = tf.expand_dims([self.start_token], 0)
 
         stop_condition = False
-        while not stop_condition:
 
-            predictions, dec_hidden, attention_weights = self.decoder(dec_input, dec_hidden, enc_out)
+        if k==1:
+            while not stop_condition:
 
-            # storing the attention weights to plot later on
-            # attention_weights = tf.reshape(attention_weights, (-1,))
-            # attention_plot[t] = attention_weights.numpy()
+                predictions, dec_hidden, attention_weights = self.decoder(dec_input, dec_hidden, enc_out)
 
-            predicted_id = int(tf.argmax(predictions[0]).numpy())
+                # storing the attention weights to plot later on
+                #attention_weights = tf.reshape(attention_weights, (-1,))
+                #attention_plot[t] = attention_weights.numpy()
 
-            # the predicted ID is fed back into the model
-            dec_input = tf.expand_dims([predicted_id], 0)
 
-            result.append(Vocabulary.revert_back(tokenizer, predicted_id))
+                predicted_id = int(tf.argmax(predictions[0]).numpy())
 
-            if (Vocabulary.revert_back(tokenizer, predicted_id) == 'endtoken'
-                    or len(result) >= self.config.data_loader.window_size_name):
+                # the predicted ID is fed back into the model
+                dec_input = tf.expand_dims([predicted_id], 0)
 
-                stop_condition = True
+                result.append(Vocabulary.revert_back(tokenizer, predicted_id))
+
+                if (Vocabulary.revert_back(tokenizer, predicted_id) == 'endtoken'
+                        or len(result) >= self.config.data_loader.window_size_name):
+
+                    stop_condition = True
+
+        else:
+            # sequences = [decoded so far, neg-loglikelihood, eos reached, last word, newest states value]
+            init_seq = [[[], 1.0, False, enc_out, dec_input, dec_hidden]]
+            sequences = self.run_beam_search(tokenizer, init_seq, k)
+
+            sequences = sequences[:return_top_n]  # only return top n
+            return sequences
 
 
         return [result]
+
+
+    def run_beam_search(self, tokenizer, sequences, k):
+
+
+        #checks if all sequences have come to and end
+        stop_beam_search = True
+
+        #all potential candidates
+        all_candidates = list()
+
+        #loop through the existing sequences
+        for i in range(len(sequences)):
+            length_seq = len(sequences)
+            seq, score, stop_condition, enc_out, dec_input, dec_hidden = sequences[i]
+
+            # if no stop condition: expand beam search tree, else just add the candidate again
+            if not stop_condition:
+                stop_beam_search = False
+
+                predictions, dec_hidden, attention_weights = self.decoder(dec_input, dec_hidden, enc_out)
+
+                top_k_probs_sorted, top_k_idx_sorted = tf.math.top_k(predictions[0], k=k)
+                top_k_probs_sorted = np.array(top_k_probs_sorted)
+                top_k_idx_sorted = np.array(top_k_idx_sorted) #convert to np array
+
+                sampled_char = Vocabulary.revert_back(tokenizer, top_k_idx_sorted)
+                sampled_char = list(map(lambda x: str(x), sampled_char))  # in case of true which is oov
+
+                #iterates over new potential characters and sets stop_cond=true
+                #for each candidate if the char is endtoken or the seq > window size name
+                for i in range(top_k_idx_sorted.shape[0]):
+                    if (sampled_char[i] == 'endtoken'):
+                        stop_condition = True
+
+                    elif ((len(seq) + 1) > self.config.data_loader.window_size_name):
+                        stop_condition = True
+
+                    else:
+                        stop_condition = False
+
+                    # Update the target sequence (of length 1).
+                    dec_input = tf.expand_dims([top_k_idx_sorted[i]], 0)
+
+                    #print("seq so far {}, adding char {}, stop condition {}".format(seq, sampled_char[i], stop_condition))
+
+                    candidate = [seq + [sampled_char[i]],
+                                 score * -log(top_k_probs_sorted[i]),
+                                 stop_condition,
+                                 enc_out,
+                                 dec_input,
+                                 dec_hidden]  # log probability because of very small values
+                    all_candidates.append(candidate)
+
+            else:
+                all_candidates.append(sequences[i])  # add the candidate again to all candidates
+
+        #get the top k ones
+        ordered = sorted(all_candidates, key=lambda tup: tup[1])  # sort along the score
+        sequences = ordered[:k]  # keep k best ones
+
+
+        if stop_beam_search:
+            sequences = np.array(sequences)
+            sequences = sequences[:,0:2] #only return sequence and probability
+            sequences = sequences.tolist()[0]
+            return sequences
+
+        else:
+            return self.run_beam_search(tokenizer, sequences, k)
+
