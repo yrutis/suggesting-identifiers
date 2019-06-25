@@ -42,6 +42,9 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
     def train(self):
         logger = logging.getLogger(__name__)
 
+        logger.info("Training on {}".format(self.n_batches*self.batch_size))
+        logger.info("Validating on {}".format(self.val_n_batches*self.batch_size))
+
         for epoch in range(self.epochs):
             start = time.time()
 
@@ -69,9 +72,9 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
                     load_from += 1
 
                 trainX = trainX.astype(int)
-                logger.info("first trainX in current batch {}".format(trainX[0]))
+
                 trainY = trainY.astype(int)
-                logger.info("first trainY in current batch {}".format(trainY[0]))
+
 
                 trainX = tf.convert_to_tensor(trainX)
                 trainY = tf.convert_to_tensor(trainY)
@@ -97,7 +100,7 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
                         # using teacher forcing
                         dec_input = tf.expand_dims(trainY[:, t], 1)
 
-                logger.info("This is the loss {}".format(loss))
+
                 batch_loss = (loss / int(trainY.shape[1]))
 
                 total_loss += batch_loss
@@ -109,10 +112,10 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
                 self.optimizer.apply_gradients(zip(gradients, variables)) #apply gradients
 
                 if batch % 100 == 0:
-                    logger.info('Training Epoch {} Batch {} Loss {:.4f}'.format(epoch + 1,
-                                                                 batch,
-                                                                 self.n_batches,
-                                                                 batch_loss.numpy()))
+                    logger.info("first trainX in current batch {}".format(trainX[0]))
+                    logger.info("first trainY in current batch {}".format(trainY[0]))
+                    logger.info('Training Epoch {} Batch {} / {} Loss {:.4f}'
+                                .format(epoch + 1, batch, self.n_batches, batch_loss.numpy()))
 
 
 
@@ -161,6 +164,8 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
                 val_total_loss += batch_loss
 
                 if batch % 100 == 0:
+                    logger.info("first valX in current batch {}".format(valX[0]))
+                    logger.info("first valY in current batch {}".format(valY[0]))
                     logger.info('Validation! Epoch {} Batch {} of {} Loss {:.4f}'.format(epoch + 1,
                                                                        batch, self.val_n_batches,
                                                                        batch_loss.numpy()))
