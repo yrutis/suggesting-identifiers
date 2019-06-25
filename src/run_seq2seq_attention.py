@@ -52,7 +52,8 @@ def train_model(config, report_folder):
     logger.info("create trainer...")
     trainer = Seq2SeqAttentionTrain(encoder=encoder, decoder=decoder, n_batches=n_batches, val_n_batches=val_n_batches,
                                     window_size=window_size, max_output_elements=max_output_elemts,
-                                    config=config, report_folder=report_folder, start_token=start_token)
+                                    config=config, report_folder=report_folder, start_token=start_token,
+                                    data_storage=data_storage)
 
     logger.info("start training...")
     trainer.train()

@@ -12,7 +12,8 @@ tf.enable_eager_execution()
 
 
 class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
-    def __init__(self, encoder, decoder, n_batches, val_n_batches, config, window_size, max_output_elements, start_token, report_folder):
+    def __init__(self, encoder, decoder, n_batches, val_n_batches, config, window_size, max_output_elements,
+                 start_token, data_storage, report_folder):
         self.encoder = encoder
         self.decoder = decoder
         self.n_batches = n_batches
@@ -23,6 +24,7 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
         self.epochs = config.trainer.num_epochs
         self.max_output_elements = max_output_elements
         self.start_token = start_token
+        self.data_storage = data_storage
         self.optimizer = tf.train.AdamOptimizer()
         self.checkpoint_dir = report_folder
         self.checkpoint_prefix = os.path.join(self.checkpoint_dir, "ckpt")
@@ -50,16 +52,14 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
                 trainX = np.empty([self.batch_size, self.window_size])
                 trainY = np.empty([self.batch_size, self.max_output_elements])
 
-                data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-                                           'data')
-                data_storage = os.path.join(data_folder, 'trainingValidationChunks')
+
                 load_from = batch * self.batch_size
                 load_until = (batch + 1) * self.batch_size
 
                 i = 0  # to always load in matrix place 0 to 64
                 while load_from < load_until:
-                    trainX[i,] = np.load(os.path.join(data_storage, 'trainX1-' + str(i) + '.npy'))
-                    trainY[i,] = np.load(os.path.join(data_storage, 'trainX2-' + str(i) + '.npy'))
+                    trainX[i,] = np.load(os.path.join(self.data_storage, 'trainX1-' + str(i) + '.npy'))
+                    trainY[i,] = np.load(os.path.join(self.data_storage, 'trainX2-' + str(i) + '.npy'))
                     i += 1
                     load_from += 1
 
@@ -109,17 +109,14 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
                 valX = np.empty([self.batch_size, self.window_size])
                 valY = np.empty([self.batch_size, self.max_output_elements])
 
-                data_folder = os.path.join(
-                    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-                    'data')
-                data_storage = os.path.join(data_folder, 'trainingValidationChunks')
+
                 load_from = batch * self.batch_size
                 load_until = (batch + 1) * self.batch_size
 
                 i = 0  # to always load in matrix place 0 to 64
                 while load_from < load_until:
-                    valX[i,] = np.load(os.path.join(data_storage, 'valX1-' + str(i) + '.npy'))
-                    valY[i,] = np.load(os.path.join(data_storage, 'valX2-' + str(i) + '.npy'))
+                    valX[i,] = np.load(os.path.join(self.data_storage, 'valX1-' + str(i) + '.npy'))
+                    valY[i,] = np.load(os.path.join(self.data_storage, 'valX2-' + str(i) + '.npy'))
                     i += 1
                     load_from += 1
 
