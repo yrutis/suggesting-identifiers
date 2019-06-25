@@ -22,6 +22,8 @@ path_to_zip = tf.keras.utils.get_file(
     'spa-eng.zip', origin='http://download.tensorflow.org/data/spa-eng.zip',
     extract=True)
 
+#%%
+
 path_to_file = os.path.dirname(path_to_zip)+"/spa-eng/spa.txt"
 
 #%%
@@ -154,6 +156,8 @@ vocab_tar_size = len(targ_lang.word2idx)
 dataset = tf.data.Dataset.from_tensor_slices((input_tensor_train, target_tensor_train)).shuffle(BUFFER_SIZE)
 dataset = dataset.batch(BATCH_SIZE, drop_remainder=True)
 
+
+
 #%%
 
 def gru(units):
@@ -275,7 +279,37 @@ for epoch in range(EPOCHS):
     hidden = encoder.initialize_hidden_state()
     total_loss = 0
 
+
     for (batch, (inp, targ)) in enumerate(dataset):
+
+
+
+        X = np.empty([BATCH_SIZE, 13])
+        Y = np.empty([BATCH_SIZE, 5])
+
+        data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
+        data_storage = os.path.join(data_folder, 'trainingValidationChunks')
+        load_from  = batch * BATCH_SIZE
+        load_until = (batch+1)*BATCH_SIZE
+        print("loading from {} to {}".format(load_until, load_until))
+
+        i = 0 # to always load in matrix place 0 to 64
+        while load_from < load_until:
+            X[i,] = np.load(os.path.join(data_storage, 'trainX1-' + str(i) + '.npy'))
+            Y[i,] = np.load(os.path.join(data_storage, 'trainX2-' + str(i) + '.npy'))
+            i += 1
+            load_from += 1
+
+        X = X.astype(int)
+        Y = Y.astype(int)
+        inp = tf.convert_to_tensor(X)
+        targ = tf.convert_to_tensor(Y)
+
+
+
+
+        print("this is batch {}, BATCH_SIZE {}, n_batches {} the current len of inp {}".format(batch, BATCH_SIZE, N_BATCH, len(inp)))
+        print("the current len of targ {}".format(targ))
         loss = 0
 
         with tf.GradientTape() as tape:

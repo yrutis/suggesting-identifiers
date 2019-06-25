@@ -24,6 +24,9 @@ LSTMBid_config_path = os.path.join(os.path.join(os.path.dirname(os.path.dirname(
 seq2seq_config_path = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                                     'configs'), "seq2seq.json")
 
+seq2seq_attention_config_path = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                    'configs'), "Seq2SeqAttention.json")
+
 #------------------------------------------------------------------------------------------------------------------
 
 

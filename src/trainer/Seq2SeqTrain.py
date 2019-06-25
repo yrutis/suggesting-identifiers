@@ -13,9 +13,10 @@ import tensorflow as tf
 from math import log
 
 from src.data.DataGeneratorSubtoken import DataGenerator
+from src.trainer.AbstractTrainSubtoken import AbstractTrainSubtoken
 
 
-class Seq2SeqTrain(object):
+class Seq2SeqTrain(AbstractTrainSubtoken):
 
     def __init__(self, model, encoder_model, decoder_model, config, report_folder):
         self.model = model

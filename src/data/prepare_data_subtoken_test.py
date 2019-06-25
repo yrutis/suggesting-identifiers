@@ -64,18 +64,18 @@ def main(filename, tokenizer, window_size_body, window_size_params, window_size_
     # tokenize just trainX
     vocab_size = len(word_index) + 1
     x_test_tokenized = tokenizer.texts_to_sequences(x_test)
-    print(x_test[:10])
-    print(x_test_tokenized[:10])
+    #print(x_test[:10])
+    #print(x_test_tokenized[:10])
     x_test_rev = list(map(sequence_to_text, x_test_tokenized))
-    print(x_test_rev[:10])
+    #print(x_test_rev[:10])
 
     # tokenize just trainY
     y_test = list(y_test)
-    print(y_test[:20])
+    #print(y_test[:20])
     y_test_tokenized = tokenizer.texts_to_sequences(y_test)
-    print(y_test_tokenized[:20])
+    #print(y_test_tokenized[:20])
     y_test_rev = list(map(sequence_to_text, y_test_tokenized))
-    print(y_test_rev[:20])
+    #print(y_test_rev[:20])
 
 
     encoder_input_data = np.zeros(
