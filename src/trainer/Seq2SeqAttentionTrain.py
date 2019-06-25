@@ -75,8 +75,6 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
                 trainX = tf.convert_to_tensor(trainX)
                 trainY = tf.convert_to_tensor(trainY)
 
-                print(trainX)
-                print(trainY)
 
 
                 loss = 0
@@ -127,8 +125,8 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
 
                 i = 0  # to always load in matrix place 0 to 64
                 while load_from < load_until:
-                    valX[i,] = np.load(os.path.join(self.data_storage, 'valX1-' + str(i) + '.npy'))
-                    valY[i,] = np.load(os.path.join(self.data_storage, 'valX2-' + str(i) + '.npy'))
+                    valX[i,] = np.load(os.path.join(self.data_storage, 'valX1-' + str(load_from) + '.npy'))
+                    valY[i,] = np.load(os.path.join(self.data_storage, 'valX2-' + str(load_from) + '.npy'))
                     i += 1
                     load_from += 1
 
