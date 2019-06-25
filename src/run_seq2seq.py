@@ -58,9 +58,6 @@ def train_model(config, report_folder):
     logger.info("start seq2seq training...")
     trainer.train(all_train, all_val, window_size, max_output_elemts, vocab_size, data_storage)
 
-    logger.info("deleting temp files...")
-    shutil.rmtree(data_storage)
-
     return trainer
 
 

@@ -55,6 +55,8 @@ class Evaluator(object):
             false_negative += current_false_negative
 
             if ((complete_true == 1) and (len(decoded_correct_output_list)>0)): #not just unk
+                logger.info("complete_true == 1 {}".format((complete_true == 1)))
+                logger.info("len(decoded_correct_output_list)>0) {}".format((len(decoded_correct_output_list)>0))) #not just unk
                 logger.info("Complete True! input: {} \n correct: {}\n prediction: {}".format(input_seq_dec, decoded_correct_output_list, decoded_sentence_k_100))
 
             i += 1
@@ -90,6 +92,7 @@ class Evaluator(object):
         subtoken_list = [str(x) for x in subtoken_list]
         subtoken_list = list(filter(lambda x: x != "starttoken", subtoken_list))
         subtoken_list = list(filter(lambda x: x != "endtoken", subtoken_list))
+        subtoken_list = list(filter(lambda x: x != "UNK", subtoken_list))  # oov
         subtoken_list = list(filter(lambda x: x != "True", subtoken_list))  # oov
         subtoken_list = list(filter(lambda x: x != '1', subtoken_list))  # oov
         return subtoken_list

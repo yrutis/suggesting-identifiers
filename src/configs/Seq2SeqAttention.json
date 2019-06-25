@@ -1,7 +1,7 @@
 {
     "name": "seq2seqAttention",
     "data_loader": {
-        "name": "java-small-project-split",
+        "name": "Android-Universal-Image-Loader",
         "window_size_body": 8,
         "window_size_params": 2,
         "window_size_name": 5

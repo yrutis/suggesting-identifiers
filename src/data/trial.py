@@ -1,354 +1,232 @@
-from __future__ import absolute_import, division, print_function
+from pickle import dump
 
-# Import TensorFlow >= 1.10 and enable eager execution
-import tensorflow as tf
-
-tf.enable_eager_execution()
-
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-
-import unicodedata
-import re
+import pandas as pd
 import numpy as np
+
+import collections
+compare = lambda x, y: collections.Counter(x) == collections.Counter(y)
+
+
+def find_start_end_token(sample_y):
+    start_end_token = 0
+    for token in sample_y:
+        if token == 'starttoken' or token == 'endtoken':
+            start_end_token += 1
+
+    return start_end_token
+
+def add_start_end_token(y):
+    _list = ['starttoken'] + y + ['endtoken']
+    return _list
+
+
+from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.sequence import pad_sequences
+from sklearn.model_selection import train_test_split
+import src.data.utils.helper_functions as helper_functions
+import logging
 import os
-import time
 
-print(tf.__version__)
+filename, window_size_body, window_size_params, window_size_name = "java-small-project-split", 8, 2, 5
 
-#%%
-# Download the file
-path_to_zip = tf.keras.utils.get_file(
-    'spa-eng.zip', origin='http://download.tensorflow.org/data/spa-eng.zip',
-    extract=True)
+filename += '-processed'
 
-#%%
+data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
+training_processed_decoded_full_path = os.path.join(
+    os.path.join(os.path.join(os.path.join(os.path.join(data_folder, 'processed'),
+                                           'decoded'), filename), 'training'), filename + '-subtoken.json')
+validation_processed_decoded_full_path = os.path.join(
+    os.path.join(os.path.join(os.path.join(os.path.join(data_folder, 'processed'),
+                                           'decoded'), filename), 'validation'), filename + '-subtoken.json')
 
-path_to_file = os.path.dirname(path_to_zip)+"/spa-eng/spa.txt"
+data_storage = os.path.join(
+    os.path.join(os.path.join(os.path.join(os.path.join(data_folder, 'processed'),
+                                           'decoded'), filename), 'training'),
+    'training-params-' + str(window_size_params) + '-body-' + str(window_size_body)
+    + '-name-' + str(window_size_name))
 
-#%%
+df_train = pd.read_json(training_processed_decoded_full_path, orient='records')
+df_val = pd.read_json(validation_processed_decoded_full_path, orient='records')
 
-# Converts the unicode file to ascii
-def unicode_to_ascii(s):
-    return ''.join(c for c in unicodedata.normalize('NFD', s)
-                   if unicodedata.category(c) != 'Mn')
 
+#print(df_train.head(100))
 
-def preprocess_sentence(w):
-    w = unicode_to_ascii(w.lower().strip())
+max_input_elemts = 1 + window_size_params + window_size_body + 2  # return type + ... + ... + startendtoken
+max_output_elemts = 2 + window_size_name  # startendtoken + ...
 
-    # creating a space between a word and the punctuation following it
-    # eg: "he is a boy." => "he is a boy ."
-    # Reference:- https://stackoverflow.com/questions/3645931/python-padding-punctuation-with-white-spaces-keeping-punctuation
-    w = re.sub(r"([?.!,¿])", r" \1 ", w)
-    w = re.sub(r'[" "]+', " ", w)
+df_train['parameters'] = df_train['parameters'].apply(helper_functions.get_first_x_elem, args=(window_size_params,))
+df_train['methodBody'] = df_train['methodBody'].apply(helper_functions.get_first_x_elem, args=(window_size_body,))
+df_train["concatMethodBodyClean"] = df_train['Type'].map(lambda x: [x]) + df_train["parameters"] + df_train["methodBody"]
 
-    # replacing everything with space except (a-z, A-Z, ".", "?", "!", ",")
-    w = re.sub(r"[^a-zA-Z?.!,¿]+", " ", w)
+df_train['methodName'] = df_train['methodName'].apply(helper_functions.get_first_x_elem, args=(window_size_name,))
 
-    w = w.rstrip().strip()
 
-    # adding a start and an end token to the sentence
-    # so that the model know when to start and stop predicting.
-    w = '<start> ' + w + ' <end>'
-    return w
+df_train['has_start_end'] = df_train['methodName'].apply(find_start_end_token)
+df_has_start = df_train[df_train['has_start_end'] == 1]
+df_has_not_start = df_train[df_train['has_start_end'] == 0]
 
-#%%
+# %% add start end token
+df_train['concatMethodBodyClean'] = df_train['concatMethodBodyClean'].apply(add_start_end_token)
+df_train['methodName'] = df_train['methodName'].apply(add_start_end_token)
 
-# 1. Remove the accents
-# 2. Clean the sentences
-# 3. Return word pairs in the format: [ENGLISH, SPANISH]
-def create_dataset(path, num_examples):
-    lines = open(path, encoding='UTF-8').read().strip().split('\n')
 
-    word_pairs = [[preprocess_sentence(w) for w in l.split('\t')] for l in lines[:num_examples]]
+df_val['parameters'] = df_val['parameters'].apply(helper_functions.get_first_x_elem, args=(window_size_params,))
+df_val['methodBody'] = df_val['methodBody'].apply(helper_functions.get_first_x_elem, args=(window_size_body,))
+df_val["concatMethodBodyClean"] = df_val['Type'].map(lambda x: [x]) + df_val["parameters"] + df_val["methodBody"]
 
-    return word_pairs
+df_val['methodName'] = df_val['methodName'].apply(helper_functions.get_first_x_elem, args=(window_size_name,))
 
-#%%
 
-# This class creates a word -> index mapping (e.g,. "dad" -> 5) and vice-versa
-# (e.g., 5 -> "dad") for each language,
-class LanguageIndex():
-    def __init__(self, lang):
-        self.lang = lang
-        self.word2idx = {}
-        self.idx2word = {}
-        self.vocab = set()
 
-        self.create_index()
 
-    def create_index(self):
-        for phrase in self.lang:
-            self.vocab.update(phrase.split(' '))
 
-        self.vocab = sorted(self.vocab)
+# %% add start end token
+df_val['concatMethodBodyClean'] = df_val['concatMethodBodyClean'].apply(add_start_end_token)
+df_val['methodName'] = df_val['methodName'].apply(add_start_end_token)
 
-        self.word2idx['<pad>'] = 0
-        for index, word in enumerate(self.vocab):
-            self.word2idx[word] = index + 1
+method_body_cleaned_list_x = list(df_train['concatMethodBodyClean'])
+method_name_x = list(df_train['methodName'])
 
-        for word, index in self.word2idx.items():
-            self.idx2word[index] = word
+# %%dataset in training vocab format
 
-#%%
+training_vocab_x = helper_functions.get_training_vocab(method_body_cleaned_list_x, is_for_x=True)
+training_vocab_y = helper_functions.get_training_vocab(method_name_x, is_for_x=True)
 
-def max_length(tensor):
-    return max(len(t) for t in tensor)
+x_train = list(map(helper_functions.get_into_tokenizer_format, method_body_cleaned_list_x))
 
+# %%word2idx
 
-def load_dataset(path, num_examples):
-    # creating cleaned input, output pairs
-    pairs = create_dataset(path, num_examples)
+# fit on text the most common words from trainX and trainY
+tokenizer = Tokenizer(oov_token="UNK")
+# actual training data gets mapped on text
+tokenizer.fit_on_texts(training_vocab_y)  # actual training data gets mapped on text
 
-    # index language using the class defined above
-    inp_lang = LanguageIndex(sp for en, sp in pairs)
-    targ_lang = LanguageIndex(en for en, sp in pairs)
+word_index = tokenizer.word_index
+print('Found {} unique Y tokens.'.format(len(word_index) + 1))
 
-    # Vectorize the input and target languages
+tokenizer.fit_on_texts(training_vocab_x)
 
-    # Spanish sentences
-    input_tensor = [[inp_lang.word2idx[s] for s in sp.split(' ')] for en, sp in pairs]
+word_index = tokenizer.word_index
+print('Found {} unique X+Y tokens.'.format(len(word_index) + 1))
+# %% idx2word
 
-    # English sentences
-    target_tensor = [[targ_lang.word2idx[s] for s in en.split(' ')] for en, sp in pairs]
+# Creating a reverse dictionary
+reverse_word_map = dict(map(reversed, tokenizer.word_index.items()))
 
-    # Calculate max_length of input and output tensor
-    # Here, we'll set those to the longest sentence in the dataset
-    max_length_inp, max_length_tar = max_length(input_tensor), max_length(target_tensor)
+# Function takes a tokenized sentence and returns the words
+def sequence_to_text(list_of_indices):
+    # Looking up words in dictionary
+    words = [reverse_word_map.get(letter) for letter in list_of_indices]
+    return (words)
 
-    # Padding the input and output tensor to the maximum length
-    input_tensor = tf.keras.preprocessing.sequence.pad_sequences(input_tensor,
-                                                                 maxlen=max_length_inp,
-                                                                 padding='post')
+# %%
 
-    target_tensor = tf.keras.preprocessing.sequence.pad_sequences(target_tensor,
-                                                                  maxlen=max_length_tar,
-                                                                  padding='post')
+# tokenize just trainX
+vocab_size = len(word_index) + 1
+x_train_tokenized = tokenizer.texts_to_sequences(x_train)
+x_train_tokenized = pad_sequences(x_train_tokenized, maxlen=max_input_elemts,
+                                  padding='post', truncating='post')
 
-    return input_tensor, target_tensor, inp_lang, targ_lang, max_length_inp, max_length_tar
 
-#%%
 
-# Try experimenting with the size of that dataset
-num_examples = 30000
-input_tensor, target_tensor, inp_lang, targ_lang, max_length_inp, max_length_targ = load_dataset(path_to_file, num_examples)
 
-#%%
+#print(x_train[:10])
+#print(x_train_tokenized[:10])
+x_train_rev = list(map(sequence_to_text, x_train_tokenized))
+#print(x_train_rev[:10])
+x_train_rev_pd = pd.Series(x_train_rev)
 
-# Creating training and validation sets using an 80-20 split
-input_tensor_train, input_tensor_val, target_tensor_train, target_tensor_val = train_test_split(input_tensor, target_tensor, test_size=0.2)
 
-# Show length
-print(len(input_tensor_train), len(target_tensor_train), len(input_tensor_val), len(target_tensor_val))
 
+# %%
 
-#%%
+# tokenize just trainY
+y_train = list(df_train['methodName'])
+#print(y_train[:50000])
+y_train_tokenized = tokenizer.texts_to_sequences(y_train)
+y_train_tokenized = pad_sequences(y_train_tokenized, maxlen=max_output_elemts, padding='post', truncating='post')
+#print(y_train_tokenized[:50000])
+y_train_rev = list(map(sequence_to_text, y_train_tokenized))
+#print(y_train_rev[:50000])
+# %%
 
-BUFFER_SIZE = len(input_tensor_train)
-BATCH_SIZE = 64
-N_BATCH = BUFFER_SIZE//BATCH_SIZE
-embedding_dim = 256
-units = 1024
-vocab_inp_size = len(inp_lang.word2idx)
-vocab_tar_size = len(targ_lang.word2idx)
+# tokenize just valX
+x_val_tokenized = tokenizer.texts_to_sequences(df_val['concatMethodBodyClean'])
+x_val_tokenized = pad_sequences(x_val_tokenized, maxlen=max_input_elemts, padding='post', truncating='post')
 
-dataset = tf.data.Dataset.from_tensor_slices((input_tensor_train, target_tensor_train)).shuffle(BUFFER_SIZE)
-dataset = dataset.batch(BATCH_SIZE, drop_remainder=True)
+#print(df_val['concatMethodBodyClean'][:10])
+#print(x_val_tokenized[:10])
+x_val_rev = list(map(sequence_to_text, x_val_tokenized))
+#print(x_val_rev[:10])
 
+# %%
 
+# tokenize just valY
+y_val = list(df_val['methodName'])
+#print(y_val[:50000])
+y_val_tokenized = tokenizer.texts_to_sequences(y_val)
+y_val_tokenized = pad_sequences(y_val_tokenized, maxlen=max_output_elemts,
+                                padding='post', truncating='post')
 
-#%%
+#print(y_val_tokenized[:50000])
+y_val_rev = list(map(sequence_to_text, y_val_tokenized))
+#print(y_val_rev[:50000])
 
-def gru(units):
-  # If you have a GPU, we recommend using CuDNNGRU(provides a 3x speedup than GRU)
-  # the code automatically does that.
-  if tf.test.is_gpu_available():
-    return tf.keras.layers.CuDNNGRU(units,
-                                    return_sequences=True,
-                                    return_state=True,
-                                    recurrent_initializer='glorot_uniform')
-  else:
-    return tf.keras.layers.GRU(units,
-                               return_sequences=True,
-                               return_state=True,
-                               recurrent_activation='sigmoid',
-                               recurrent_initializer='glorot_uniform')
+# %%
 
+print("len Y Train Tokenized {}, len X Train Tokenized {}"
+                .format(len(y_train_tokenized), len(x_train_tokenized)))
 
-class Encoder(tf.keras.Model):
-    def __init__(self, vocab_size, embedding_dim, enc_units, batch_sz):
-        super(Encoder, self).__init__()
-        self.batch_sz = batch_sz
-        self.enc_units = enc_units
-        self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
-        self.gru = gru(self.enc_units)
 
-    def call(self, x, hidden):
-        x = self.embedding(x)
-        output, state = self.gru(x, initial_state=hidden)
-        return output, state
+print("len Y Train Tokenized {}, len X Train Tokenized {}"
+                        .format(len(y_train_tokenized), len(x_train_tokenized)))
 
-    def initialize_hidden_state(self):
-        return tf.zeros((self.batch_sz, self.enc_units))
 
 
-class Decoder(tf.keras.Model):
-    def __init__(self, vocab_size, embedding_dim, dec_units, batch_sz):
-        super(Decoder, self).__init__()
-        self.batch_sz = batch_sz
-        self.dec_units = dec_units
-        self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
-        self.gru = gru(self.dec_units)
-        self.fc = tf.keras.layers.Dense(vocab_size)
+encoder_input_data = np.zeros(
+(1, max_input_elemts),
+dtype='int')
+decoder_input_data = np.zeros(
+(1, max_output_elemts),
+dtype='int')
+decoder_target_data = np.zeros(
+(1, max_output_elemts, vocab_size),
+dtype='int')
 
-        # used for attention
-        self.W1 = tf.keras.layers.Dense(self.dec_units)
-        self.W2 = tf.keras.layers.Dense(self.dec_units)
-        self.V = tf.keras.layers.Dense(1)
+# %%
 
-    def call(self, x, hidden, enc_output):
-        # enc_output shape == (batch_size, max_length, hidden_size)
+all_train = []
 
-        # hidden shape == (batch_size, hidden size)
-        # hidden_with_time_axis shape == (batch_size, 1, hidden size)
-        # we are doing this to perform addition to calculate the score
-        hidden_with_time_axis = tf.expand_dims(hidden, 1)
+for i, (input_text, target_text) in enumerate(zip(x_train_tokenized, y_train_tokenized)):
+    assert(len(input_text) == max_input_elemts) #make sure always whole matrix is filled
+    assert(len(target_text) == max_output_elemts)
+    for t, word in enumerate(input_text):
+        encoder_input_data[0, t] = input_text[t]
 
-        # score shape == (batch_size, max_length, 1)
-        # we get 1 at the last axis because we are applying tanh(FC(EO) + FC(H)) to self.V
-        score = self.V(tf.nn.tanh(self.W1(enc_output) + self.W2(hidden_with_time_axis)))
+    for t, word in enumerate(target_text):
+        # decoder_target_data is ahead of decoder_input_data by one timestep
+        decoder_input_data[0, t] = target_text[t]
+        if t > 0:
+            # decoder_target_data will be ahead by one timestep (t=0 is always start)
+            # and will not include the start character.
+            decoder_target_data[0, t - 1, target_text[t]] = 1
 
-        # attention_weights shape == (batch_size, max_length, 1)
-        attention_weights = tf.nn.softmax(score, axis=1)
 
-        # context_vector shape after sum == (batch_size, hidden_size)
-        context_vector = attention_weights * enc_output
-        context_vector = tf.reduce_sum(context_vector, axis=1)
+    #save each sample as a numpy file in folder
+    trainX1 = encoder_input_data[0]
+    trainX1_rev = sequence_to_text(trainX1)
+    trainX1_rev_orig = sequence_to_text(input_text)
+    assert(compare(trainX1_rev, trainX1_rev_orig)) #check if inserted correctly
+    print(trainX1_rev)
+    trainX2 = decoder_input_data[0]
+    trainX2_rev = sequence_to_text(trainX2)
+    print(trainX2_rev)
+    trainY = decoder_target_data[0]
+    np.save(os.path.join(data_storage,
+                         'trainX1-' + str(i)), trainX1)
+    np.save(os.path.join(data_storage,
+                         'trainX2-' + str(i)), trainX2)
+    np.save(os.path.join(data_storage,
+                         'trainY-' + str(i)), trainY)
 
-        # x shape after passing through embedding == (batch_size, 1, embedding_dim)
-        x = self.embedding(x)
-
-        # x shape after concatenation == (batch_size, 1, embedding_dim + hidden_size)
-        x = tf.concat([tf.expand_dims(context_vector, 1), x], axis=-1)
-
-        # passing the concatenated vector to the GRU
-        output, state = self.gru(x)
-
-        # output shape == (batch_size * 1, hidden_size)
-        output = tf.reshape(output, (-1, output.shape[2]))
-
-        # output shape == (batch_size * 1, vocab)
-        x = self.fc(output)
-
-        return x, state, attention_weights
-
-    def initialize_hidden_state(self):
-        return tf.zeros((self.batch_sz, self.dec_units))
-
-#%%
-
-encoder = Encoder(vocab_inp_size, embedding_dim, units, BATCH_SIZE)
-decoder = Decoder(vocab_tar_size, embedding_dim, units, BATCH_SIZE)
-
-#%%
-
-optimizer = tf.train.AdamOptimizer()
-
-
-def loss_function(real, pred):
-  mask = 1 - np.equal(real, 0)
-  loss_ = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=real, logits=pred) * mask
-  return tf.reduce_mean(loss_)
-
-#%%
-
-checkpoint_dir = './training_checkpoints'
-checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
-checkpoint = tf.train.Checkpoint(optimizer=optimizer,
-                                 encoder=encoder,
-                                 decoder=decoder)
-
-#%%
-
-EPOCHS = 10
-
-for epoch in range(EPOCHS):
-    start = time.time()
-
-    hidden = encoder.initialize_hidden_state()
-    total_loss = 0
-
-
-    for (batch, (inp, targ)) in enumerate(dataset):
-
-
-
-        X = np.empty([BATCH_SIZE, 13])
-        Y = np.empty([BATCH_SIZE, 5])
-
-        data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
-        data_storage = os.path.join(data_folder, 'trainingValidationChunks')
-        load_from  = batch * BATCH_SIZE
-        load_until = (batch+1)*BATCH_SIZE
-        print("loading from {} to {}".format(load_until, load_until))
-
-        i = 0 # to always load in matrix place 0 to 64
-        while load_from < load_until:
-            X[i,] = np.load(os.path.join(data_storage, 'trainX1-' + str(i) + '.npy'))
-            Y[i,] = np.load(os.path.join(data_storage, 'trainX2-' + str(i) + '.npy'))
-            i += 1
-            load_from += 1
-
-        X = X.astype(int)
-        Y = Y.astype(int)
-        inp = tf.convert_to_tensor(X)
-        targ = tf.convert_to_tensor(Y)
-
-
-
-
-        print("this is batch {}, BATCH_SIZE {}, n_batches {} the current len of inp {}".format(batch, BATCH_SIZE, N_BATCH, len(inp)))
-        print("the current len of targ {}".format(targ))
-        loss = 0
-
-        with tf.GradientTape() as tape:
-            enc_output, enc_hidden = encoder(inp, hidden)
-
-            dec_hidden = enc_hidden
-
-            dec_input = tf.expand_dims([targ_lang.word2idx['<start>']] * BATCH_SIZE, 1)
-
-            # Teacher forcing - feeding the target as the next input
-            for t in range(1, targ.shape[1]):
-                # passing enc_output to the decoder
-                predictions, dec_hidden, _ = decoder(dec_input, dec_hidden, enc_output)
-
-                loss += loss_function(targ[:, t], predictions)
-
-                # using teacher forcing
-                dec_input = tf.expand_dims(targ[:, t], 1)
-
-        batch_loss = (loss / int(targ.shape[1]))
-
-        total_loss += batch_loss
-
-        variables = encoder.variables + decoder.variables
-
-        gradients = tape.gradient(loss, variables)
-
-        optimizer.apply_gradients(zip(gradients, variables))
-
-        if batch % 100 == 0:
-            print('Epoch {} Batch {} Loss {:.4f}'.format(epoch + 1,
-                                                         batch,
-                                                         batch_loss.numpy()))
-    # saving (checkpoint) the model every 2 epochs
-    if (epoch + 1) % 2 == 0:
-        checkpoint.save(file_prefix=checkpoint_prefix)
-
-    print('Epoch {} Loss {:.4f}'.format(epoch + 1,
-                                        total_loss / N_BATCH))
-    print('Time taken for 1 epoch {} sec\n'.format(time.time() - start))
-
-#%%
+    all_train.append(i)

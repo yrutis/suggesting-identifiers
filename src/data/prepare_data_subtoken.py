@@ -4,12 +4,16 @@ import pandas as pd
 import numpy as np
 
 from keras.preprocessing.text import Tokenizer
+from keras_preprocessing.sequence import pad_sequences
+
 import src.data.utils.helper_functions as helper_functions
 import logging
 import os
 
 from os import listdir
 from os.path import isfile, join
+import collections
+
 
 
 def add_start_end_token(y):
@@ -22,6 +26,7 @@ def main(config, report_folder='', using_generator=False):
     # get logger
     # get logger
     logger = logging.getLogger(__name__)
+    compare = lambda x, y: collections.Counter(x) == collections.Counter(y)
 
     filename, window_size_body, window_size_params, window_size_name = \
         config.data_loader.name, config.data_loader.window_size_body, \
@@ -97,7 +102,7 @@ def main(config, report_folder='', using_generator=False):
         # %%word2idx
 
         # fit on text the most common words from trainX and trainY
-        tokenizer = Tokenizer(oov_token=True)
+        tokenizer = Tokenizer(oov_token="UNK")
         # actual training data gets mapped on text
         tokenizer.fit_on_texts(training_vocab_y)  # actual training data gets mapped on text
 
@@ -119,69 +124,77 @@ def main(config, report_folder='', using_generator=False):
             words = [reverse_word_map.get(letter) for letter in list_of_indices]
             return (words)
 
-        # %%
-
         # tokenize just trainX
         vocab_size = len(word_index) + 1
         x_train_tokenized = tokenizer.texts_to_sequences(x_train)
-        #print(x_train[:10])
-        #print(x_train_tokenized[:10])
+        x_train_tokenized = pad_sequences(x_train_tokenized, maxlen=max_input_elemts,
+                                          padding='post', truncating='post')
+
+        # print(x_train[:10])
+        # print(x_train_tokenized[:10])
         x_train_rev = list(map(sequence_to_text, x_train_tokenized))
-        #print(x_train_rev[:10])
+        # print(x_train_rev[:10])
+        x_train_rev_pd = pd.Series(x_train_rev)
 
         # %%
 
         # tokenize just trainY
         y_train = list(df_train['methodName'])
-        #print(y_train[:20])
+        # print(y_train[:50000])
         y_train_tokenized = tokenizer.texts_to_sequences(y_train)
-        #print(y_train_tokenized[:20])
+        y_train_tokenized = pad_sequences(y_train_tokenized, maxlen=max_output_elemts, padding='post',
+                                          truncating='post')
+        # print(y_train_tokenized[:50000])
         y_train_rev = list(map(sequence_to_text, y_train_tokenized))
-        #print(y_train_rev[:20])
+        # print(y_train_rev[:50000])
         # %%
 
         # tokenize just valX
         x_val_tokenized = tokenizer.texts_to_sequences(df_val['concatMethodBodyClean'])
-        #print(df_val['concatMethodBodyClean'][:10])
-        #print(x_val_tokenized[:10])
+        x_val_tokenized = pad_sequences(x_val_tokenized, maxlen=max_input_elemts, padding='post', truncating='post')
+
+        # print(df_val['concatMethodBodyClean'][:10])
+        # print(x_val_tokenized[:10])
         x_val_rev = list(map(sequence_to_text, x_val_tokenized))
-        #print(x_val_rev[:10])
+        # print(x_val_rev[:10])
 
         # %%
 
         # tokenize just valY
         y_val = list(df_val['methodName'])
-        #print(y_val[:20])
+        # print(y_val[:50000])
         y_val_tokenized = tokenizer.texts_to_sequences(y_val)
-        #print(y_val_tokenized[:20])
+        y_val_tokenized = pad_sequences(y_val_tokenized, maxlen=max_output_elemts,
+                                        padding='post', truncating='post')
+
+        # print(y_val_tokenized[:50000])
         y_val_rev = list(map(sequence_to_text, y_val_tokenized))
-        #print(y_val_rev[:20])
+        # print(y_val_rev[:50000])
 
         # %%
 
         logger.info("len Y Train Tokenized {}, len X Train Tokenized {}"
                         .format(len(y_train_tokenized), len(x_train_tokenized)))
 
-
-
         encoder_input_data = np.zeros(
             (1, max_input_elemts),
-            dtype='float32')
+            dtype='int')
         decoder_input_data = np.zeros(
             (1, max_output_elemts),
-            dtype='float32')
+            dtype='int')
         decoder_target_data = np.zeros(
             (1, max_output_elemts, vocab_size),
-            dtype='float32')
+            dtype='int')
 
         # %%
 
         all_train = []
 
         for i, (input_text, target_text) in enumerate(zip(x_train_tokenized, y_train_tokenized)):
+            assert (len(input_text) == max_input_elemts)  # make sure always whole matrix is filled
+            assert (len(target_text) == max_output_elemts)
             for t, word in enumerate(input_text):
-                if t < max_input_elemts:
-                    encoder_input_data[0, t] = input_text[t]
+                encoder_input_data[0, t] = input_text[t]
 
             for t, word in enumerate(target_text):
                 # decoder_target_data is ahead of decoder_input_data by one timestep
@@ -191,10 +204,13 @@ def main(config, report_folder='', using_generator=False):
                     # and will not include the start character.
                     decoder_target_data[0, t - 1, target_text[t]] = 1
 
-
-            #save each sample as a numpy file in folder
+            # save each sample as a numpy file in folder
             trainX1 = encoder_input_data[0]
+            assert (compare(input_text, trainX1))  # check if inserted correctly
+
             trainX2 = decoder_input_data[0]
+            assert (compare(target_text, trainX2))  # check if inserted correctly
+
             trainY = decoder_target_data[0]
             np.save(os.path.join(data_storage,
                                  'trainX1-' + str(i)), trainX1)
@@ -204,7 +220,6 @@ def main(config, report_folder='', using_generator=False):
                                  'trainY-' + str(i)), trainY)
 
             all_train.append(i)
-
 
         # %%
         logger.info("len Y val tokenized {}, len X val toknized {}"
@@ -218,19 +233,20 @@ def main(config, report_folder='', using_generator=False):
 
         val_encoder_input_data = np.zeros(
             (1, max_input_elemts),
-            dtype='float32')
+            dtype='int')
         val_decoder_input_data = np.zeros(
             (1, max_output_elemts),
-            dtype='float32')
+            dtype='int')
         val_decoder_target_data = np.zeros(
             (1, max_output_elemts, vocab_size),
-            dtype='float32')
+            dtype='int')
 
         for i, (input_text, target_text) in enumerate(zip(x_val_tokenized, y_val_tokenized)):
 
+            assert (len(input_text) == max_input_elemts)  # make sure always whole matrix is filled
+            assert (len(target_text) == max_output_elemts)
             for t, word in enumerate(input_text):
-                if t < max_input_elemts:
-                    val_encoder_input_data[0, t] = input_text[t]
+                val_encoder_input_data[0, t] = input_text[t]
 
             for t, word in enumerate(target_text):
                 # decoder_target_data is ahead of decoder_input_data by one timestep
@@ -240,9 +256,12 @@ def main(config, report_folder='', using_generator=False):
                     # and will not include the start character.
                     val_decoder_target_data[0, t - 1, target_text[t]] = 1
 
-
             valX1 = val_encoder_input_data[0]
+            assert (compare(input_text, valX1))  # check if inserted correctly
+
             valX2 = val_decoder_input_data[0]
+            assert (compare(target_text, valX2))  # check if inserted correctly
+
             valY = val_decoder_target_data[0]
             np.save(os.path.join(data_storage,
                                  'valX1-' + str(i)), valX1)
@@ -291,9 +310,3 @@ def main(config, report_folder='', using_generator=False):
     return all_train, all_val, vocab_size, max_input_elemts, max_output_elemts, data_storage
 
 
-
-
-if __name__ == '__main__':
-    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(level=logging.INFO, format=log_fmt)
-    main("Android-Universal-Image-Loader", 2, 8, 3)
