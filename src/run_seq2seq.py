@@ -34,7 +34,7 @@ def train_model(config, report_folder):
 
     # get data
     all_train, all_val, vocab_size, window_size, max_output_elemts, data_storage\
-        = prepare_data.main(config=config, report_folder=report_folder, using_generator=True)
+        = prepare_data.main(config=config, report_folder=report_folder)
 
     logger.info('Found {} unique tokens.'.format(vocab_size))
 

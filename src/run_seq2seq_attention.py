@@ -32,11 +32,9 @@ def train_model(config, report_folder):
     # get logger
     logger = logging.getLogger(__name__)
 
-
-
     # get data
     all_train, all_val, vocab_size, window_size, max_output_elemts, data_storage\
-        = prepare_data.main(config=config, report_folder=report_folder, using_generator=True)
+        = prepare_data.main(config=config, report_folder=report_folder)
 
     start_token = get_start_token(report_folder)
 
@@ -48,7 +46,7 @@ def train_model(config, report_folder):
 
     logger.info("create seq2seq Attention Model...")
     encoder = Encoder(vocab_size, config)
-    decoder = Decoder(vocab_size, config, encoder.embedding) #same embedding
+    decoder = Decoder(vocab_size, config, encoder.embedding) # use same embedding for encoder and decoder
 
 
     logger.info("create trainer...")
