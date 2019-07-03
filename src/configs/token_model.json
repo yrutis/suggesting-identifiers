@@ -1,7 +1,7 @@
 {
-    "name": "LSTMBid",
+    "name": "simpleNN",
     "data_loader": {
-        "name": "Android-Universal-Image-Loader",
+        "name": "java-small",
         "window_size_body": 16,
         "window_size_params": 8,
         "remove_train_unk": 0.5,
