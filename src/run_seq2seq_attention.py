@@ -60,9 +60,6 @@ def train_model(config, report_folder):
         tokenizer = load(input_file)
 
     trainer.train(tokenizer)
-
-    logger.info("deleting temp files...")
-
     return trainer
 
 def eval_model(config, report_folder, trainer:Seq2SeqAttentionTrain):

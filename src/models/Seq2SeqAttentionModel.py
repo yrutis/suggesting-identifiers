@@ -43,9 +43,7 @@ class Decoder(tf.keras.Model):
         self.dec_units = config.model.gru_dim
         self.embedding = embedding_encoder
         self.gru = gru(self.dec_units)
-        self.fc = tf.keras.layers.Dense(vocab_size,
-                                        activation='softmax'
-                                        )
+        self.fc = tf.keras.layers.Dense(vocab_size)
 
         # used for attention
         self.W1 = tf.keras.layers.Dense(self.dec_units)

@@ -193,6 +193,8 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
     def predict(self, tokenizer, input_seq, k, return_top_n):
         logger = logging.getLogger(__name__)
 
+        attention_plot = np.zeros((self.max_output_elements, self.window_size))
+
         # restoring the latest checkpoint in checkpoint_dir
         self.checkpoint.restore(tf.train.latest_checkpoint(self.checkpoint_dir))
 
@@ -210,13 +212,15 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
         stop_condition = False
 
         #if k==1:
+        t = 0
         while not stop_condition:
 
             predictions, dec_hidden, attention_weights = self.decoder(dec_input, dec_hidden, enc_out)
 
             # storing the attention weights to plot later on
-            #attention_weights = tf.reshape(attention_weights, (-1,))
-            #attention_plot[t] = attention_weights.numpy()
+            attention_weights = tf.reshape(attention_weights, (-1,))
+            attention_plot[t] = attention_weights.numpy()
+            t += 1
 
 
             predicted_id = int(tf.argmax(predictions[0]).numpy())
@@ -240,7 +244,7 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
             #return sequences
 
 
-        return [result]
+        return [result, attention_plot]
 
 
     def run_beam_search(self, tokenizer, sequences, k):
