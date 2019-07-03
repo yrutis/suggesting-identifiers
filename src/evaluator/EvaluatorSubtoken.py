@@ -54,8 +54,8 @@ class Evaluator(object):
             false_positive += current_false_positive
             false_negative += current_false_negative
 
-            if ((complete_true == 1) and (len(decoded_correct_output_list)>0)): #not just unk
-                logger.info("complete_true == 1 {}".format((complete_true == 1)))
+            if ((current_complete_true == 1) and (len(decoded_correct_output_list)>0)): #not just unk
+                logger.info("current_complete_true == 1 {}".format((current_complete_true == 1)))
                 logger.info("len(decoded_correct_output_list)>0) {}".format((len(decoded_correct_output_list)>0))) #not just unk
                 logger.info("Complete True! input: {} \n correct: {}\n prediction: {}".format(input_seq_dec, decoded_correct_output_list, decoded_sentence_k_100))
 

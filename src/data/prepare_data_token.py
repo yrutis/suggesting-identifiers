@@ -125,12 +125,12 @@ def main(filename, window_size_params, window_size_body, report_folder, remove_t
 
 
 
-    if not using_generator:
+    if not using_generator: #for hyper parameter optimization
 
         return trainX, trainY, valX, valY, tokenizer, perc_unk_train, perc_unk_val, max_input_elemts
 
 
-    else:
+    else: #for regular training
 
         def save_to_chunks(X: np.ndarray, Y:np.ndarray, folder, type: str):
 
