@@ -35,9 +35,9 @@ def model(trainX, trainY, valX, valY, vocab_size, GRU_config, report_folder_GRU,
     c = contextEmbedding(tensor)
     c = Dropout({{uniform(0, 0.5)}})(c)
     c = GRU({{choice([50, 100, 200])}}, recurrent_dropout={{uniform(0, 0.5)}}, dropout={{uniform(0, 0.5)}})(c)
-    c = Dropout({{uniform(0, 0.5)}})(c)
+    c = Dropout({{uniform(0, 0.5)}}, name='dropout_after_gru')(c)
     c = Dense({{choice([30, 50, 70, 100, 200])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
-    c = Dropout({{uniform(0, 0.5)}})(c)
+    c = Dropout({{uniform(0, 0.5)}}, name='final_dropout')(c)
 
     if {{choice(['three', 'four'])}} == 'four':
         c = Dense({{choice([30, 50, 70, 100, 200, 300])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     best_run, best_model = optim.minimize(model=model,
                                           data=data,
                                           algo=tpe.suggest,
-                                          max_evals=1,
+                                          max_evals=3,
                                           trials=Trials())
     print(best_run)
 
