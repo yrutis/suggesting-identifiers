@@ -50,6 +50,13 @@ logger.info(len_parameters)
 
 #%%
 
+if not token_model:
+    len_method_name = df['methodName'].apply(helper_functions.compute_col_length)
+    len_method_name = len_method_name.describe()
+
+    logger.info(len_method_name)
+
+
 if token_model:
 
     window_size_params = 2

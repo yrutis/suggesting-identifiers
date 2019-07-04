@@ -2,8 +2,8 @@
     "name": "simpleNN",
     "data_loader": {
         "name": "java-small",
-        "window_size_body": 16,
-        "window_size_params": 8,
+        "window_size_body": 35,
+        "window_size_params": 4,
         "remove_train_unk": 0.5,
         "remove_val_unk": 0.5,
         "remove_test_unk": 0.5
