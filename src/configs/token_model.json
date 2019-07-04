@@ -1,5 +1,5 @@
 {
-    "name": "LSTM",
+    "name": "BidLSTM",
     "data_loader": {
         "name": "java-small",
         "window_size_body": 35,
