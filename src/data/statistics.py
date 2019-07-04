@@ -18,12 +18,10 @@ logger.info(filename)
 
 
 data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'data')
-processed_decoded_full_path = os.path.join(os.path.join(os.path.join(data_folder, 'processed'), 'decoded'),
-                                           filename + '.json')  # get decoded path
-logger.info(processed_decoded_full_path)
+
 
 processed_decoded_full_path = os.path.join(os.path.join(os.path.join(os.path.join(os.path.join(data_folder, 'processed'),
-                                                        'decoded'), filename), 'validation'), filename + '-token.json')
+                                                        'decoded'), filename), 'training'), filename + '-subtoken.json')
 
 #%%
 df = pd.read_json(processed_decoded_full_path, orient='records')
