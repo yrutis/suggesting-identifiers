@@ -84,19 +84,19 @@ class Evaluator(object):
             false_negative += current_false_negative
 
 
-            #if ((current_complete_true == 1) and (len(decoded_correct_output_list)>0)): #not just unk
-            if isinstance(trainer, Seq2SeqAttentionTrain):
-                # logger.info("I am an attention")
-                attention_plot = current_result[1]
+            if ((current_complete_true == 1) and (len(decoded_correct_output_list)>0)): #not just unk
+                if isinstance(trainer, Seq2SeqAttentionTrain):
+                    # logger.info("I am an attention")
+                    attention_plot = current_result[1]
 
-                attention_plot = attention_plot[:len(current_result[0]), :len(input_seq_dec)]
-                self.plot_attention(attention_plot, input_seq_dec, current_result[0], i)
+                    attention_plot = attention_plot[:len(current_result[0]), :len(input_seq_dec)]
+                    self.plot_attention(attention_plot, input_seq_dec, current_result[0], i)
 
                 #logger.info("current_complete_true == 1 {}".format((current_complete_true == 1)))
                 #logger.info("len(decoded_correct_output_list)>0) {}".format((len(decoded_correct_output_list)>0))) #not just unk
                 #logger.info("Complete True! input: {} \n correct: {}\n prediction: {}".format(input_seq_dec, decoded_correct_output_list, decoded_sentence_k_100))
 
-            self.load_correct_prediction_file(input=input_seq_dec, prediction=decoded_sentence_k_100,
+                self.load_correct_prediction_file(input=input_seq_dec, prediction=decoded_sentence_k_100,
                                           correct=decoded_correct_output_list, i = i)
 
 
@@ -170,7 +170,7 @@ class Evaluator(object):
 
         fontdict = {'fontsize': 14}
 
-        sentence = list(map(lambda x: str(x), sentence))
+        sentence = list(map(lambda x: str(x), sentence)) #to get nones
 
         ax.set_xticks(range(len(sentence)))
         ax.set_yticks(range(len(predicted_sentence)))
