@@ -1,5 +1,5 @@
 {
-    "name": "GRU",
+    "name": "LSTM",
     "data_loader": {
         "name": "java-small",
         "window_size_body": 35,
