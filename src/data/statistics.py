@@ -9,7 +9,7 @@ from sklearn.model_selection import train_test_split
 #%% get logger to work
 log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 logging.basicConfig(level=logging.INFO, format=log_fmt)
-filename = "java-med-processed"
+filename = "java-small-processed"
 token_model = False
 
 # get logger
@@ -21,7 +21,7 @@ data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.pa
 
 
 processed_decoded_full_path = os.path.join(os.path.join(os.path.join(os.path.join(os.path.join(data_folder, 'processed'),
-                                                        'decoded'), filename), 'validation'), filename + '-subtoken.json')
+                                                        'decoded'), filename), 'training'), filename + '-subtoken.json')
 
 #%%
 df = pd.read_json(processed_decoded_full_path, orient='records')

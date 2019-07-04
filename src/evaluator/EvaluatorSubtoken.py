@@ -13,6 +13,7 @@ class Evaluator(object):
     def __init__(self, trainer:AbstractTrainSubtoken, report_folder):
         self.__trained_model = trainer
         self.report_folder = report_folder
+        self.fig_folder = os.path.join(report_folder, 'figures')
         self.correct_predictions_file = os.path.join(self.report_folder, 'correct_predictions.csv')
 
 
@@ -87,11 +88,9 @@ class Evaluator(object):
             if isinstance(trainer, Seq2SeqAttentionTrain):
                 # logger.info("I am an attention")
                 attention_plot = current_result[1]
-                length_res0 = len(current_result[0])
-                length_input = len(input_seq_dec)
 
                 attention_plot = attention_plot[:len(current_result[0]), :len(input_seq_dec)]
-                self.plot_attention(attention_plot, input_seq_dec, current_result[0])
+                self.plot_attention(attention_plot, input_seq_dec, current_result[0], i)
 
                 #logger.info("current_complete_true == 1 {}".format((current_complete_true == 1)))
                 #logger.info("len(decoded_correct_output_list)>0) {}".format((len(decoded_correct_output_list)>0))) #not just unk
@@ -163,17 +162,25 @@ class Evaluator(object):
 
         return complete_true, true_positive, false_positive, false_negative
 
-
-    def plot_attention(self, attention, sentence, predicted_sentence):
+    # function for plotting the attention weights
+    def plot_attention(self, attention, sentence, predicted_sentence, i):
         fig = plt.figure(figsize=(10, 10))
         ax = fig.add_subplot(1, 1, 1)
         ax.matshow(attention, cmap='viridis')
 
         fontdict = {'fontsize': 14}
 
-        ax.set_xticklabels([''] + sentence, fontdict=fontdict, rotation=90)
-        ax.set_yticklabels([''] + predicted_sentence, fontdict=fontdict)
+        sentence = list(map(lambda x: str(x), sentence))
 
-        plt.show()
-        plt
+        ax.set_xticks(range(len(sentence)))
+        ax.set_yticks(range(len(predicted_sentence)))
+
+        ax.set_xticklabels(sentence, fontdict=fontdict, rotation=90)
+        ax.set_yticklabels(predicted_sentence, fontdict=fontdict)
+
+        if not os.path.exists(self.fig_folder):
+            os.mkdir(self.fig_folder)
+
+        plt.savefig(os.path.join(self.fig_folder, 'fig-' + str(i) + '.png'))
+        plt.close()
 
