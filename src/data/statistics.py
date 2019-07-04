@@ -21,7 +21,7 @@ data_folder = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.pa
 
 
 processed_decoded_full_path = os.path.join(os.path.join(os.path.join(os.path.join(os.path.join(data_folder, 'processed'),
-                                                        'decoded'), filename), 'training'), filename + '-subtoken.json')
+                                                        'decoded'), filename), 'validation'), filename + '-subtoken.json')
 
 #%%
 df = pd.read_json(processed_decoded_full_path, orient='records')
