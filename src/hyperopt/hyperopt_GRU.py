@@ -70,7 +70,7 @@ if __name__ == '__main__':
     best_run, best_model = optim.minimize(model=model,
                                           data=data,
                                           algo=tpe.suggest,
-                                          max_evals=3,
+                                          max_evals=20,
                                           trials=Trials())
     print(best_run)
 

@@ -1,5 +1,5 @@
 {
-    "name": "simpleNN",
+    "name": "GRU",
     "data_loader": {
         "name": "java-small",
         "window_size_body": 35,
