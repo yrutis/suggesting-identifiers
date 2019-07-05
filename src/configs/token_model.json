@@ -1,7 +1,7 @@
 {
     "name": "BidLSTM",
     "data_loader": {
-        "name": "java-small",
+        "name": "Android-Universal-Image-Loader",
         "window_size_body": 35,
         "window_size_params": 4,
         "remove_train_unk": 0.5,

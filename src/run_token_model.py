@@ -21,7 +21,7 @@ import src.data.prepare_data_token as prepare_data
 import src.data.prepare_data_test_token as prepare_data_test
 
 
-from src.evaluator.EvaluatorSubtoken import Evaluator
+from src.evaluator.Evaluator import Evaluator
 from src.models.SimpleNN import SimpleNNModel
 from src.models.LSTMModel import LSTMModel
 from src.models.LSTMBidModel import LSTMModelBid
@@ -103,7 +103,6 @@ def train_model(config, report_folder):
     logger.info("deleting temp files...")
     shutil.rmtree(data_storage)
 
-
     return trainer
 
 
@@ -122,7 +121,7 @@ def eval_model(config, report_folder, trainer:AbstractTrain):
                                                          tokenizer,
                                                          remove_test_unk=config.data_loader.remove_test_unk)
     logger.info("save evaluation to file")
-    evaluator = Evaluator(trainer.model, report_folder)
+    evaluator = Evaluator(report_folder)
 
     loss_acc_list_of_metrics = trainer.model.evaluate(testX, testY, verbose=0)
 
@@ -153,7 +152,7 @@ def eval_model(config, report_folder, trainer:AbstractTrain):
     correct = [[item] for item in testY]
 
     # evaluator.evaluate()
-    acc2, prec, rec, f1 = evaluator.get_accuracy_precision_recall_f1_score(correct, predictions_decoded, 'token')
+    acc2, prec, rec, f1 = evaluator.get_accuracy_precision_recall_f1_score(correct, predictions_decoded)
     # save metrics
     metrics = {'Description': 'token',
                'Accuracy': acc,

@@ -61,7 +61,7 @@ def main(filename, window_size_params, window_size_body, report_folder, remove_t
     training_vocab_y = helper_functions.get_training_vocab(trainY, is_for_x=False)
 
     # fit on text words that appear at least 3x from trainX and trainY
-    tokenizer = Tokenizer(oov_token=True, filters='')
+    tokenizer = Tokenizer(oov_token="UNK", filters='')
 
     # actual training data gets mapped on text
     tokenizer.fit_on_texts(training_vocab_y)
