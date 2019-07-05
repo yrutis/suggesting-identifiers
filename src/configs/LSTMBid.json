@@ -11,10 +11,10 @@
     },
     "model": {
         "name": "model.LSTMBid",
-        "embedding_dim": 64,
-        "lstm_dim": 32,
-        "dense_activation_1": "sigmoid",
-        "dense_dim": 50,
+        "embedding_dim": 128,
+        "lstm_dim": 100,
+        "dense_activation_1": "elu",
+        "dense_dim": 70,
         "dropout_1": 0.5,
         "loss": "sparse_categorical_crossentropy",
         "metrics": [

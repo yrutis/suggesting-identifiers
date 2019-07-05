@@ -11,9 +11,9 @@
     },
     "model": {
         "name": "model.SimpleNN",
-        "embedding_dim": 56,
-        "dense_dim": 50,
-        "dense_activation_1": "sigmoid",
+        "embedding_dim": 128,
+        "dense_dim": 100,
+        "dense_activation_1": "elu",
         "dropout_1": 0.5,
         "loss": "sparse_categorical_crossentropy",
         "metrics": [

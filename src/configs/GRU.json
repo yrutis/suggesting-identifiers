@@ -14,7 +14,7 @@
         "embedding_dim": 128,
         "lstm_dim": 100,
         "dense_dim": 70,
-        "dense_activation_1": "sigmoid",
+        "dense_activation_1": "elu",
         "dropout_1": 0.2,
         "dropout_2": 0.2,
         "dropout_3": 0.2,
