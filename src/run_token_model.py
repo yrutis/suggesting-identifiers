@@ -131,8 +131,8 @@ def eval_model(config, report_folder, trainer:AbstractTrain):
 
     predictions = trainer.model.predict(testX, batch_size=8, verbose=0)  # get prob dist
     predictions_idx = np.argmax(predictions, axis=1)  # get highest idx for each X
-    #predictions_prob = predictions[predictions_idx]
-    predictions_prob = np.take(predictions, predictions_idx).tolist()
+    predictions_prob = np.amax(predictions, axis=1).tolist()  # get highest prob for each X
+    #predictions_prob = np.take(predictions, predictions_idx).tolist()
     predictions_decoded = Vocabulary.revert_back(tokenizer=tokenizer, sequence=predictions_idx)
     testX = testX.tolist()
     testX = [Vocabulary.revert_back(tokenizer=tokenizer, sequence=x) for x in testX]
@@ -148,25 +148,13 @@ def eval_model(config, report_folder, trainer:AbstractTrain):
     df = pd.DataFrame(model_data, columns=['Input', 'Correct', 'Prediction', 'PredictionProb'])
     df.to_csv(os.path.join(report_folder, 'predictions_test.csv'))
 
-    predictions_decoded = [[item] for item in predictions_decoded]
-    correct = [[item] for item in testY]
-
-    # evaluator.evaluate()
-    acc2, prec, rec, f1 = evaluator.get_accuracy_precision_recall_f1_score(correct, predictions_decoded)
     # save metrics
-    metrics = {'Description': 'token',
-               'Accuracy': acc,
-               'AccuracySelf': acc2,
-               'Top-5-Acc': top_5_acc,
-               'Precision': prec,
-               'Recall': rec,
-               'F1': f1}
+    metrics = {'Accuracy': acc,
+               'Top-5-Acc': top_5_acc}
 
-    df = pd.DataFrame([metrics], columns=['Description', 'Accuracy', 'AccuracySelf', 'Top-5-Acc', 'Precision', 'Recall', 'F1'])
+    df = pd.DataFrame([metrics], columns=['Accuracy', 'Top-5-Acc'])
 
-    report_file = os.path.join(report_folder, 'f1_report.csv')
-    logger.info("this is the length of testX {}".format(len(testX)))
-
+    report_file = os.path.join(report_folder, 'metrics.csv')
     df.to_csv(report_file, index=False)
 
 def main(config_path):

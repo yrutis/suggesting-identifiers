@@ -23,6 +23,8 @@ from keras.callbacks import EarlyStopping
 import tensorflow as tf
 
 from src.hyperopt.hyperopt_data import data
+from hyperas.utils import eval_hyperopt_space
+
 
 
 def model(trainX, trainY, valX, valY, vocab_size, LSTM_config, report_folder_LSTM, window_size):
@@ -69,7 +71,7 @@ if __name__ == '__main__':
     best_run, best_model = optim.minimize(model=model,
                                           data=data,
                                           algo=tpe.suggest,
-                                          max_evals=20,
+                                          max_evals=10,
                                           trials=Trials())
     print(best_run)
 

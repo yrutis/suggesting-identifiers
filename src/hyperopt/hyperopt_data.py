@@ -7,22 +7,9 @@ import os
 from datetime import datetime
 from random import randint
 
-from keras import Input, Model
-from keras.layers import Bidirectional
-from keras.optimizers import Adam
-
 import src.utils.path as path_file
 from src.data import prepare_data_token
 import src.utils.config as config_loader
-from hyperopt import Trials, STATUS_OK, tpe
-from hyperas import optim
-from hyperas.distributions import choice, uniform
-from keras.layers.core import Dense, Dropout
-from keras.layers.embeddings import Embedding
-from keras.layers.recurrent import LSTM
-from keras.callbacks import EarlyStopping
-
-import tensorflow as tf
 
 def data():
 
@@ -43,7 +30,7 @@ def data():
         prepare_data_token.main(token_model_config.data_loader.name,
                                 token_model_config.data_loader.window_size_params,
                                 token_model_config.data_loader.window_size_body,
-                                remove_val_unk=0.8, report_folder=report_folder)
+                                remove_val_unk=0.6, report_folder=report_folder)
 
     vocab_size = len(tokenizer.word_index) + 1
     print('Found {} unique tokens.'.format(vocab_size))

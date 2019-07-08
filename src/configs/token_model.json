@@ -1,8 +1,8 @@
 {
-    "name": "BidLSTM",
+    "name": "simpleNN",
     "data_loader": {
-        "name": "Android-Universal-Image-Loader",
-        "window_size_body": 35,
+        "name": "java-small-project-split",
+        "window_size_body": 20,
         "window_size_params": 4,
         "remove_train_unk": 0.5,
         "remove_val_unk": 0.5,
