@@ -101,7 +101,7 @@ def seq2seq(x_train, y_train, x_val, y_val, params):
 
     history = model.fit({"encoder_input": x_train[0], "decoder_input": x_train[1]},
                         y_train,
-                        batch_size=32,
+                        batch_size=params["batch_size"],
                         epochs=params["epochs"],
                         validation_data=({"encoder_input": x_val[0], "decoder_input": x_val[1]}, y_val),
                         verbose=2)
@@ -112,7 +112,8 @@ def seq2seq(x_train, y_train, x_val, y_val, params):
 # then we can go ahead and set the parameter space
 p = {'embedding':[64, 128, 256],
      'LSTM':[60, 120, 250],
-     'epochs': [10, 15, 20],
+     'batch_size': [32, 64, 128],
+     'epochs': [10, 15, 20, 30, 40],
      'recurrent_dropout1': [0, 0.2, 0.5],
      'dropout1': [0, 0.2, 0.5],
      'recurrent_dropout2': [0, 0.2, 0.5],
