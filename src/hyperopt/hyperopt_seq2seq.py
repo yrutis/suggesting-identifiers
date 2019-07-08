@@ -84,20 +84,20 @@ def seq2seq(x_train, y_train, x_val, y_val, params):
     e = Embedding(vocab_size, params['embedding'])
     encoder_inputs = Input(shape=(None,), name="encoder_input")
     en_x = e(encoder_inputs)
-    encoder = LSTM(20, return_state=True)
+    encoder = LSTM(params['LSTM'], return_state=True, recurrent_dropout=params['recurrent_dropout1'], dropout=params['dropout1'])
     encoder_outputs, state_h, state_c = encoder(en_x)
     encoder_states = [state_h, state_c]
     decoder_inputs = Input(shape=(None,), name='decoder_input')
     dex = e
     final_dex = dex(decoder_inputs)
-    decoder_lstm = LSTM(20, return_sequences=True, return_state=True)
+    decoder_lstm = LSTM(params['LSTM'], return_sequences=True, return_state=True, recurrent_dropout=params['recurrent_dropout2'], dropout=params['dropout2'])
     decoder_outputs, _, _ = decoder_lstm(final_dex, initial_state=encoder_states)
 
     decoder_dense = Dense(vocab_size, activation='softmax')
     decoder_outputs = decoder_dense(decoder_outputs)
     model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
     model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['acc'])
-    print(model.summary())
+    #print(model.summary())
 
     history = model.fit({"encoder_input": x_train[0], "decoder_input": x_train[1]},
                         y_train,
@@ -110,10 +110,14 @@ def seq2seq(x_train, y_train, x_val, y_val, params):
     return history, model
 
 # then we can go ahead and set the parameter space
-p = {'embedding':[32, 64, 128, 256],
-     'LSTM1':[0, 1, 2],
-     'epochs': [2, 4, 6],
-     'dropout': [0]}
+p = {'embedding':[64, 128, 256],
+     'LSTM':[60, 120, 250],
+     'epochs': [10, 15, 20],
+     'recurrent_dropout1': [0, 0.2, 0.5],
+     'dropout1': [0, 0.2, 0.5],
+     'recurrent_dropout2': [0, 0.2, 0.5],
+     'dropout2': [0, 0.2, 0.5],
+     }
 
 # and run the experiment
 t = ta.Scan(x=trainX,
@@ -123,4 +127,5 @@ t = ta.Scan(x=trainX,
             model=seq2seq,
             params=p,
             dataset_name='seq2seq_eval',
-            experiment_no='1')
+            experiment_no='1',
+            print_params=True)
