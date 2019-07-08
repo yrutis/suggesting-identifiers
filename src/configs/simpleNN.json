@@ -12,9 +12,11 @@
     "model": {
         "name": "model.SimpleNN",
         "embedding_dim": 128,
-        "dense_dim": 100,
-        "dense_activation_1": "elu",
-        "dropout_1": 0.5,
+        "dense_dim": 70,
+        "dense_activation_1": "relu",
+        "dropout_1": 0.1,
+        "dropout_2": 0.5,
+        "dropout_3": 0.4,
         "loss": "sparse_categorical_crossentropy",
         "metrics": [
             "acc",
@@ -24,6 +26,6 @@
     "trainer": {
         "name": "trainer.SimpleNN",
         "num_epochs": 15,
-        "batch_size": 64
+        "batch_size": 128
     }
 }
