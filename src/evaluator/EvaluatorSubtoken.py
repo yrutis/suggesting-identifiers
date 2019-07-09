@@ -58,7 +58,7 @@ class Evaluator(object):
         progress = 0
         while i < testX.shape[0]:
 
-            if progress % 10 == 0:
+            if progress % 1000 == 0:
                 logger.info("{} / {} completed".format(progress, testX.shape[0]))
             progress +=1
 
