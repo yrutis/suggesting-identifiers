@@ -90,29 +90,29 @@ def main(filename, window_size_params, window_size_body, report_folder, remove_t
     # tokenize trainY
     y_train = list(df_train['methodName'])
     y_train_tokenized = tokenizer.texts_to_sequences(y_train)
-    logger.info(y_train_tokenized[:5])
+    #logger.info(y_train_tokenized[:5])
     y_train_tokenized = list(map(helper_functions.getFirstElem, y_train_tokenized))
-    logger.info(y_train_tokenized[:5])
+    #logger.info(y_train_tokenized[:5])
     trainY = np.array(y_train_tokenized)
 
 
     # tokenize just valX
     valX_raw = list(df_val['concatMethodBodyCleaned'])
-    logger.info(valX_raw[:3])
+    #logger.info(valX_raw[:3])
     x_test_seq = tokenizer.texts_to_sequences(valX_raw)
     valX = pad_sequences(x_test_seq, maxlen=max_input_elemts, value=0)
-    logger.info(valX[:3])
+    #logger.info(valX[:3])
     valX_decoded = list(map(sequence_to_text, valX))
-    logger.info(valX_decoded[:3])
+    #logger.info(valX_decoded[:3])
 
 
     # tokenize just testY
     y_test = list(df_val['methodName'])
-    logger.info(y_test[:3])
+    #logger.info(y_test[:3])
     y_test_tokenized = tokenizer.texts_to_sequences(y_test)
-    logger.info(y_test_tokenized[:3])
+    #logger.info(y_test_tokenized[:3])
     y_test_decoded = list(map(sequence_to_text, y_test_tokenized))
-    logger.info(y_test_decoded[:3])
+    #logger.info(y_test_decoded[:3])
     y_test_tokenized = list(map(helper_functions.getFirstElem, y_test_tokenized))
     valY = np.array(y_test_tokenized)
 

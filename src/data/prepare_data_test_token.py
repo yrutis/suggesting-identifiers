@@ -55,21 +55,21 @@ def main(filename, window_size_params, window_size_body, tokenizer, remove_test_
 
     # tokenize just testX
     testX_raw = list(df_test['concatMethodBodyCleaned'])
-    logger.info(testX_raw[:3])
+    ##logger.info(testX_raw[:3])
     x_test_seq = tokenizer.texts_to_sequences(testX_raw)
     testX = pad_sequences(x_test_seq, maxlen=max_input_elemts, value=0)
-    logger.info(testX[:3])
+    ##logger.info(testX[:3])
     testX_decoded = list(map(sequence_to_text, testX))
-    logger.info(testX_decoded[:3])
+    ##logger.info(testX_decoded[:3])
 
 
     # tokenize just testY
     y_test = list(df_test['methodName'])
-    logger.info(y_test[:3])
+    #logger.info(y_test[:3])
     y_test_tokenized = tokenizer.texts_to_sequences(y_test)
-    logger.info(y_test_tokenized[:3])
+    #logger.info(y_test_tokenized[:3])
     y_test_decoded = list(map(sequence_to_text, y_test_tokenized))
-    logger.info(y_test_decoded[:3])
+    #logger.info(y_test_decoded[:3])
     y_test_tokenized = list(map(helper_functions.getFirstElem, y_test_tokenized))
     testY = np.array(y_test_tokenized)
 
