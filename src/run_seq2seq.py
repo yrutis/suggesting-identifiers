@@ -1,6 +1,3 @@
-import shutil
-
-import pandas as pd
 from numpy.random import seed
 from src.evaluator.EvaluatorSubtoken import Evaluator
 
@@ -23,8 +20,6 @@ import src.utils.config as config_loader
 import src.utils.path as path_file
 from src.trainer.Seq2SeqTrain import Seq2SeqTrain
 from src.Vocabulary.Vocabulary import Vocabulary
-
-import numpy as np
 
 
 def train_model(config, report_folder):
