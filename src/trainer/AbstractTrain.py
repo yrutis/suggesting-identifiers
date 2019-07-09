@@ -1,6 +1,6 @@
 import os
 import logging
-from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.callbacks import EarlyStopping, ModelCheckpoint, Callback
 from src.data.Datagenerator import DataGenerator
 
 import pandas as pd
@@ -13,10 +13,8 @@ class AbstractTrain(object):
         self.config = config
         self.history = None
         self.type = None
-        #self.tokenizer = tokenizer
-        #self.histories = Histories(report_folder, tokenizer)
-        self.es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=10)
-        self.mc = ModelCheckpoint(os.path.join(report_folder, "best_model.h5"), monitor='val_acc', mode='max', verbose=1, save_best_only=True)
+        self.es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=2)
+        #self.mc = ModelCheckpoint(os.path.join(report_folder, "Model_weights-improvement-epoch-{epoch:02d}-val_acc-{val_acc:.4f}.hdf5"), monitor='val_acc', mode='max', verbose=1, save_best_only=True)
         self.report_folder = report_folder
 
 
@@ -37,11 +35,7 @@ class AbstractTrain(object):
                     workers=6,
                     epochs=self.config.trainer.num_epochs,
                     verbose=2,
-                    callbacks=[self.es, self.mc
-                               ])
-
-
-
+                    callbacks=[self.es])
         
     
     def visualize_training(self, perc_unk_train, perc_unk_val):

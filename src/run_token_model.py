@@ -104,6 +104,9 @@ def train_model(config, report_folder):
     trainer.train(all_train=all_train, all_val=all_val, data_storage=data_storage, window_size=window_size)
     trainer.visualize_training(perc_unk_train, perc_unk_val)
 
+    logger.info("saving the model")
+    trainer.model.save(os.path.join(report_folder, "best_model.h5"))
+
     logger.info("deleting temp files...")
     shutil.rmtree(data_storage)
 
