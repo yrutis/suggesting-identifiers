@@ -1,7 +1,7 @@
 {
-    "name": "LSTMBid",
+    "name": "GRU",
     "data_loader": {
-        "name": "Android-Universal-Image-Loader",
+        "name": "java-small-project-split",
         "remote_data": "java-small-project-split",
         "local_data": "Android-Universal-Image-Loader",
         "window_size_body": 20,

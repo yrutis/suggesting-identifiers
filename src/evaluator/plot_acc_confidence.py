@@ -38,8 +38,7 @@ def get_accuracy_by_confidence(df):
 
 #%% load data
 
-path_to_predictions = 'predictions_test.csv'
-df = pd.read_csv('predictions_test.csv')
+df = pd.read_csv('predictions_test_simpleNN.csv')
 
 threadshold_list_simpleNN, acc_list_simpleNN = get_accuracy_by_confidence(df)
 
@@ -47,7 +46,7 @@ threadshold_list_simpleNN, acc_list_simpleNN = get_accuracy_by_confidence(df)
 
 fig, ax = plt.subplots()
 ax.plot(threadshold_list_simpleNN, acc_list_simpleNN, 'k--', label='simpleNN')
-plt.xlabel('Confidence')
+plt.xlabel('Suggestion Frequency')
 plt.ylabel('Accuracy')
 #plt.axis([0, 1, 0, 1])
 plt.title('Accuracy of different Models for the Allamanis Dataset')
@@ -58,4 +57,4 @@ legend = ax.legend(loc='upper center', shadow=True, fontsize='x-large')
 #legend.get_frame().set_facecolor('C0')
 
 plt.show()
-
+plt.savefig("acc_suggest_frequ.png")

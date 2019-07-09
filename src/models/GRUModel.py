@@ -31,13 +31,13 @@ class GRUModel(AbstractModel):
         contextEmbedding = Embedding(input_dim=self.__context_vocab_size, output_dim=self.config.model.embedding_dim, input_length=self.__windows_size)
 
 
-        tensor = Input(shape=(self.__windows_size,), name=self.input_name)
+        tensor = Input(shape=(self.__windows_size,))
         c = contextEmbedding(tensor)
-        #c = Dropout(self.config.model.dropout_1)(c)
-        c = GRU(self.config.model.lstm_dim)(c)
-        #c = Dropout(self.config.model.dropout_2)(c)
+        c = Dropout(self.config.model.dropout_1)(c)
+        c = GRU(self.config.model.gru_dim)(c)
+        c = Dropout(self.config.model.dropout_2)(c)
         c = Dense(self.config.model.dense_dim, activation=self.config.model.dense_activation_1)(c)
-        #c = Dropout(self.config.model.dropout_3)(c)
+        c = Dropout(self.config.model.dropout_3)(c)
         answer = layers.Dense(self.__context_vocab_size, activation='softmax')(c)
 
         self.model = Model(tensor, answer)

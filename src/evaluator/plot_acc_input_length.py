@@ -47,8 +47,7 @@ def get_accuracy_and_input_length(df):
 
 #%% load data
 
-path_to_predictions = 'predictions_test.csv'
-df = pd.read_csv('predictions_test.csv')
+df = pd.read_csv('predictions_test_simpleNN.csv')
 
 input_length_simpleNN, acc_list_simpleNN = get_accuracy_and_input_length(df)
 

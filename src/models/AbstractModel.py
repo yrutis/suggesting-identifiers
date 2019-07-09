@@ -10,8 +10,7 @@ class AbstractModel(object):
         self.type = None
         self.config = config
         self.report_folder = report_folder
-        self.input_name = "1-type-" + str(config.data_loader.window_size_params) \
-                          + "-params-" + str(config.data_loader.window_size_body) + "-body"
+
 
     def build_model(self):
         raise NotImplementedError
