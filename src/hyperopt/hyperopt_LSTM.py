@@ -37,14 +37,14 @@ def model(trainX, trainY, valX, valY, vocab_size, LSTM_config, report_folder_LST
     tensor = Input(shape=(window_size,))
     c = contextEmbedding(tensor)
     c = Dropout({{uniform(0, 0.5)}})(c)
-    c = LSTM({{choice([50, 100, 200])}}, recurrent_dropout={{uniform(0, 0.5)}}, dropout={{uniform(0, 0.5)}})(c)
+    c = LSTM({{choice([50, 100, 200])}}, recurrent_dropout={{uniform(0, 0.5)}})(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
-    c = Dense({{choice([50, 70, 100, 200])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
+    c = Dense({{choice([50, 70, 100, 200])}}, activation={{choice(['relu', 'elu', 'selu'])}})(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
 
-    if {{choice(['three', 'four'])}} == 'four':
-        c = Dense({{choice([30, 50, 70, 100, 200, 300])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
-        c = Dropout({{uniform(0, 0.5)}})(c)
+    #if {{choice(['three', 'four'])}} == 'four':
+     #   c = Dense({{choice([30, 50, 70, 100, 200, 300])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
+      #  c = Dropout({{uniform(0, 0.5)}})(c)
     answer = Dense(vocab_size, activation='softmax')(c)
 
     model = Model(tensor, answer)
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     best_run, best_model = optim.minimize(model=model,
                                           data=data,
                                           algo=tpe.suggest,
-                                          max_evals=10,
+                                          max_evals=15,
                                           trials=Trials())
     print(best_run)
 

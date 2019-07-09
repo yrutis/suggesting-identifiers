@@ -34,7 +34,7 @@ def model(trainX, trainY, valX, valY, vocab_size, GRU_config, report_folder_GRU,
     tensor = Input(shape=(window_size,))
     c = contextEmbedding(tensor)
     c = Dropout({{uniform(0, 0.5)}})(c)
-    c = GRU({{choice([50, 100, 200])}}, recurrent_dropout={{uniform(0, 0.5)}}, dropout={{uniform(0, 0.5)}})(c)
+    c = GRU({{choice([50, 100, 200])}}, recurrent_dropout={{uniform(0, 0.5)}})(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
     c = Dense({{choice([70, 100, 200])}}, activation={{choice(['relu', 'elu', 'selu'])}})(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
