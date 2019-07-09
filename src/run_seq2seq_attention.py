@@ -79,7 +79,7 @@ def eval_model(config, report_folder, trainer:Seq2SeqAttentionTrain):
     accuracy_k1, precision_k1, recall_k1, f1_k1 = evaluator.evaluate(testX=testX, testY=testY, Vocabulary=Vocabulary,
                                                          tokenizer=tokenizer, trainer=trainer, is_attention=True)
 
-    logger.info("acc {} prec {} recall {} f1 {}".format(accuracy, precision, recall, f1))
+    logger.info("acc k100 {} prec k100 {} recall k100 {} f1 k100 {}".format(accuracy, precision, recall, f1))
     logger.info("acc k1 {} prec k1 {} recall k1 {} f1 k1 {}".format(accuracy_k1, precision_k1, recall_k1, f1_k1))
 
 
