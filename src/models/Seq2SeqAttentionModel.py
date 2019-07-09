@@ -10,7 +10,8 @@ def gru(units):
     return tf.keras.layers.CuDNNGRU(units,
                                     return_sequences=True,
                                     return_state=True,
-                                    recurrent_initializer='glorot_uniform')
+                                    recurrent_initializer='glorot_uniform',
+                                    )
   else:
     return tf.keras.layers.GRU(units,
                                return_sequences=True,
@@ -25,7 +26,12 @@ class Encoder(tf.keras.Model):
         self.batch_sz = config.trainer.batch_size
         self.enc_units = config.model.gru_dim
         self.embedding = tf.keras.layers.Embedding(vocab_size, config.model.embedding_dim)
-        self.gru = gru(self.enc_units)
+        self.gru = tf.keras.layers.GRU(self.enc_units,
+                                       return_sequences=True,
+                                       return_state=True,
+                                       recurrent_initializer='glorot_uniform',
+                                       dropout=config.model.dropout_1,
+                                       recurrent_dropout=config.model.recurrent_dropout_1)
 
     def call(self, x, hidden):
         x = self.embedding(x)
@@ -42,7 +48,12 @@ class Decoder(tf.keras.Model):
         self.batch_sz = config.trainer.batch_size
         self.dec_units = config.model.gru_dim
         self.embedding = embedding_encoder
-        self.gru = gru(self.dec_units)
+        self.gru = tf.keras.layers.GRU(self.dec_units,
+                                       return_sequences=True,
+                                       return_state=True,
+                                       recurrent_initializer='glorot_uniform',
+                                       dropout=config.model.dropout_2,
+                                       recurrent_dropout=config.model.recurrent_dropout_2)
         self.fc = tf.keras.layers.Dense(vocab_size)
 
         # used for attention

@@ -8,10 +8,12 @@
     },
     "model": {
         "name": "model.seq2seq",
-        "embedding_dim": 64,
-        "gru_dim": 50,
-        "dense_dim": 50,
-        "dropout_1": 0.5,
+        "embedding_dim": 256,
+        "gru_dim": 250,
+        "recurrent_dropout_1": 0.2,
+        "dropout_1": 0.2,
+        "recurrent_dropout_2": 0.2,
+        "dropout_2": 0.2,
         "loss": "categorical_crossentropy",
         "metrics": [
             "acc"
