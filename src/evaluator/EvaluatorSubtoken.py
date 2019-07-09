@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from sklearn import metrics
 from src.trainer.AbstractTrainSubtoken import AbstractTrainSubtoken
-from src.trainer.Seq2SeqAttentionTrain import Seq2SeqAttentionTrain
 import matplotlib
 
 
@@ -42,13 +41,18 @@ class Evaluator(object):
 
 
 
-    def evaluate(self, testX, testY, Vocabulary, tokenizer, trainer:AbstractTrainSubtoken):
+    def evaluate(self, testX, testY, Vocabulary, tokenizer, trainer:AbstractTrainSubtoken, is_attention):
         logger = logging.getLogger(__name__)
 
-        complete_true = 0
-        true_positive = 0
-        false_positive = 0
-        false_negative = 0
+        complete_true_k100 = 0
+        true_positive_k100 = 0
+        false_positive_k100 = 0
+        false_negative_k100 = 0
+
+        complete_true_k1 = 0
+        true_positive_k1 = 0
+        false_positive_k1 = 0
+        false_negative_k1 = 0
 
         i = 0
         progress = 0
@@ -65,47 +69,55 @@ class Evaluator(object):
             input_seq_dec = Vocabulary.revert_back(tokenizer=tokenizer, sequence=input_seq.tolist()[0])
 
             decoded_sentence_k_100 = trainer.predict(tokenizer=tokenizer, input_seq=input_seq, k=100, return_top_n=1)
-            decoded_sentence = trainer.predict(tokenizer=tokenizer, input_seq=input_seq, k=1, return_top_n=1)
+            decoded_sentence_k1 = trainer.predict(tokenizer=tokenizer, input_seq=input_seq, k=1, return_top_n=1)
 
-            current_result = decoded_sentence_k_100 #just for attention
+            current_result = decoded_sentence_k1 #just for attention
 
 
             decoded_sentence_k_100 = self.filter_results(decoded_sentence_k_100[0])
+            decoded_sentence_k1 = self.filter_results(decoded_sentence_k1[0])
             decoded_correct_output_list = self.filter_results(decoded_correct_output_list)
 
 
-            current_complete_true, current_true_positive, \
-            current_false_positive, current_false_negative = \
+            current_complete_true_k100, current_true_positive_k100, \
+            current_false_positive_k100, current_false_negative_k100 = \
                 self.get_subtoken_stats(decoded_correct_output_list, decoded_sentence_k_100)
 
-            complete_true += current_complete_true
-            true_positive += current_true_positive
-            false_positive += current_false_positive
-            false_negative += current_false_negative
+            current_complete_true_k1, current_true_positive_k1, \
+            current_false_positive_k1, current_false_negative_k1 = \
+                self.get_subtoken_stats(decoded_correct_output_list, decoded_sentence_k1)
+
+            complete_true_k100 += current_complete_true_k100
+            true_positive_k100 += current_true_positive_k100
+            false_positive_k100 += current_false_positive_k100
+            false_negative_k100 += current_false_negative_k100
+
+            complete_true_k1 += current_complete_true_k1
+            true_positive_k1 += current_true_positive_k1
+            false_positive_k1 += current_false_positive_k1
+            false_negative_k1 += current_false_negative_k1
 
 
-            if ((current_complete_true == 1) and (len(decoded_correct_output_list)>0)): #not just unk
-                if isinstance(trainer, Seq2SeqAttentionTrain):
-                    # logger.info("I am an attention")
+            if ((current_complete_true_k1 == 1) and (len(decoded_correct_output_list)>0)): #not just unk
+
+                if is_attention:
                     attention_plot = current_result[1]
 
                     attention_plot = attention_plot[:len(current_result[0]), :len(input_seq_dec)]
                     self.plot_attention(attention_plot, input_seq_dec, current_result[0], i)
 
-                #logger.info("current_complete_true == 1 {}".format((current_complete_true == 1)))
-                #logger.info("len(decoded_correct_output_list)>0) {}".format((len(decoded_correct_output_list)>0))) #not just unk
-                #logger.info("Complete True! input: {} \n correct: {}\n prediction: {}".format(input_seq_dec, decoded_correct_output_list, decoded_sentence_k_100))
 
-                self.load_correct_prediction_file(input=input_seq_dec, prediction=decoded_sentence_k_100,
+                self.load_correct_prediction_file(input=input_seq_dec, prediction=decoded_sentence_k1,
                                           correct=decoded_correct_output_list, i = i)
 
 
 
             i += 1
 
-        accuracy, precision, recall, f1 = self.calculate_results(complete_true, testX.shape[0], true_positive, false_positive, false_negative)
+        accuracy, precision, recall, f1 = self.calculate_results(complete_true_k100, testX.shape[0], true_positive_k100, false_positive_k100, false_negative_k100)
+        accuracy_k1, precision_k1, recall_k1, f1_k1 = self.calculate_results(complete_true_k1, testX.shape[0], true_positive_k1, false_positive_k1, false_negative_k1)
 
-        return accuracy, precision, recall, f1
+        return accuracy, precision, recall, f1, accuracy_k1, precision_k1, recall_k1, f1_k1
 
 
 

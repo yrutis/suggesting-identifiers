@@ -1,14 +1,11 @@
 import os
-
 from keras.utils import plot_model
-
 from src.models.AbstractModel import AbstractModel
-
 import logging
-
 from keras import Input
 from keras.layers import Embedding, Flatten, Dense, Dropout, LSTM
 from keras.models import Model
+
 
 
 class Seq2SeqModel(AbstractModel):

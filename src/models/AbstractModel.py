@@ -2,6 +2,8 @@ import os
 from keras.utils import plot_model
 import logging
 import src.utils.path as path_file
+import tensorflow as tf
+tf.disable_eager_execution()
 
 class AbstractModel(object):
 

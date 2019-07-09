@@ -5,7 +5,6 @@ import numpy as np
 
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
-from sklearn.model_selection import train_test_split
 import src.data.utils.helper_functions as helper_functions
 import logging
 import os

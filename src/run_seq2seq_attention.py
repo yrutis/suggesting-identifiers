@@ -15,7 +15,6 @@ import src.data.prepare_data_subtoken as prepare_data
 import src.data.prepare_data_subtoken_test as prepare_data_test
 
 import tensorflow as tf
-
 tf.enable_eager_execution()
 
 import src.utils.config as config_loader
@@ -76,10 +75,12 @@ def eval_model(config, report_folder, trainer:Seq2SeqAttentionTrain):
 
     evaluator = Evaluator(trainer=trainer, report_folder=report_folder)
 
-    accuracy, precision, recall, f1 = evaluator.evaluate(testX=testX, testY=testY, Vocabulary=Vocabulary,
-                                                         tokenizer=tokenizer, trainer=trainer)
+    accuracy, precision, recall, f1, \
+    accuracy_k1, precision_k1, recall_k1, f1_k1 = evaluator.evaluate(testX=testX, testY=testY, Vocabulary=Vocabulary,
+                                                         tokenizer=tokenizer, trainer=trainer, is_attention=True)
 
     logger.info("acc {} prec {} recall {} f1 {}".format(accuracy, precision, recall, f1))
+    logger.info("acc k1 {} prec k1 {} recall k1 {} f1 k1 {}".format(accuracy_k1, precision_k1, recall_k1, f1_k1))
 
 
 def main(config_path):

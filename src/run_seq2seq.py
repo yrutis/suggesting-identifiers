@@ -16,7 +16,6 @@ import os
 import json
 import tensorflow as tf
 
-
 import src.data.prepare_data_subtoken as prepare_data
 import src.data.prepare_data_subtoken_test as prepare_data_test
 from src.models.Seq2SeqModel import Seq2SeqModel
@@ -78,11 +77,16 @@ def eval_model(config, report_folder, trainer:Seq2SeqTrain):
 
     evaluator = Evaluator(trainer=trainer, report_folder=report_folder)
 
-    accuracy, precision, recall, f1 = evaluator.evaluate(testX=testX, testY=testY, Vocabulary=Vocabulary, tokenizer=tokenizer, trainer=trainer)
+    accuracy, precision, recall, f1, \
+    accuracy_k1, precision_k1, recall_k1, f1_k1 = \
+        evaluator.evaluate(testX=testX, testY=testY, Vocabulary=Vocabulary,
+                           tokenizer=tokenizer, trainer=trainer, is_attention=False)
 
     logger.info("acc {} prec {} recall {} f1 {}".format(accuracy, precision, recall, f1))
+    logger.info("acc k1 {} prec k1 {} recall k1 {} f1 k1 {}".format(accuracy_k1, precision_k1, recall_k1, f1_k1))
 
-    #evaluator.get_accuracy_precision_recall_f1_score(correct, predictions_k_1, 'k1')
+
+#evaluator.get_accuracy_precision_recall_f1_score(correct, predictions_k_1, 'k1')
     #evaluator.get_accuracy_precision_recall_f1_score(correct, predictions_k_100, 'k100')
 
 

@@ -1,4 +1,5 @@
 import logging
+import math
 
 import tensorflow as tf
 import numpy as np
@@ -211,37 +212,37 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
 
         stop_condition = False
 
-        #if k==1:
-        t = 0
-        while not stop_condition:
+        if k==1:
+            t = 0
+            while not stop_condition:
 
-            predictions, dec_hidden, attention_weights = self.decoder(dec_input, dec_hidden, enc_out)
+                predictions, dec_hidden, attention_weights = self.decoder(dec_input, dec_hidden, enc_out)
 
-            # storing the attention weights to plot later on
-            attention_weights = tf.reshape(attention_weights, (-1,))
-            attention_plot[t] = attention_weights.numpy()
-            t += 1
+                # storing the attention weights to plot later on
+                attention_weights = tf.reshape(attention_weights, (-1,))
+                attention_plot[t] = attention_weights.numpy()
+                t += 1
 
 
-            predicted_id = int(tf.argmax(predictions[0]).numpy())
+                predicted_id = int(tf.argmax(predictions[0]).numpy())
 
-            # the predicted ID is fed back into the model
-            dec_input = tf.expand_dims([predicted_id], 0)
+                # the predicted ID is fed back into the model
+                dec_input = tf.expand_dims([predicted_id], 0)
 
-            result.append(Vocabulary.revert_back(tokenizer, predicted_id))
+                result.append(Vocabulary.revert_back(tokenizer, predicted_id))
 
-            if (Vocabulary.revert_back(tokenizer, predicted_id) == 'endtoken'
-                    or len(result) >= self.config.data_loader.window_size_name):
+                if (Vocabulary.revert_back(tokenizer, predicted_id) == 'endtoken'
+                        or len(result) >= self.config.data_loader.window_size_name):
 
-                stop_condition = True
+                    stop_condition = True
 
-        #else:
-            # sequences = [decoded so far, neg-loglikelihood, eos reached, last word, newest states value]
-            #init_seq = [[[], 1.0, False, enc_out, dec_input, dec_hidden]]
-            #sequences = self.run_beam_search(tokenizer, init_seq, k)
+        else:
+            #sequences = [decoded so far, neg-loglikelihood, eos reached, last word, newest states value]
+            init_seq = [[[], 1.0, False, enc_out, dec_input, dec_hidden]]
+            sequences = self.run_beam_search(tokenizer, init_seq, k)
 
-            #sequences = sequences[:return_top_n]  # only return top n
-            #return sequences
+            sequences = sequences[:return_top_n]  # only return top n
+            return sequences
 
 
         return [result, attention_plot]
@@ -269,7 +270,12 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
 
                 top_k_probs_sorted, top_k_idx_sorted = tf.math.top_k(predictions[0], k=k)
                 top_k_probs_sorted = np.array(top_k_probs_sorted)
-                top_k_idx_sorted = np.array(top_k_idx_sorted) #convert to np array
+                top_k_idx_sorted = np.array(top_k_idx_sorted)  # convert to np array
+
+                # define vectorized sigmoid
+                sigmoid_v = np.vectorize(self.sigmoid)
+
+                top_k_probs_sorted = sigmoid_v(top_k_probs_sorted) #push all values between 0 and 1
 
                 sampled_char = Vocabulary.revert_back(tokenizer, top_k_idx_sorted)
                 sampled_char = list(map(lambda x: str(x), sampled_char))  # in case of true which is oov
@@ -316,3 +322,8 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
         else:
             return self.run_beam_search(tokenizer, sequences, k)
 
+
+# custom function
+    @staticmethod
+    def sigmoid(x):
+        return 1 / (1 + math.exp(-x))
