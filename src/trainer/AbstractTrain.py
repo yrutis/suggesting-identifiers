@@ -1,13 +1,10 @@
 import os
 import logging
 from keras.callbacks import EarlyStopping, ModelCheckpoint
-
 from src.data.Datagenerator import DataGenerator
-from src.trainer.Callbacks.Callback import Histories
 
 import pandas as pd
 from matplotlib import pyplot as plt
-import tensorflow as tf
 
 class AbstractTrain(object):
 
