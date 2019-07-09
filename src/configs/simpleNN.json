@@ -1,31 +1,16 @@
 {
-    "name": "simpleNN",
-    "data_loader": {
-        "name": "Android-Universal-Image-Loader",
-        "full_data": "all_methods_train",
-        "local_data": "Android-Universal-Image-Loader",
-        "window_size_body": 16,
-        "window_size_params": 8,
-        "remove_train_unk": 0.5,
-        "remove_val_unk": 0.5
-    },
     "model": {
         "name": "model.SimpleNN",
         "embedding_dim": 128,
         "dense_dim": 70,
         "dense_activation_1": "relu",
-        "dropout_1": 0.1,
-        "dropout_2": 0.5,
-        "dropout_3": 0.4,
+        "dropout_1": 0.488,
+        "dropout_2": 0.085,
+        "dropout_3": 0.383,
         "loss": "sparse_categorical_crossentropy",
         "metrics": [
             "acc",
             "sparse_top_k_categorical_accuracy"
         ]
-    },
-    "trainer": {
-        "name": "trainer.SimpleNN",
-        "num_epochs": 15,
-        "batch_size": 128
     }
 }
