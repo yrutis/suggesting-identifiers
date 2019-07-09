@@ -30,7 +30,9 @@ def data():
         prepare_data_token.main(token_model_config.data_loader.name,
                                 token_model_config.data_loader.window_size_params,
                                 token_model_config.data_loader.window_size_body,
-                                remove_val_unk=0.6, report_folder=report_folder)
+                                remove_train_unk=0.5,
+                                remove_val_unk=0.6,
+                                report_folder=report_folder)
 
     vocab_size = len(tokenizer.word_index) + 1
     print('Found {} unique tokens.'.format(vocab_size))

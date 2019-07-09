@@ -32,15 +32,15 @@ class LSTMModel(AbstractModel):
 
         tensor = Input(shape=(self.__windows_size,))
         c = contextEmbedding(tensor)
-        #c = Dropout(self.config.model.dropout_1)(c)
-        c = LSTM(self.config.model.lstm_dim)(c)
-        #c = Dropout(self.config.model.dropout_2)(c)
+        c = Dropout(self.config.model.dropout_1)(c)
+        c = LSTM(self.config.model.lstm_dim, recurrent_dropout=self.config.model.recurrent_dropout)(c)
+        c = Dropout(self.config.model.dropout_2)(c)
         c = Dense(self.config.model.dense_dim, activation=self.config.model.dense_activation_1)(c)
-        #c = Dropout(self.config.model.dropout_3)(c)
+        c = Dropout(self.config.model.dropout_3)(c)
         answer = layers.Dense(self.__context_vocab_size, activation='softmax')(c)
 
         self.model = Model(tensor, answer)
-        optimizer = Adam()
+        optimizer = Adam(lr=self.config.model.learning_rate)
         self.model.compile(optimizer=optimizer, loss=self.config.model.loss, metrics=self.config.model.metrics)
         print(self.model.summary())
 

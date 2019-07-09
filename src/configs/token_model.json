@@ -1,7 +1,7 @@
 {
     "name": "simpleNN",
     "data_loader": {
-        "name": "Android-Universal-Image-Loader",
+        "name": "java-small-project-split",
         "remote_data": "java-small-project-split",
         "local_data": "Android-Universal-Image-Loader",
         "window_size_body": 20,
@@ -12,7 +12,7 @@
     },
     "trainer": {
         "name": "trainer.SimpleNN",
-        "num_epochs": 30,
-        "batch_size": 128
+        "num_epochs": 20,
+        "batch_size": 64
     }
 }

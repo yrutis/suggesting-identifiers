@@ -41,9 +41,6 @@ def model(trainX, trainY, valX, valY, vocab_size, report_folder_LSTMBid, window_
     c = Dense({{choice([70, 100, 200])}}, activation={{choice(['relu', 'elu', 'selu'])}})(c)
     c = Dropout({{uniform(0, 0.5)}})(c)
 
-    #if {{choice(['three', 'four'])}} == 'four':
-     #   c = Dense({{choice([30, 50, 70, 100, 200])}}, activation={{choice(['sigmoid', 'relu', 'elu', 'selu'])}})(c)
-     #   c = Dropout({{uniform(0, 0.5)}})(c)
     answer = Dense(vocab_size, activation='softmax')(c)
 
     model = Model(tensor, answer)
