@@ -25,7 +25,10 @@ class Seq2SeqModel(AbstractModel):
         e = Embedding(self.__context_vocab_size, self.config.model.embedding_dim)
         encoder_inputs = Input(shape=(None,), name="encoder_input")
         en_x = e(encoder_inputs)
-        encoder = LSTM(self.config.model.lstm_encoder_dim, return_state=True)
+        encoder = LSTM(self.config.model.lstm_encoder_dim,
+                       return_state=True,
+                       dropout=self.config.model.dropout_1,
+                       recurrent_dropout=self.config.model.recurrent_dropout_1)
         encoder_outputs, state_h, state_c = encoder(en_x)
         # We discard `encoder_outputs` and only keep the states.
         encoder_states = [state_h, state_c]
@@ -35,7 +38,12 @@ class Seq2SeqModel(AbstractModel):
         dex = e
         final_dex = dex(decoder_inputs)
 
-        decoder_lstm = LSTM(self.config.model.lstm_decoder_dim, return_sequences=True, return_state=True)
+        decoder_lstm = LSTM(self.config.model.lstm_decoder_dim,
+                            return_sequences=True,
+                            return_state=True,
+                            dropout=self.config.model.dropout_2,
+                            recurrent_dropout=self.config.model.recurrent_dropout_2
+                            )
 
         decoder_outputs, _, _ = decoder_lstm(final_dex,
                                              initial_state=encoder_states)
