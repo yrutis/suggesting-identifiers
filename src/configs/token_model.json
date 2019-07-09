@@ -1,5 +1,5 @@
 {
-    "name": "LSTM",
+    "name": "LSTMBid",
     "data_loader": {
         "name": "java-small-project-split",
         "remote_data": "java-small-project-split",
