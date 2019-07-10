@@ -8,7 +8,7 @@ from random import randint
 from src.Vocabulary.Vocabulary import Vocabulary
 from src.subtoken_approach.evaluator.EvaluatorSubtoken import Evaluator
 
-from src.subtoken_approach.models import Encoder, Decoder
+from src.subtoken_approach.models.Seq2SeqAttentionModel import Encoder, Decoder
 from src.subtoken_approach.trainer.Seq2SeqAttentionTrain import Seq2SeqAttentionTrain
 
 import src.subtoken_approach.data.prepare_data_subtoken as prepare_data

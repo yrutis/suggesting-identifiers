@@ -115,9 +115,9 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
                 if batch % 400 == 0:
                     #logger.info("first trainX in current batch {}".format(trainX[0]))
                     #logger.info("first trainX in current batch {}".format(Vocabulary.revert_back(tokenizer, np.array(trainX[0]))))
-
                     #logger.info("first trainY in current batch {}".format(trainY[0]))
                     #logger.info("first trainY in current batch {}".format(Vocabulary.revert_back(tokenizer, np.array(trainY[0]))))
+
                     logger.info('Training Epoch {} Batch {} / {} Loss {:.4f}'
                                 .format(epoch + 1, batch, self.n_batches, batch_loss.numpy()))
 
