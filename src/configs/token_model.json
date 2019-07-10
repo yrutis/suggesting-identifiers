@@ -1,12 +1,12 @@
 {
     "name": "simpleNN",
     "data_loader": {
-        "name": "java-small-project-split",
+        "name": "Android-Universal-Image-Loader",
         "remote_data": "java-small-project-split",
         "local_data": "Android-Universal-Image-Loader",
-        "window_size_body": 20,
+        "window_size_body": 21,
         "window_size_params": 4,
-        "remove_train_unk": 0.5,
+        "remove_train_unk": 0,
         "remove_val_unk": 0.6,
         "remove_test_unk": 1
     },

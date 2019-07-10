@@ -6,13 +6,13 @@ from pickle import load
 from random import randint
 
 from src.Vocabulary.Vocabulary import Vocabulary
-from src.evaluator.EvaluatorSubtoken import Evaluator
+from src.subtoken_approach.evaluator.EvaluatorSubtoken import Evaluator
 
-from src.models.Seq2SeqAttentionModel import Encoder, Decoder
-from src.trainer.Seq2SeqAttentionTrain import Seq2SeqAttentionTrain
+from src.subtoken_approach.models import Encoder, Decoder
+from src.subtoken_approach.trainer.Seq2SeqAttentionTrain import Seq2SeqAttentionTrain
 
-import src.data.prepare_data_subtoken as prepare_data
-import src.data.prepare_data_subtoken_test as prepare_data_test
+import src.subtoken_approach.data.prepare_data_subtoken as prepare_data
+import src.subtoken_approach.data.prepare_data_subtoken_test as prepare_data_test
 
 import tensorflow as tf
 tf.enable_eager_execution()

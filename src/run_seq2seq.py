@@ -1,5 +1,5 @@
 from numpy.random import seed
-from src.evaluator.EvaluatorSubtoken import Evaluator
+from src.subtoken_approach.evaluator.EvaluatorSubtoken import Evaluator
 
 seed(1)
 from tensorflow import set_random_seed
@@ -7,18 +7,18 @@ set_random_seed(2)
 
 from datetime import datetime
 from random import randint
-from pickle import dump, load
+from pickle import load
 import logging
 import os
 import json
 import tensorflow as tf
 
-import src.data.prepare_data_subtoken as prepare_data
-import src.data.prepare_data_subtoken_test as prepare_data_test
-from src.models.Seq2SeqModel import Seq2SeqModel
+import src.subtoken_approach.data.prepare_data_subtoken as prepare_data
+import src.subtoken_approach.data.prepare_data_subtoken_test as prepare_data_test
+from src.subtoken_approach.models.Seq2SeqModel import Seq2SeqModel
 import src.utils.config as config_loader
 import src.utils.path as path_file
-from src.trainer.Seq2SeqTrain import Seq2SeqTrain
+from src.subtoken_approach.trainer.Seq2SeqTrain import Seq2SeqTrain
 from src.Vocabulary.Vocabulary import Vocabulary
 
 

@@ -15,7 +15,7 @@ set_random_seed(2)
 
 from datetime import datetime
 from random import randint
-from pickle import dump, load
+from pickle import load
 import logging
 import os
 import tensorflow as tf
@@ -23,17 +23,17 @@ import numpy as np
 from src.Vocabulary.Vocabulary import Vocabulary
 
 
-import src.data.prepare_data_token as prepare_data
-import src.data.prepare_data_test_token as prepare_data_test
+import src.token_approach.data.prepare_data_token as prepare_data
+import src.token_approach.data.prepare_data_test_token as prepare_data_test
 
-from src.models.SimpleNN import SimpleNNModel
-from src.models.LSTMModel import LSTMModel
-from src.models.LSTMBidModel import LSTMModelBid
-from src.models.GRUModel import GRUModel
+from src.token_approach.models.SimpleNN import SimpleNNModel
+from src.token_approach.models.LSTMModel import LSTMModel
+from src.token_approach.models.LSTMBidModel import LSTMModelBid
+from src.token_approach.models.GRUModel import GRUModel
 
 import src.utils.config as config_loader
 import src.utils.path as path_file
-from src.trainer.AbstractTrain import AbstractTrain
+from src.token_approach.trainer.AbstractTrain import AbstractTrain
 
 def train_model(config, report_folder):
     # get logger
@@ -46,8 +46,7 @@ def train_model(config, report_folder):
                           config.data_loader.window_size_body,
                           report_folder=report_folder,
                           remove_train_unk=config.data_loader.remove_train_unk,
-                          remove_val_unk=config.data_loader.remove_val_unk,
-                          using_generator=True)
+                          remove_val_unk=config.data_loader.remove_val_unk)
 
     logger.info('Found {} unique tokens.'.format(vocab_size))
 
@@ -106,9 +105,6 @@ def train_model(config, report_folder):
 
     logger.info("saving the model")
     trainer.model.save(os.path.join(report_folder, "best_model.h5"))
-
-    logger.info("deleting temp files...")
-    shutil.rmtree(data_storage)
 
 
 
