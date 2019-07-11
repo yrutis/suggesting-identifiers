@@ -12,7 +12,7 @@ import os
 #%%
 
 
-def main(filename, window_size_params, window_size_body, report_folder='', remove_train_unk=0, remove_val_unk=0):
+def main(filename, window_size_params, window_size_body, partition, report_folder='', remove_train_unk=0, remove_val_unk=0):
 
 
     # get logger
@@ -35,7 +35,7 @@ def main(filename, window_size_params, window_size_body, report_folder='', remov
     data_storage = os.path.join(
         os.path.join(os.path.join(os.path.join(os.path.join(data_folder, 'processed'),
                                                'decoded'), filename), 'training'),
-        'training-params-' + str(window_size_params) + '-body-' + str(window_size_body))
+        'partition-' + str(partition) + 'training-params-' + str(window_size_params) + '-body-' + str(window_size_body))
 
 
     if not os.path.exists(data_storage):
@@ -137,13 +137,23 @@ def main(filename, window_size_params, window_size_body, report_folder='', remov
             i = 0
             list_of_elements = []
             assert(X.shape[0] == Y.shape[0])
-            while i < X.shape[0]:
-                current_name_x = type + 'X-' + str(i)
-                current_name_y = type + 'Y-' + str(i)
-                np.save(os.path.join(folder, current_name_x), X[i:i + 1])
-                np.save(os.path.join(folder, current_name_y), Y[i:i + 1])
-                list_of_elements.append(i)
-                i += 1
+            while True:
+                if i + partition < X.shape[0]:
+                    current_name_x = type + 'X-' + str(i//partition)
+                    current_name_y = type + 'Y-' + str(i//partition)
+                    np.save(os.path.join(folder, current_name_x), X[i:i + partition])
+                    np.save(os.path.join(folder, current_name_y), Y[i:i + partition])
+                    list_of_elements.append(i)
+                elif i < X.shape[0]:
+                    current_name_x = type + 'X-' + str(i//partition)
+                    current_name_y = type + 'Y-' + str(i//partition)
+                    np.save(os.path.join(folder, current_name_x), X[i:X.shape[0]])
+                    np.save(os.path.join(folder, 'X-last-'+type), X[i:X.shape[0]]) #save last file twice to count occurences
+                    np.save(os.path.join(folder, current_name_y), Y[i:X.shape[0]])
+                    list_of_elements.append(i)
+                else:
+                    break
+                i += partition
 
             return list_of_elements
 
@@ -154,8 +164,24 @@ def main(filename, window_size_params, window_size_body, report_folder='', remov
 
         vocab_size = len(tokenizer.word_index) + 1
 
-        assert(trainX.shape[0] == len(all_train)) #to check if all was saved correctly
-        assert(valX.shape[0] == len(all_val))
+        trainxshape = trainX.shape[0] / partition + 1
+        len_alltrain = len(all_train)
+
+        if trainX.shape[0] % partition != 0: #if not dividable by partition it is plus 1 else not
+            assert(((trainX.shape[0] // partition) +1) == len(all_train)) #check if it was correctly broken into partions of partition000
+        else:
+            assert (trainX.shape[0] / partition == len(all_train))  # check if it was correctly broken into partions of partition000
+
+        if valX.shape[0] % partition != 0: #if not dividable by partition it is plus 1 else not
+            assert(((valX.shape[0] // partition) +1) == len(all_val))
+        else:
+            assert (valX.shape[0] / partition == len(all_val))
+
+
+        all_train = [x for x in range(trainX.shape[0])]
+        all_val = [x for x in range(valX.shape[0])]
+
+
 
         # safe tokenizer
         tokenizer_path = os.path.join(data_storage, 'tokenizer.pkl')
@@ -179,8 +205,12 @@ def main(filename, window_size_params, window_size_body, report_folder='', remov
     else:
         logger.info("folder exists: {}".format(data_storage))
 
-        all_train_files = [f for f in os.listdir(data_storage) if f.startswith('train')]
-        all_val_files = [f for f in os.listdir(data_storage) if f.startswith('val')]
+        all_train_files = [f for f in os.listdir(data_storage) if f.startswith('trainX')]
+        all_val_files = [f for f in os.listdir(data_storage) if f.startswith('valX')]
+
+        #count how many are last
+        last_training = np.load(os.path.join(data_storage, 'X-last-train.npy'))
+        last_val = np.load(os.path.join(data_storage, 'X-last-val.npy'))
 
         with open(os.path.join(data_storage, 'tokenizer.pkl'), "rb") as input_file:
             tokenizer = load(input_file)
@@ -194,8 +224,8 @@ def main(filename, window_size_params, window_size_body, report_folder='', remov
         vocab_size = len(tokenizer.word_index) + 1  # I only need the vocab size
 
 
-        all_train = [x for x in range(len(all_train_files) // 2)]
-        all_val = [x for x in range(len(all_val_files) // 2)]
+        all_train = [x for x in range((len(all_train_files)-1)*partition+last_training.shape[0])] #load all regular partions + the length of last irregular partion
+        all_val = [x for x in range((len(all_val_files)-1)*partition+last_val.shape[0])]
 
         max_input_elemts = 1 + window_size_params + window_size_body  # return type + ... + ... + startendtoken
 
@@ -210,4 +240,4 @@ def main(filename, window_size_params, window_size_body, report_folder='', remov
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
-    main("Android-Universal-Image-Loader", 2, 8, '')
+    main("Android-Universal-Image-Loader", 2, 1, '')

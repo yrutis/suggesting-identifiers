@@ -4,15 +4,16 @@
         "name": "Android-Universal-Image-Loader",
         "remote_data": "java-small-project-split",
         "local_data": "Android-Universal-Image-Loader",
-        "window_size_body": 21,
+        "window_size_body": 22,
         "window_size_params": 4,
         "remove_train_unk": 0,
         "remove_val_unk": 0.6,
-        "remove_test_unk": 1
+        "remove_test_unk": 1,
+        "partition": 32
     },
     "trainer": {
         "name": "trainer.SimpleNN",
-        "num_epochs": 20,
-        "batch_size": 64
+        "num_epochs": 5,
+        "batch_size": 8
     }
 }

@@ -44,6 +44,7 @@ def train_model(config, report_folder):
         = prepare_data.main(config.data_loader.name,
                           config.data_loader.window_size_params,
                           config.data_loader.window_size_body,
+                          partition=config.data_loader.partition,
                           report_folder=report_folder,
                           remove_train_unk=config.data_loader.remove_train_unk,
                           remove_val_unk=config.data_loader.remove_val_unk)

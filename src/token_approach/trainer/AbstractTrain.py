@@ -22,19 +22,19 @@ class AbstractTrain(object):
         logger = logging.getLogger(__name__)
 
         params = {'dim': window_size,
-                  'batch_size': self.config.trainer.num_epochs,
+                  'batch_size': self.config.trainer.batch_size,
                   'shuffle': False}
 
         # Generators
-        training_generator = DataGenerator(all_train, data_storage, 'train', **params)
-        validation_generator = DataGenerator(all_val, data_storage, 'val', **params)
+        training_generator = DataGenerator(all_train, data_storage, 'train', self.config.data_loader.partition, **params)
+        validation_generator = DataGenerator(all_val, data_storage, 'val', self.config.data_loader.partition, **params)
 
-        self.history = self.model.fit_generator(generator=training_generator,
+        self.history = self.model.fit_generator(
+                    generator=training_generator,
                     validation_data=validation_generator,
-                    use_multiprocessing=True,
-                    workers=6,
                     epochs=self.config.trainer.num_epochs,
                     verbose=2,
+                    shuffle=False,
                     callbacks=[self.es])
         
     
