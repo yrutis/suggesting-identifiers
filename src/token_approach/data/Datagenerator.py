@@ -74,7 +74,7 @@ class DataGenerator(keras.utils.Sequence):
             y[i] = self.current_partion_y[(ID % self.partition):(ID % self.partition) + 1]
 
         #print("AFTER idx {} type {}, list of Ids: {}".format(self.index, self.type, list_IDs_temp))
-        #print("X: {}".format(X))
+        #print("first X: {}".format(X[0]))
         #print("y: {}".format(y))
 
 

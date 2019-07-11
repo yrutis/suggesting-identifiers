@@ -9,7 +9,7 @@
         "remove_train_unk": 0,
         "remove_val_unk": 0.6,
         "remove_test_unk": 1,
-        "partition": 32
+        "partition": 64
     },
     "trainer": {
         "name": "trainer.SimpleNN",

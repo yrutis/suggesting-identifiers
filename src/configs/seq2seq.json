@@ -4,7 +4,8 @@
         "name": "Android-Universal-Image-Loader",
         "window_size_body": 25,
         "window_size_params": 4,
-        "window_size_name": 5
+        "window_size_name": 5,
+        "partition": 16
     },
     "model": {
         "name": "model.seq2seq",
@@ -23,6 +24,6 @@
     "trainer": {
         "name": "trainer.seq2seq",
         "num_epochs": 2,
-        "batch_size": 64
+        "batch_size": 8
     }
 }

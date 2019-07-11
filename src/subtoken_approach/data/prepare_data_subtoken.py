@@ -1,3 +1,4 @@
+import math
 from pickle import dump, load
 import pandas as pd
 import numpy as np
@@ -23,9 +24,10 @@ def main(config, report_folder=''):
     logger = logging.getLogger(__name__)
     compare = lambda x, y: collections.Counter(x) == collections.Counter(y)
 
-    filename, window_size_body, window_size_params, window_size_name = \
+    filename, window_size_body, window_size_params, window_size_name, partition = \
         config.data_loader.name, config.data_loader.window_size_body, \
-        config.data_loader.window_size_params, config.data_loader.window_size_name,
+        config.data_loader.window_size_params, config.data_loader.window_size_name, \
+        config.data_loader.partition
 
     filename += '-processed'
 
@@ -41,13 +43,12 @@ def main(config, report_folder=''):
     data_storage = os.path.join(
         os.path.join(os.path.join(os.path.join(os.path.join(data_folder, 'processed'),
                                                'decoded'), filename), 'training'),
-        'training-params-' + str(window_size_params) + '-body-' + str(window_size_body)
+        'partition' + str(partition) + '-training-params-' + str(window_size_params) + '-body-' + str(window_size_body)
         + '-name-' + str(window_size_name))
 
 
     df_train = pd.read_json(training_processed_decoded_full_path, orient='records')
     df_val = pd.read_json(validation_processed_decoded_full_path, orient='records')
-
 
 
     if not os.path.exists(data_storage):
@@ -84,6 +85,11 @@ def main(config, report_folder=''):
         df_val['methodName'] = df_val['methodName'].apply(add_start_end_token)
 
 
+        #%% shuffle dataframe
+        df_train = df_train.sample(frac=1)
+        df_val = df_val.sample(frac=1)
+
+        #%%
         method_body_cleaned_list_x = list(df_train['concatMethodBodyClean'])
         method_name_x = list(df_train['methodName'])
 
@@ -171,103 +177,79 @@ def main(config, report_folder=''):
         logger.info("len Y Train Tokenized {}, len X Train Tokenized {}"
                         .format(len(y_train_tokenized), len(x_train_tokenized)))
 
-        encoder_input_data = np.zeros(
-            (1, max_input_elemts),
-            dtype='int')
-        decoder_input_data = np.zeros(
-            (1, max_output_elemts),
-            dtype='int')
-        decoder_target_data = np.zeros(
-            (1, max_output_elemts, vocab_size),
-            dtype='int')
-
+        all_train = [x for x in range(len(x_train_tokenized))]
+        all_val = [x for x in range(len(x_val_tokenized))]
         # %%
 
-        all_train = []
+        def split_to_chunks(np_array):
+            '''
+            :param np_array: numpy array to be splitted into chunks
+            :return:
+            '''
+            #1) retrieve indices
+            np_array_split_indices = [partition * (i + 1) for i in range(math.floor(np_array.shape[0] / partition))]
+            if np_array_split_indices[-1] == np_array.shape[0]:
+                del np_array_split_indices[-1]
 
-        for i, (input_text, target_text) in enumerate(zip(x_train_tokenized, y_train_tokenized)):
-            assert (len(input_text) == max_input_elemts)  # make sure always whole matrix is filled
-            assert (len(target_text) == max_output_elemts)
-            for t, word in enumerate(input_text):
-                encoder_input_data[0, t] = input_text[t]
+            #2) split np array according to indices
+            np_array_splitted = np.array_split(np_array, np_array_split_indices, axis=0)
 
-            for t, word in enumerate(target_text):
-                # decoder_target_data is ahead of decoder_input_data by one timestep
-                decoder_input_data[0, t] = target_text[t]
-                if t > 0:
-                    # decoder_target_data will be ahead by one timestep (t=0 is always start)
-                    # and will not include the start character.
-                    decoder_target_data[0, t - 1, target_text[t]] = 1
+            return np_array_splitted
 
-            # save each sample as a numpy file in folder
-            trainX1 = encoder_input_data[0]
-            assert (compare(input_text, trainX1))  # check if inserted correctly
+        def save_to_chunks(x, y, type):
+            for j, (x_chunk, y_chunk) in enumerate(
+                    zip(x, y)):
 
-            trainX2 = decoder_input_data[0]
-            assert (compare(target_text, trainX2))  # check if inserted correctly
+                encoder_input_data = np.zeros(
+                    (x_chunk.shape[0], max_input_elemts),
+                    dtype='int')
+                decoder_input_data = np.zeros(
+                    (y_chunk.shape[0], max_output_elemts),
+                    dtype='int')
+                decoder_target_data = np.zeros(
+                    (y_chunk.shape[0], max_output_elemts, vocab_size),
+                    dtype='int')
 
-            trainY = decoder_target_data[0]
-            np.save(os.path.join(data_storage,
-                                 'trainX1-' + str(i)), trainX1)
-            np.save(os.path.join(data_storage,
-                                 'trainX2-' + str(i)), trainX2)
-            np.save(os.path.join(data_storage,
-                                 'trainY-' + str(i)), trainY)
+                for i, (input_text, target_text) in enumerate(zip(x_chunk, y_chunk)):
+                    assert (len(input_text) == max_input_elemts)  # make sure always whole matrix is filled
+                    assert (len(target_text) == max_output_elemts)
 
-            all_train.append(i)
+                    for t, word in enumerate(input_text):
+                        encoder_input_data[i, t] = input_text[t]
 
-        # %%
-        logger.info("len Y val tokenized {}, len X val toknized {}"
-                    .format(len(y_val_tokenized), len(x_val_tokenized)))
+                    for t, word in enumerate(target_text):
+                        # decoder_target_data is ahead of decoder_input_data by one timestep
+                        decoder_input_data[i, t] = target_text[t]
+                        if t > 0:
+                            # decoder_target_data will be ahead by one timestep (t=0 is always start)
+                            # and will not include the start character.
+                            decoder_target_data[i, t - 1, target_text[t]] = 1
+
+                np.save(os.path.join(data_storage,
+                                     type+'X1-' + str(j)), encoder_input_data)
+                np.save(os.path.join(data_storage,
+                                     type+'X2-' + str(j)), decoder_input_data)
+                np.save(os.path.join(data_storage,
+                                     type+'Y-' + str(j)), decoder_target_data)
+
+                #for the last one save the remainder
+                if (j+1) == len(x):
+                    remaining = x_chunk.shape[0]
+                    remaining_path = os.path.join(data_storage, 'remaining_'+type+'.pkl')
+                    dump(remaining, open(remaining_path, 'wb'))
+                    print("total {}, remaining: {}".format(len(x), remaining))
 
 
 
-        # %%
+        x_train_tokenized_splitted = split_to_chunks(x_train_tokenized)
+        y_train_tokenized_splitted = split_to_chunks(y_train_tokenized)
+        x_val_tokenized_splitted = split_to_chunks(x_val_tokenized)
+        y_val_tokenized_splitted = split_to_chunks(y_val_tokenized)
 
-        all_val = []
+        save_to_chunks(x_train_tokenized_splitted, y_train_tokenized_splitted, 'train')
+        save_to_chunks(x_val_tokenized_splitted, y_val_tokenized_splitted, 'val')
 
-        val_encoder_input_data = np.zeros(
-            (1, max_input_elemts),
-            dtype='int')
-        val_decoder_input_data = np.zeros(
-            (1, max_output_elemts),
-            dtype='int')
-        val_decoder_target_data = np.zeros(
-            (1, max_output_elemts, vocab_size),
-            dtype='int')
 
-        for i, (input_text, target_text) in enumerate(zip(x_val_tokenized, y_val_tokenized)):
-
-            assert (len(input_text) == max_input_elemts)  # make sure always whole matrix is filled
-            assert (len(target_text) == max_output_elemts)
-            for t, word in enumerate(input_text):
-                val_encoder_input_data[0, t] = input_text[t]
-
-            for t, word in enumerate(target_text):
-                # decoder_target_data is ahead of decoder_input_data by one timestep
-                val_decoder_input_data[0, t] = target_text[t]
-                if t > 0:
-                    # decoder_target_data will be ahead by one timestep (t=0 is always start)
-                    # and will not include the start character.
-                    val_decoder_target_data[0, t - 1, target_text[t]] = 1
-
-            valX1 = val_encoder_input_data[0]
-            assert (compare(input_text, valX1))  # check if inserted correctly
-
-            valX2 = val_decoder_input_data[0]
-            assert (compare(target_text, valX2))  # check if inserted correctly
-
-            valY = val_decoder_target_data[0]
-            np.save(os.path.join(data_storage,
-                                 'valX1-' + str(i)), valX1)
-            np.save(os.path.join(data_storage,
-                                 'valX2-' + str(i)), valX2)
-            np.save(os.path.join(data_storage,
-                                 'valY-' + str(i)), valY)
-            all_val.append(i)
-
-        #to check if all has been saved
-        assert (len(all_val) == len(x_val_tokenized) == len(y_val_tokenized))
 
         vocab_size = len(tokenizer.word_index) + 1
 
@@ -279,25 +261,28 @@ def main(config, report_folder=''):
             tokenizer_path = os.path.join(report_folder, 'tokenizer.pkl')  # also safe it in the report folder
             dump(tokenizer, open(tokenizer_path, 'wb'))
 
-        logger.info("done saving training, val chunks, tokenizer, perc unk train val...")
+        logger.info("done saving training, val chunks, tokenizer...")
 
 
     else:
         logger.info("folder exists: {}".format(data_storage))
 
-        all_train_files = [f for f in listdir(data_storage) if f.startswith('train')]
-        all_val_files = [f for f in listdir(data_storage) if f.startswith('val')]
+        all_train_files = [f for f in listdir(data_storage) if f.startswith('trainX1')]
+        all_val_files = [f for f in listdir(data_storage) if f.startswith('valX1')]
+
+        with open(os.path.join(data_storage, 'remaining_train.pkl'), "rb") as input_file:
+            remaining_training = load(input_file)
+
+        with open(os.path.join(data_storage, 'remaining_val.pkl'), "rb") as input_file:
+            remaining_val = load(input_file)
 
         with open(os.path.join(data_storage, 'tokenizer.pkl'), "rb") as input_file:
             tokenizer = load(input_file)
 
         vocab_size = len(tokenizer.word_index) + 1 #I only need the vocab size
 
-        assert(df_train.shape[0] == (len(all_train_files)//3)) #divided by 3 because of trainX1, trainX2, trainY for each sample
-        assert(df_val.shape[0] == (len(all_val_files)//3)) #divided by 3 because of valX1, valX2, valY for each sample
-
-        all_train = [x for x in range(len(all_train_files)//3)]
-        all_val = [x for x in range(len(all_val_files)//3)]
+        all_train = [x for x in range((len(all_train_files) - 1) * partition + remaining_training)]  # load all regular partions + the length of last irregular partion
+        all_val = [x for x in range((len(all_val_files) - 1) * partition + remaining_val)]
 
         max_input_elemts = 1 + window_size_params + window_size_body + 2  # return type + ... + ... + startendtoken
         max_output_elemts = 2 + window_size_name  # startendtoken + ...

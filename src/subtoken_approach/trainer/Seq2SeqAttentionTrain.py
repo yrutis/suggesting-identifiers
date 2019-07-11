@@ -25,6 +25,7 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
         self.config = config
         self.batch_size = config.trainer.batch_size
         self.epochs = config.trainer.num_epochs
+        self.partition = config.data_loader.partition
         self.max_output_elements = max_output_elements
         self.start_token = start_token
         self.data_storage = data_storage
@@ -64,11 +65,21 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
                 load_until = (batch + 1) * self.batch_size
 
 
+
+
                 i = 0  # to always load in matrix place 0 to 64
                 while load_from < load_until:
 
-                    trainX[i,] = np.load(os.path.join(self.data_storage, 'trainX1-' + str(load_from) + '.npy'))
-                    trainY[i,] = np.load(os.path.join(self.data_storage, 'trainX2-' + str(load_from) + '.npy'))
+                    if load_from % self.partition == 0:
+                        # print("loaded new file...")
+                        self.current_partion_x1 = np.load(
+                            os.path.join(self.data_storage, 'trainX1-' + str(load_from//self.partition) + '.npy'))
+                        self.current_partion_y = np.load(
+                            os.path.join(self.data_storage, 'trainX2-' + str(load_from//self.partition) + '.npy'))
+
+
+                    trainX[i,] = self.current_partion_x1[(load_from % self.partition):(load_from % self.partition) + 1]
+                    trainY[i,] = self.current_partion_y[(load_from % self.partition):(load_from % self.partition) + 1]
                     i += 1
                     load_from += 1
 
@@ -113,9 +124,9 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
                 self.optimizer.apply_gradients(zip(gradients, variables)) #apply gradients
 
                 if batch % 400 == 0:
-                    #logger.info("first trainX in current batch {}".format(trainX[0]))
+                    logger.info("first trainX in current batch {}".format(trainX[0]))
                     #logger.info("first trainX in current batch {}".format(Vocabulary.revert_back(tokenizer, np.array(trainX[0]))))
-                    #logger.info("first trainY in current batch {}".format(trainY[0]))
+                    logger.info("first trainY in current batch {}".format(trainY[0]))
                     #logger.info("first trainY in current batch {}".format(Vocabulary.revert_back(tokenizer, np.array(trainY[0]))))
 
                     logger.info('Training Epoch {} Batch {} / {} Loss {:.4f}'
@@ -134,8 +145,15 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
 
                 i = 0  # to always load in matrix place 0 to 64
                 while load_from < load_until:
-                    valX[i,] = np.load(os.path.join(self.data_storage, 'valX1-' + str(load_from) + '.npy'))
-                    valY[i,] = np.load(os.path.join(self.data_storage, 'valX2-' + str(load_from) + '.npy'))
+                    if load_from % self.partition == 0:
+                        # print("loaded new file...")
+                        self.val_current_partion_x1 = np.load(
+                            os.path.join(self.data_storage, 'valX1-' + str(load_from // self.partition) + '.npy'))
+                        self.val_current_partion_y = np.load(
+                            os.path.join(self.data_storage, 'valX2-' + str(load_from // self.partition) + '.npy'))
+
+                    valX[i,] = self.current_partion_x1[(load_from % self.partition):(load_from % self.partition) + 1]
+                    valY[i,] = self.current_partion_y[(load_from % self.partition):(load_from % self.partition) + 1]
                     i += 1
                     load_from += 1
 
@@ -168,10 +186,10 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
                 val_total_loss += batch_loss
 
                 if batch % 400 == 0:
-                    #logger.info("first valX in current batch {}".format(valX[0]))
+                    logger.info("first valX in current batch {}".format(valX[0]))
                     #logger.info("first valX in current batch {}".format(Vocabulary.revert_back(tokenizer, np.array(valX[0]))))
 
-                    #logger.info("first valY in current batch {}".format(valY[0]))
+                    logger.info("first valY in current batch {}".format(valY[0]))
                     #logger.info("first valY in current batch {}".format(Vocabulary.revert_back(tokenizer, np.array(valY[0]))))
 
                     logger.info('Validation! Epoch {} Batch {} of {} Loss {:.4f}'.format(epoch + 1,

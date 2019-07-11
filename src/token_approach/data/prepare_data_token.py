@@ -35,7 +35,7 @@ def main(filename, window_size_params, window_size_body, partition, report_folde
     data_storage = os.path.join(
         os.path.join(os.path.join(os.path.join(os.path.join(data_folder, 'processed'),
                                                'decoded'), filename), 'training'),
-        'partition-' + str(partition) + 'training-params-' + str(window_size_params) + '-body-' + str(window_size_body))
+        'partition-' + str(partition) + '-training-params-' + str(window_size_params) + '-body-' + str(window_size_body))
 
 
     if not os.path.exists(data_storage):
@@ -240,4 +240,4 @@ def main(filename, window_size_params, window_size_body, partition, report_folde
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_fmt)
-    main("Android-Universal-Image-Loader", 2, 1, '')
+    main("Android-Universal-Image-Loader", 2, 1, 32, '')
