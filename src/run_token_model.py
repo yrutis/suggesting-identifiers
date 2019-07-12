@@ -141,7 +141,7 @@ def eval_model(config, report_folder):
 
 
 
-    logger.info("evaluating model...")
+    logger.info("evaluating model on {} test size...".format(testX.shape[0]))
     loss_acc_list_of_metrics = model.evaluate(testX, testY, verbose=0) #evaluate for acc and top5 acc
 
     acc = loss_acc_list_of_metrics[1]
