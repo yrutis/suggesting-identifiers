@@ -19,7 +19,7 @@ class Seq2SeqModel(AbstractModel):
         logger = logging.getLogger(__name__)
 
         logger.info("building model...")
-        logger.info("Embedding of shape {}, {}, {}".format(self.__context_vocab_size, 64, self.__windows_size))
+        logger.info("Embedding of shape {}, {}, {}".format(self.__context_vocab_size, self.config.model.embedding_dim, self.__windows_size))
 
 
         e = Embedding(self.__context_vocab_size, self.config.model.embedding_dim)
