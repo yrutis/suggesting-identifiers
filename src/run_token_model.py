@@ -35,6 +35,10 @@ import src.utils.config as config_loader
 import src.utils.path as path_file
 from src.token_approach.trainer.AbstractTrain import AbstractTrain
 
+from src.token_approach.evaluator.Evaluator import Evaluator
+
+
+
 def train_model(config, report_folder):
     # get logger
     logger = logging.getLogger(__name__)
@@ -173,6 +177,14 @@ def eval_model(config, report_folder):
 
     report_file = os.path.join(report_folder, 'metrics.csv')
     df.to_csv(report_file, index=False)
+
+    logger.info("getting accuracy, precision, recall, f1 score...")
+    evaluator = Evaluator(report_folder)
+    evaluator.get_accuracy_precision_recall_f1_score(testY, predictions_decoded)
+
+
+
+
 
 def main(config_path):
     # get logger

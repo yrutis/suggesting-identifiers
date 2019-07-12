@@ -11,31 +11,20 @@ class Evaluator(object):
         self.report_folder = report_folder
         self.fig_folder = os.path.join(report_folder, 'figures')
         self.correct_predictions_file = os.path.join(self.report_folder, 'correct_predictions.csv')
+        self.correct_input = []
+        self.correct_prediction = []
+        self.correct_ground_truth = []
+        self.correct_position = []
 
-
-    def load_correct_prediction_file(self, input, prediction, correct, i):
-        correct_prediction = {'input': [input],
-                              'prediction': [prediction],
-                              'correct': [correct],
-                              'i': [i]
+    def save_correct_predictions(self):
+        correct_predictions = {'input': self.correct_input,
+                              'prediction': self.correct_prediction,
+                              'correct': self.correct_ground_truth,
+                              'i': self.correct_position
                               }
 
-        correct_prediction = pd.DataFrame(correct_prediction, columns=['input', 'prediction', 'correct', 'i'])
-
-
-        if os.path.exists(self.correct_predictions_file):
-
-
-
-            correct_predictions = pd.read_csv(self.correct_predictions_file)
-
-            correct_predictions = correct_predictions.append(correct_prediction, sort=False) #append
-
-        else:
-            correct_predictions = correct_prediction
-
+        correct_predictions = pd.DataFrame(correct_predictions, columns=['input', 'prediction', 'correct', 'i'])
         df = correct_predictions.to_csv(self.correct_predictions_file, index=False)
-
 
 
     def evaluate(self, testX, testY, Vocabulary, tokenizer, trainer:AbstractTrainSubtoken, is_attention):
@@ -103,13 +92,16 @@ class Evaluator(object):
                     attention_plot = attention_plot[:len(current_result[0]), :len(input_seq_dec)]
                     self.plot_attention(attention_plot, input_seq_dec, current_result[0], i)
 
-
-                self.load_correct_prediction_file(input=input_seq_dec, prediction=decoded_sentence_k1,
-                                          correct=decoded_correct_output_list, i = i)
+                self.correct_input.append(input_seq_dec)
+                self.correct_prediction.append(decoded_sentence_k1)
+                self.correct_ground_truth.append(decoded_correct_output_list)
+                self.correct_position.append(i)
 
 
 
             i += 1
+
+        self.save_correct_predictions()
 
         accuracy, precision, recall, f1 = self.calculate_results(complete_true_k100, testX.shape[0], true_positive_k100, false_positive_k100, false_negative_k100)
         accuracy_k1, precision_k1, recall_k1, f1_k1 = self.calculate_results(complete_true_k1, testX.shape[0], true_positive_k1, false_positive_k1, false_negative_k1)
@@ -144,7 +136,6 @@ class Evaluator(object):
         subtoken_list = list(filter(lambda x: x != "starttoken", subtoken_list))
         subtoken_list = list(filter(lambda x: x != "endtoken", subtoken_list))
         subtoken_list = list(filter(lambda x: x != "UNK", subtoken_list))  # oov
-        subtoken_list = list(filter(lambda x: x != "True", subtoken_list))  # oov
         subtoken_list = list(filter(lambda x: x != '1', subtoken_list))  # oov
         return subtoken_list
 

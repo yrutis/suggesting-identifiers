@@ -54,6 +54,13 @@ class Evaluator(object):
 
 
     @staticmethod
+    def filter_results(token_list):
+        token_list = list(filter(lambda x: x != "UNK", token_list))  # oov
+        return token_list
+
+
+
+    @staticmethod
     def perSubtokenStatistics(results):
         # check if in vocabulary
         complete_true = 0
@@ -61,11 +68,14 @@ class Evaluator(object):
         false_positive = 0
         false_negative = 0
         for correct, predicted in results:
+            correct = [correct]
+            predicted = [predicted]
+            correct = Evaluator.filter_results(correct)
+            predicted = Evaluator.filter_results(predicted)
             if ''.join(correct) == ''.join(predicted):
                 true_positive += len(correct)
                 complete_true += 1
                 continue
-
             for subtok in predicted:
                 if subtok in correct:
                     true_positive += 1
