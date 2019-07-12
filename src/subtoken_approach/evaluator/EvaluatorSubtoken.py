@@ -11,10 +11,15 @@ class Evaluator(object):
         self.report_folder = report_folder
         self.fig_folder = os.path.join(report_folder, 'figures')
         self.correct_predictions_file = os.path.join(self.report_folder, 'correct_predictions.csv')
+        self.incorrect_predictions_file = os.path.join(self.report_folder, 'incorrect_predictions.csv')
         self.correct_input = []
         self.correct_prediction = []
         self.correct_ground_truth = []
         self.correct_position = []
+        self.incorrect_input = []
+        self.incorrect_prediction = []
+        self.incorrect_ground_truth = []
+        self.incorrect_position = []
 
     def save_correct_predictions(self):
         correct_predictions = {'input': self.correct_input,
@@ -25,6 +30,16 @@ class Evaluator(object):
 
         correct_predictions = pd.DataFrame(correct_predictions, columns=['input', 'prediction', 'correct', 'i'])
         df = correct_predictions.to_csv(self.correct_predictions_file, index=False)
+
+    def save_incorrect_predictions(self):
+        incorrect_predictions = {'input': self.incorrect_input,
+                              'prediction': self.incorrect_prediction,
+                              'correct': self.incorrect_ground_truth,
+                              'i': self.incorrect_position
+                              }
+
+        incorrect_predictions = pd.DataFrame(incorrect_predictions, columns=['input', 'prediction', 'correct', 'i'])
+        df = incorrect_predictions.to_csv(self.incorrect_predictions_file, index=False)
 
 
     def evaluate(self, testX, testY, Vocabulary, tokenizer, trainer:AbstractTrainSubtoken, is_attention):
@@ -97,11 +112,25 @@ class Evaluator(object):
                 self.correct_ground_truth.append(decoded_correct_output_list)
                 self.correct_position.append(i)
 
+            elif ((current_complete_true_k1 != 1) and (current_complete_true_k100 == 1)):
+                #where beam search was successful
+                logger.info(input_seq_dec)
+                logger.info(decoded_sentence_k1)
+                logger.info(decoded_sentence_k_100)
+                logger.info(decoded_correct_output_list)
+
+            else:
+                self.incorrect_input.append(input_seq_dec)
+                self.incorrect_prediction.append(decoded_sentence_k1)
+                self.incorrect_ground_truth.append(decoded_correct_output_list)
+                self.incorrect_position.append(i)
+
 
 
             i += 1
 
         self.save_correct_predictions()
+        self.save_incorrect_predictions()
 
         accuracy, precision, recall, f1 = self.calculate_results(complete_true_k100, testX.shape[0], true_positive_k100, false_positive_k100, false_negative_k100)
         accuracy_k1, precision_k1, recall_k1, f1_k1 = self.calculate_results(complete_true_k1, testX.shape[0], true_positive_k1, false_positive_k1, false_negative_k1)
