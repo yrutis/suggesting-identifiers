@@ -1,7 +1,7 @@
 {
     "name": "LSTM",
     "data_loader": {
-        "name": "java-small-project-split",
+        "name": "Android-Universal-Image-Loader",
         "remote_data": "java-small-project-split",
         "local_data": "Android-Universal-Image-Loader",
         "window_size_body": 22,

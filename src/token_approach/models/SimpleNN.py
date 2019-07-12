@@ -26,11 +26,11 @@ class SimpleNNModel(AbstractModel):
 
         tensor = Input(shape=(self.__windows_size,))
         c = contextEmbedding(tensor)
-        c = Dropout(self.config.model.dropout_1)(c)
+        #c = Dropout(self.config.model.dropout_1)(c)
         c = Flatten()(c)
-        c = Dropout(self.config.model.dropout_2)(c)
+        #c = Dropout(self.config.model.dropout_2)(c)
         c = Dense(self.config.model.dense_dim, activation=self.config.model.dense_activation_1)(c)
-        c = Dropout(self.config.model.dropout_3)(c)
+        #c = Dropout(self.config.model.dropout_3)(c)
         answer = Dense(self.__context_vocab_size, activation='softmax')(c)
 
         self.model = Model(tensor, answer)

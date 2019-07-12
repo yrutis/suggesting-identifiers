@@ -13,7 +13,7 @@ class AbstractTrain(object):
         self.config = config
         self.history = None
         self.type = None
-        #self.es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=2)
+        #self.es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=5)
         #self.mc = ModelCheckpoint(os.path.join(report_folder, "Model_weights-improvement-epoch-{epoch:02d}-val_acc-{val_acc:.4f}.hdf5"), monitor='val_acc', mode='max', verbose=1, save_best_only=True)
         self.report_folder = report_folder
 

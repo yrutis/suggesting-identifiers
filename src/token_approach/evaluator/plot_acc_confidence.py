@@ -38,7 +38,7 @@ def get_accuracy_by_confidence(df):
 
 #%% load data
 
-df = pd.read_csv('predictions_test_simpleNN.csv')
+df = pd.read_csv('predictions_test_1.csv')
 
 threadshold_list_simpleNN, acc_list_simpleNN = get_accuracy_by_confidence(df)
 
