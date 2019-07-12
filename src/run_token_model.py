@@ -191,6 +191,7 @@ def main(config_path):
     tf.app.flags.DEFINE_integer('window_size_params', config.data_loader.window_size_params, 'somewhere between 2 and 10')
     tf.app.flags.DEFINE_integer('epochs', config.trainer.num_epochs, 'somewhere between 1 and 50')
     tf.app.flags.DEFINE_integer('batch_size', config.trainer.batch_size, 'must be a power of 2 2^1 - 2^6')
+    tf.app.flags.DEFINE_integer('partition', config.data_loader.partition, 'should be between 10k-100k and dividable by batch_size')
     tf.app.flags.DEFINE_float('remove_train_unk', config.data_loader.remove_train_unk, 'must be between 0 and 1')
     tf.app.flags.DEFINE_float('remove_val_unk', config.data_loader.remove_val_unk, 'must be a between 0 and 1')
     tf.app.flags.DEFINE_float('remove_test_unk', config.data_loader.remove_test_unk, 'must be a between 0 and 1')
@@ -212,6 +213,9 @@ def main(config_path):
 
     config.trainer.batch_size = FLAGS.batch_size
     logger.info("batch size is {}".format(config.trainer.batch_size))
+
+    config.data_loader.partition = FLAGS.partition
+    logger.info("partition is {}".format(config.data_loader.partition))
 
     config.data_loader.remove_train_unk = FLAGS.remove_train_unk
     logger.info("remove_train_unk is {}".format(config.data_loader.remove_train_unk))

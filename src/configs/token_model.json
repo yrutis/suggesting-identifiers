@@ -6,7 +6,7 @@
         "local_data": "Android-Universal-Image-Loader",
         "window_size_body": 22,
         "window_size_params": 4,
-        "remove_train_unk": 0,
+        "remove_train_unk": 0.5,
         "remove_val_unk": 0.6,
         "remove_test_unk": 1,
         "partition": 64
