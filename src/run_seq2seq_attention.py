@@ -97,6 +97,7 @@ def main(config_path):
     tf.app.flags.DEFINE_integer('window_size_body', config.data_loader.window_size_body, 'must be between 2+')
     tf.app.flags.DEFINE_integer('window_size_params', config.data_loader.window_size_params, 'must be between 2+')
     tf.app.flags.DEFINE_integer('window_size_name', config.data_loader.window_size_name, 'must be between 2+')
+    tf.app.flags.DEFINE_integer('partition', config.data_loader.partition, 'should be between 10k-100k and dividable by batch_size')
     tf.app.flags.DEFINE_integer('epochs', config.trainer.num_epochs, 'must be between 1-100')
     tf.app.flags.DEFINE_integer('batch_size', config.trainer.batch_size, 'must be a power of 2 2^1 - 2^6')
 
@@ -117,6 +118,10 @@ def main(config_path):
 
     config.trainer.batch_size = FLAGS.batch_size
     logger.info("batch size is {}".format(config.trainer.batch_size))
+
+    config.data_loader.partition = FLAGS.partition
+    logger.info("partition is {}".format(config.data_loader.partition))
+
 
     # create unique report folder
     random_nr = randint(0, 10000)
