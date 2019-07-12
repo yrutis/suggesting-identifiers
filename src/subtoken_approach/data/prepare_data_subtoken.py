@@ -188,11 +188,19 @@ def main(config, report_folder=''):
             '''
             #1) retrieve indices
             np_array_split_indices = [partition * (i + 1) for i in range(math.floor(np_array.shape[0] / partition))]
-            if np_array_split_indices[-1] == np_array.shape[0]:
-                del np_array_split_indices[-1]
 
-            #2) split np array according to indices
-            np_array_splitted = np.array_split(np_array, np_array_split_indices, axis=0)
+            #only do splitting operation if size of the array is bigger than partition
+            if len(np_array_split_indices) > 0:
+                if np_array_split_indices[-1] == np_array.shape[0]:
+                    del np_array_split_indices[-1]
+
+                # 2) split np array according to indices
+                np_array_splitted = np.array_split(np_array, np_array_split_indices, axis=0)
+
+            else:
+                np_array_splitted = [np_array] #save as list
+
+
 
             return np_array_splitted
 

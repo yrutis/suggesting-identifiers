@@ -5,7 +5,7 @@
         "window_size_body": 25,
         "window_size_params": 4,
         "window_size_name": 5,
-        "partition": 16
+        "partition": 32000
     },
     "model": {
         "name": "model.seq2seq",
