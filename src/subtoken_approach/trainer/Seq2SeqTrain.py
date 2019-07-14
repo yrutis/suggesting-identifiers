@@ -140,8 +140,6 @@ class Seq2SeqTrain(AbstractTrainSubtoken):
         start_token_idx_elem = start_token_idx[0][0]
         target_seq[0, 0] = start_token_idx_elem
 
-        # Sampling loop for a batch of sequences
-        # (to simplify, here we assume a batch of size 1).
 
         #sequences = [decoded so far, neg-loglikelihood, eos reached, last word, newest states value]
         init_seq = [[[], 1.0, False, target_seq, states_value]]
