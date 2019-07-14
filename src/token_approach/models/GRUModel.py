@@ -33,7 +33,7 @@ class GRUModel(AbstractModel):
         tensor = Input(shape=(self.__windows_size,))
         c = contextEmbedding(tensor)
         c = Dropout(self.config.model.dropout_1)(c)
-        c = GRU(self.config.model.gru_dim)(c)
+        c = GRU(self.config.model.gru_dim, recurrent_dropout=self.config.model.recurrent_dropout)(c)
         c = Dropout(self.config.model.dropout_2)(c)
         c = Dense(self.config.model.dense_dim, activation=self.config.model.dense_activation_1)(c)
         c = Dropout(self.config.model.dropout_3)(c)

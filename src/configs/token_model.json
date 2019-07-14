@@ -1,5 +1,5 @@
 {
-    "name": "LSTM",
+    "name": "LSTMBid",
     "data_loader": {
         "name": "Android-Universal-Image-Loader",
         "remote_data": "java-small-project-split",

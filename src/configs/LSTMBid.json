@@ -1,30 +1,18 @@
 {
-    "name": "LSTMBid",
-    "data_loader": {
-        "name": "Android-Universal-Image-Loader",
-        "full_data": "all_methods_train",
-        "local_data": "Android-Universal-Image-Loader",
-        "window_size_body": 16,
-        "window_size_params": 8,
-        "remove_train_unk": 0.5,
-        "remove_val_unk": 0.5
-    },
     "model": {
         "name": "model.LSTMBid",
         "embedding_dim": 128,
         "lstm_dim": 100,
         "dense_activation_1": "elu",
         "dense_dim": 70,
-        "dropout_1": 0.5,
+        "dropout_1": 0.45,
+        "dropout_2": 0.2,
+        "dropout_3": 0.2,
+        "recurrent_dropout": 0.1843,
         "loss": "sparse_categorical_crossentropy",
         "metrics": [
             "acc",
             "sparse_top_k_categorical_accuracy"
         ]
-    },
-    "trainer": {
-        "name": "trainer.LSTMBid",
-        "num_epochs": 2,
-        "batch_size": 64
     }
 }
