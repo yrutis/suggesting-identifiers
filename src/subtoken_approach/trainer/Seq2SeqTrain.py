@@ -25,7 +25,7 @@ class Seq2SeqTrain(AbstractTrainSubtoken):
         self.history = None
         self.type = None
         self.report_folder = report_folder
-        self.es = EarlyStopping(monitor='val_loss', mode='min', verbose=1)
+        self.es = EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=5)
         self.mc = ModelCheckpoint(os.path.join(report_folder, "best_model.h5"), monitor='val_acc', mode='max',
                                   verbose=1, save_best_only=True)
 
@@ -49,7 +49,9 @@ class Seq2SeqTrain(AbstractTrainSubtoken):
         self.history = self.model.fit_generator(generator=training_generator,
                                                 validation_data=validation_generator,
                                                 epochs=self.config.trainer.num_epochs,
-                                                callbacks=[self.es, self.mc],
+                                                callbacks=[
+                                                    #self.es,
+                                                    self.mc],
                                                 verbose=2
                                                 )
 
