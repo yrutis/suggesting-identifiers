@@ -124,9 +124,9 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
                 self.optimizer.apply_gradients(zip(gradients, variables)) #apply gradients
 
                 if batch % 400 == 0:
-                    logger.info("first trainX in current batch {}".format(trainX[0]))
+                    #logger.info("first trainX in current batch {}".format(trainX[0]))
                     #logger.info("first trainX in current batch {}".format(Vocabulary.revert_back(tokenizer, np.array(trainX[0]))))
-                    logger.info("first trainY in current batch {}".format(trainY[0]))
+                    #logger.info("first trainY in current batch {}".format(trainY[0]))
                     #logger.info("first trainY in current batch {}".format(Vocabulary.revert_back(tokenizer, np.array(trainY[0]))))
 
                     logger.info('Training Epoch {} Batch {} / {} Loss {:.4f}'
@@ -186,10 +186,10 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
                 val_total_loss += batch_loss
 
                 if batch % 400 == 0:
-                    logger.info("first valX in current batch {}".format(valX[0]))
+                    #logger.info("first valX in current batch {}".format(valX[0]))
                     #logger.info("first valX in current batch {}".format(Vocabulary.revert_back(tokenizer, np.array(valX[0]))))
 
-                    logger.info("first valY in current batch {}".format(valY[0]))
+                    #logger.info("first valY in current batch {}".format(valY[0]))
                     #logger.info("first valY in current batch {}".format(Vocabulary.revert_back(tokenizer, np.array(valY[0]))))
 
                     logger.info('Validation! Epoch {} Batch {} of {} Loss {:.4f}'.format(epoch + 1,

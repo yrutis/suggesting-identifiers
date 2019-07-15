@@ -5,6 +5,11 @@ import os
 from pickle import load
 from random import randint
 
+import matplotlib as mpl
+if os.environ.get('DISPLAY','') == '':
+    print('no display found. Using non-interactive Agg backend')
+    mpl.use('Agg')
+
 from src.Vocabulary.Vocabulary import Vocabulary
 from src.subtoken_approach.evaluator.EvaluatorSubtoken import Evaluator
 
