@@ -10,36 +10,25 @@ class Evaluator(object):
         self.__trained_model = trainer
         self.report_folder = report_folder
         self.fig_folder = os.path.join(report_folder, 'figures')
-        self.correct_predictions_file = os.path.join(self.report_folder, 'correct_predictions.csv')
-        self.incorrect_predictions_file = os.path.join(self.report_folder, 'incorrect_predictions.csv')
-        self.correct_input = []
-        self.correct_prediction = []
-        self.correct_ground_truth = []
-        self.correct_position = []
-        self.incorrect_input = []
-        self.incorrect_prediction = []
-        self.incorrect_ground_truth = []
-        self.incorrect_position = []
+        self.predictions_file = os.path.join(self.report_folder, 'predictions.csv')
+        self.input = []
+        self.prediction_k1 = []
+        self.prediction_k100 = []
+        self.ground_truth = []
+        self.position = []
 
-    def save_correct_predictions(self):
-        correct_predictions = {'input': self.correct_input,
-                              'prediction': self.correct_prediction,
-                              'correct': self.correct_ground_truth,
-                              'i': self.correct_position
+    def save_predictions(self):
+        predictions = {'input': self.input,
+                              'correct': self.ground_truth,
+                              'k1': self.prediction_k1,
+                              'k100': self.prediction_k100,
+                              'i': self.position
                               }
 
-        correct_predictions = pd.DataFrame(correct_predictions, columns=['input', 'prediction', 'correct', 'i'])
-        df = correct_predictions.to_csv(self.correct_predictions_file, index=False)
+        predictions = pd.DataFrame(predictions, columns=['input', 'prediction', 'correct', 'k1', 'k100', 'i'])
+        df = predictions.to_csv(self.predictions_file, index=False)
 
-    def save_incorrect_predictions(self):
-        incorrect_predictions = {'input': self.incorrect_input,
-                              'prediction': self.incorrect_prediction,
-                              'correct': self.incorrect_ground_truth,
-                              'i': self.incorrect_position
-                              }
 
-        incorrect_predictions = pd.DataFrame(incorrect_predictions, columns=['input', 'prediction', 'correct', 'i'])
-        df = incorrect_predictions.to_csv(self.incorrect_predictions_file, index=False)
 
 
     def evaluate(self, testX, testY, Vocabulary, tokenizer, trainer:AbstractTrainSubtoken, is_attention):
@@ -69,20 +58,19 @@ class Evaluator(object):
             decoded_correct_output_list = Vocabulary.revert_back(tokenizer=tokenizer, sequence=correct_output.tolist()[0])
             input_seq_dec = Vocabulary.revert_back(tokenizer=tokenizer, sequence=input_seq.tolist()[0])
 
-            decoded_sentence_k_100 = trainer.predict(tokenizer=tokenizer, input_seq=input_seq, k=100, return_top_n=1)
+            decoded_sentence_k100 = trainer.predict(tokenizer=tokenizer, input_seq=input_seq, k=100, return_top_n=1)
             decoded_sentence_k1 = trainer.predict(tokenizer=tokenizer, input_seq=input_seq, k=1, return_top_n=1)
 
-            current_result = decoded_sentence_k1 #just for attention
+            results_for_attention_plot_only = decoded_sentence_k1 #just for attention
 
-
-            decoded_sentence_k_100 = self.filter_results(decoded_sentence_k_100[0])
+            decoded_sentence_k100 = self.filter_results(decoded_sentence_k100[0])
             decoded_sentence_k1 = self.filter_results(decoded_sentence_k1[0])
             decoded_correct_output_list = self.filter_results(decoded_correct_output_list)
 
 
             current_complete_true_k100, current_true_positive_k100, \
             current_false_positive_k100, current_false_negative_k100 = \
-                self.get_subtoken_stats(decoded_correct_output_list, decoded_sentence_k_100)
+                self.get_subtoken_stats(decoded_correct_output_list, decoded_sentence_k100)
 
             current_complete_true_k1, current_true_positive_k1, \
             current_false_positive_k1, current_false_negative_k1 = \
@@ -99,38 +87,23 @@ class Evaluator(object):
             false_negative_k1 += current_false_negative_k1
 
 
-            if ((current_complete_true_k1 == 1) and (len(decoded_correct_output_list)>0)): #not just unk
+            if ((current_complete_true_k1 == 1) and (len(decoded_correct_output_list)>0) and is_attention): #not just unk
 
                 if is_attention:
-                    attention_plot = current_result[1]
+                    attention_plot = results_for_attention_plot_only[1]
 
-                    attention_plot = attention_plot[:len(current_result[0]), :len(input_seq_dec)]
-                    self.plot_attention(attention_plot, input_seq_dec, current_result[0], i)
+                    attention_plot = attention_plot[:len(results_for_attention_plot_only[0]), :len(input_seq_dec)]
+                    self.plot_attention(attention_plot, input_seq_dec, results_for_attention_plot_only[0], i)
 
-                self.correct_input.append(input_seq_dec)
-                self.correct_prediction.append(decoded_sentence_k1)
-                self.correct_ground_truth.append(decoded_correct_output_list)
-                self.correct_position.append(i)
-
-            elif ((current_complete_true_k1 != 1) and (current_complete_true_k100 == 1)):
-                #where beam search was successful
-                logger.info(input_seq_dec)
-                logger.info(decoded_sentence_k1)
-                logger.info(decoded_sentence_k_100)
-                logger.info(decoded_correct_output_list)
-
-            else:
-                self.incorrect_input.append(input_seq_dec)
-                self.incorrect_prediction.append(decoded_sentence_k1)
-                self.incorrect_ground_truth.append(decoded_correct_output_list)
-                self.incorrect_position.append(i)
-
-
+            self.input.append(input_seq_dec)
+            self.prediction_k1.append(decoded_sentence_k1)
+            self.prediction_k100.append(decoded_sentence_k100)
+            self.ground_truth.append(decoded_correct_output_list)
+            self.position.append(i)
 
             i += 1
 
-        self.save_correct_predictions()
-        self.save_incorrect_predictions()
+        self.save_predictions()
 
         accuracy, precision, recall, f1 = self.calculate_results(complete_true_k100, testX.shape[0], true_positive_k100, false_positive_k100, false_negative_k100)
         accuracy_k1, precision_k1, recall_k1, f1_k1 = self.calculate_results(complete_true_k1, testX.shape[0], true_positive_k1, false_positive_k1, false_negative_k1)
