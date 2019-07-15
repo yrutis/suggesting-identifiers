@@ -211,7 +211,7 @@ class Seq2SeqTrain(AbstractTrainSubtoken):
                     #print("seq so far {}, adding char {}, stop condition {}".format(seq, sampled_char[i], stop_condition))
 
                     candidate = [seq + [sampled_char[i]],
-                                 score * -log(tok_k_probs_sorted[i]),
+                                 score * tok_k_probs_sorted[i],
                                  stop_condition,
                                  target_seq,
                                  states_value]  # log probability because of very small values
@@ -221,7 +221,7 @@ class Seq2SeqTrain(AbstractTrainSubtoken):
                 all_candidates.append(sequences[i])  # add the candidate again to all candidates
 
         #get the top k ones
-        ordered = sorted(all_candidates, key=lambda tup: tup[1])  # sort along the score
+        ordered = sorted(all_candidates, key=lambda tup: tup[1], reverse=True)  # sort along the score
         sequences = ordered[:k]  # keep k best ones
 
 
