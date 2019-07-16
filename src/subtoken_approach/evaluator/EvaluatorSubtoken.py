@@ -59,7 +59,7 @@ class Evaluator(object):
             input_seq_dec = Vocabulary.revert_back(tokenizer=tokenizer, sequence=input_seq.tolist()[0])
 
             decoded_sentence_k100 = trainer.predict(tokenizer=tokenizer, input_seq=input_seq, k=1, return_top_n=1)
-            decoded_sentence_k1 = trainer.predict(tokenizer=tokenizer, input_seq=input_seq, k=1, return_top_n=1)
+            decoded_sentence_k1 = trainer.predict(tokenizer=tokenizer, input_seq=input_seq, k=100, return_top_n=1)
 
             results_for_attention_plot_only = decoded_sentence_k1 #just for attention
 
