@@ -41,7 +41,7 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
         loss_ = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=real, logits=pred) * mask
         return tf.reduce_mean(loss_)
 
-    def train(self, tokenizer):
+    def train(self):
         logger = logging.getLogger(__name__)
 
         logger.info("Training on {}".format(self.n_batches*self.batch_size))
@@ -296,7 +296,6 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
                 top_k_probs_sorted = sigmoid_v(top_k_probs_sorted) #push all values between 0 and 1
 
                 sampled_char = Vocabulary.revert_back(tokenizer, top_k_idx_sorted)
-                sampled_char = list(map(lambda x: str(x), sampled_char))  # in case of true which is oov
 
                 #iterates over new potential characters and sets stop_cond=true
                 #for each candidate if the char is endtoken or the seq > window size name
@@ -316,18 +315,18 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
                     #print("seq so far {}, adding char {}, stop condition {}".format(seq, sampled_char[i], stop_condition))
 
                     candidate = [seq + [sampled_char[i]],
-                                 score * -log(top_k_probs_sorted[i]),
+                                 score * top_k_probs_sorted[i],
                                  stop_condition,
                                  enc_out,
                                  dec_input,
-                                 dec_hidden]  # log probability because of very small values
+                                 dec_hidden]
                     all_candidates.append(candidate)
 
             else:
                 all_candidates.append(sequences[i])  # add the candidate again to all candidates
 
         #get the top k ones
-        ordered = sorted(all_candidates, key=lambda tup: tup[1])  # sort along the score
+        ordered = sorted(all_candidates, key=lambda tup: tup[1], reverse=True)  # sort along the score
         sequences = ordered[:k]  # keep k best ones
 
 

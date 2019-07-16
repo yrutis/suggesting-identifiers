@@ -58,12 +58,24 @@ def train_model(config, report_folder):
                                     window_size=window_size, max_output_elements=max_output_elemts,
                                     config=config, report_folder=report_folder, start_token=start_token,
                                     data_storage=data_storage)
+    if config.mode == 'train':
+        logger.info("start training...")
+        trainer.train()
 
-    logger.info("start training...")
-    with open(os.path.join(report_folder, 'tokenizer.pkl'), "rb") as input_file:
-        tokenizer = load(input_file)
+    else:
+        logger.info("load model from checkpoint...")
+        checkpoint_dir = os.path.join(os.path.join(path_file.model_folder, config.data_loader.name),
+                                          config.name + '_model_window_size_body_' + str(config.data_loader.window_size_body)
+                                          + '_params_' + str(config.data_loader.window_size_params))
+        checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
+        checkpoint = tf.train.Checkpoint(optimizer=trainer.optimizer,
+                                         encoder=encoder,
+                                         decoder=decoder)
 
-    trainer.train(tokenizer)
+        # restoring the latest checkpoint in checkpoint_dir
+        checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
+
+
     return trainer
 
 def eval_model(config, report_folder, trainer:Seq2SeqAttentionTrain):

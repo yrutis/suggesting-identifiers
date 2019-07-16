@@ -49,8 +49,17 @@ def train_model(config, report_folder):
                             config=config,
                            report_folder=report_folder)
 
-    logger.info("start seq2seq training...")
-    trainer.train(all_train, all_val, window_size, max_output_elemts, vocab_size, data_storage)
+    if config.mode == 'train':
+        logger.info("start seq2seq training...")
+        trainer.train(all_train, all_val, window_size, max_output_elemts, vocab_size, data_storage)
+
+    else:
+        trained_model_path = os.path.join(os.path.join(path_file.model_folder, config.data_loader.name),
+                                          config.name + '_model_window_size_body_' + str(config.data_loader.window_size_body)
+                                          + '_params_' + str(config.data_loader.window_size_params) + '.h5')
+
+        logger.info("loading the model...")
+        trainer.load_trained_model(trained_model_path)
 
     return trainer
 

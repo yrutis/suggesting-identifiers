@@ -91,15 +91,18 @@ class Seq2SeqTrain(AbstractTrainSubtoken):
         plt.legend()
         plt.savefig(os.path.join(self.report_folder, "loss_plot.png"))
 
-    def load_trained_model(self, path):
+    def load_trained_model(self, trained_model_path):
         logger = logging.getLogger(__name__)
 
         # load model from path
-        self.model = load_model(os.path.join(path, 'best_model.h5'))
+        self.model = load_model(trained_model_path)
 
-        logger.info(self.model.layers)
-        print("first layer {}".format(self.model.layers[1]))
-        print("second layer {}".format(self.model.layers[2]))
+        #logger.info(self.model.layers)
+        logger.info("first layer {}".format(self.model.layers[1]))
+        logger.info("second layer {}".format(self.model.layers[2]))
+        logger.info("third layer {}".format(self.model.layers[3]))
+        logger.info("fourth layer {}".format(self.model.layers[4]))
+        logger.info("sixth layer {}".format(self.model.layers[5]))
 
         latent_dim = self.config.model.lstm_decoder_dim
         encoder_inputs = self.model.input[0]  # input_1
@@ -214,7 +217,7 @@ class Seq2SeqTrain(AbstractTrainSubtoken):
                                  score * tok_k_probs_sorted[i],
                                  stop_condition,
                                  target_seq,
-                                 states_value]  # log probability because of very small values
+                                 states_value]
                     all_candidates.append(candidate)
 
             else:

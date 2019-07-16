@@ -1,5 +1,6 @@
 {
-    "name": "LSTMBid",
+    "name": "GRU",
+    "mode": "train",
     "data_loader": {
         "name": "Android-Universal-Image-Loader",
         "remote_data": "java-small-project-split",

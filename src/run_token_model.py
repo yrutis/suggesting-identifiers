@@ -99,18 +99,28 @@ def train_model(config, report_folder):
                               windows_size=window_size,
                               config=config, report_folder=report_folder)
 
-
     logger.info("create trainer...")
     trainer = AbstractTrain(model=model.model, config=config,
                              report_folder=report_folder)
 
-    logger.info("start training...")
-    trainer.train(all_train=all_train, all_val=all_val, data_storage=data_storage, window_size=window_size)
-    trainer.visualize_training(perc_unk_train, perc_unk_val)
+    if config.mode == 'train':
+        logger.info("start training...")
+        trainer.train(all_train=all_train, all_val=all_val, data_storage=data_storage, window_size=window_size)
+        trainer.visualize_training(perc_unk_train, perc_unk_val)
 
+    else:
+        trained_model_path = os.path.join(os.path.join(path_file.model_folder, config.data_loader.name),
+                                          config.name + '_model_window_size_body_' + str(config.data_loader.window_size_body)
+                                          + '_params_' + str(config.data_loader.window_size_params) + '.h5')
+        try:
+            logger.info("loading the model...")
+            trainer.model = load_model(trained_model_path)
+        except FileNotFoundError:
+            raise Exception ("Could not load the model, because it has not been trained with these parameters before")
+
+    #save model in report folder
     logger.info("saving the model")
     trainer.model.save(os.path.join(report_folder, "best_model.h5"))
-
 
 
 def eval_model(config, report_folder):

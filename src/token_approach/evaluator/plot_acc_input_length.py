@@ -27,7 +27,7 @@ def get_accuracy_and_input_length(df):
 
     df['Input_without_none'] = df['Input'].apply(remove_none) #remove nones
     df['Input_length'] = df['Input_without_none'].apply(count_input) #compute length
-    input_length = list(range(5, 34, 2))
+    input_length = list(range(5, 25, 2))
 
     acc_list = []
 
@@ -47,19 +47,35 @@ def get_accuracy_and_input_length(df):
 
 #%% load data
 
-df = pd.read_csv('predictions_test_simpleNN.csv')
+df_simpleNN = pd.read_csv('predictions_test_simpleNN.csv')
+df_GRU = pd.read_csv('predictions_test_GRU.csv')
+df_LSTM = pd.read_csv('predictions_test_LSTM.csv')
+df_LSTMBid = pd.read_csv('predictions_test_LSTMBid.csv')
 
-input_length_simpleNN, acc_list_simpleNN = get_accuracy_and_input_length(df)
+#%%
+df_simpleNN = df_simpleNN[df_simpleNN['Correct'] != 'UNK']
+df_GRU = df_GRU[df_GRU['Correct'] != 'UNK']
+df_LSTM = df_LSTM[df_LSTM['Correct'] != 'UNK']
+df_LSTMBid = df_LSTMBid[df_LSTMBid['Correct'] != 'UNK']
+
+#%%
+input_length_simpleNN, acc_list_simpleNN = get_accuracy_and_input_length(df_simpleNN)
+input_length_GRU, acc_list_GRU = get_accuracy_and_input_length(df_GRU)
+input_length_LSTM, acc_list_LSTM = get_accuracy_and_input_length(df_LSTM)
+input_length_LSTMBid, acc_list_LSTMBid = get_accuracy_and_input_length(df_LSTMBid)
 
 #%% plotting
 
 fig, ax = plt.subplots()
 ax.plot(input_length_simpleNN, acc_list_simpleNN, 'k--', label='simpleNN')
+ax.plot(input_length_GRU, acc_list_GRU, 'b', label='GRU')
+ax.plot(input_length_LSTM, acc_list_LSTM, 'g', label='LSTM')
+ax.plot(input_length_LSTMBid, acc_list_LSTMBid, 'y', label='LSTMBid')
 plt.xlabel('Input length')
 plt.ylabel('Accuracy')
 plt.title('Accuracy of different Models for the Allamanis Dataset')
 
-legend = ax.legend(loc='upper center', shadow=True, fontsize='x-large')
+legend = ax.legend(loc='center right', shadow=True, fontsize='x-large')
 
 # Put a nicer background color on the legend.
 #legend.get_frame().set_facecolor('C0')
