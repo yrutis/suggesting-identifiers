@@ -59,9 +59,9 @@ class Evaluator(object):
             input_seq_dec = Vocabulary.revert_back(tokenizer=tokenizer, sequence=input_seq.tolist()[0])
 
             decoded_sentence_k100 = trainer.predict(tokenizer=tokenizer, input_seq=input_seq, k=1, return_top_n=1)
-            decoded_sentence_k1 = trainer.predict(tokenizer=tokenizer, input_seq=input_seq, k=100, return_top_n=1)
+            decoded_sentence_k1 = trainer.predict(tokenizer=tokenizer, input_seq=input_seq, k=1, return_top_n=1)
 
-            results_for_attention_plot_only = decoded_sentence_k1 #just for attention
+            #results_for_attention_plot_only = decoded_sentence_k1 #just for attention
 
             decoded_sentence_k100 = self.filter_results(decoded_sentence_k100[0])
             decoded_sentence_k1 = self.filter_results(decoded_sentence_k1[0])
@@ -87,13 +87,13 @@ class Evaluator(object):
             false_negative_k1 += current_false_negative_k1
 
 
-            if ((current_complete_true_k1 == 1) and (len(decoded_correct_output_list)>0) and is_attention): #not just unk
+            #if ((current_complete_true_k1 == 1) and (len(decoded_correct_output_list)>0) and is_attention): #not just unk
 
-                if is_attention:
-                    attention_plot = results_for_attention_plot_only[1]
-
-                    attention_plot = attention_plot[:len(results_for_attention_plot_only[0]), :len(input_seq_dec)]
-                    self.plot_attention(attention_plot, input_seq_dec, results_for_attention_plot_only[0], i)
+             #   if is_attention:
+              #      attention_plot = results_for_attention_plot_only[1]
+#
+ #                   attention_plot = attention_plot[:len(results_for_attention_plot_only[0]), :len(input_seq_dec)]
+  #                  self.plot_attention(attention_plot, input_seq_dec, results_for_attention_plot_only[0], i)
 
             self.input.append(input_seq_dec)
             self.prediction_k1.append(decoded_sentence_k1)
