@@ -38,10 +38,10 @@ def get_accuracy_by_confidence(df):
 
 #%% load data
 
-df_simpleNN = pd.read_csv('predictions_test_simpleNN.csv')
-df_GRU = pd.read_csv('predictions_test_GRU.csv')
-df_LSTM = pd.read_csv('predictions_test_LSTM.csv')
-df_LSTMBid = pd.read_csv('predictions_test_LSTMBid.csv')
+df_simpleNN = pd.read_csv('predictions_test_javasmall_simpleNN.csv')
+df_GRU = pd.read_csv('predictions_test_javasmall_GRU.csv')
+df_LSTM = pd.read_csv('predictions_test_javasmall_LSTM.csv')
+df_LSTMBid = pd.read_csv('predictions_test_javasmall_LSTMBid.csv')
 
 #%%remove UNK method names
 df_simpleNN = df_simpleNN[df_simpleNN['Correct'] != 'UNK']
@@ -66,7 +66,7 @@ ax.plot(threadshold_list_LSTMBid, acc_list_LSTMBid, 'y', label='bidirectional LS
 plt.xlabel('Suggestion Frequency')
 plt.ylabel('Accuracy')
 #plt.axis([0, 1, 0, 1])
-plt.title('Accuracy of different Models for the Allamanis Dataset')
+plt.title('Accuracy of different Models for the Java-small Dataset')
 
 legend = ax.legend(loc='upper right', shadow=True, fontsize='large')
 

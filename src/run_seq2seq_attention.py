@@ -110,7 +110,9 @@ def main(config_path):
     # define some tf flags
 
     tf.app.flags.DEFINE_string('data', config.data_loader.name,
-                               'must be either Android-Universal-Image-Loader or all_methods_train')
+                               'must be either java-small-project-split or java-small')
+    tf.app.flags.DEFINE_string('mode', config.mode,
+                               'must be either train or eval')
     tf.app.flags.DEFINE_integer('window_size_body', config.data_loader.window_size_body, 'must be between 2+')
     tf.app.flags.DEFINE_integer('window_size_params', config.data_loader.window_size_params, 'must be between 2+')
     tf.app.flags.DEFINE_integer('window_size_name', config.data_loader.window_size_name, 'must be between 2+')
@@ -120,6 +122,9 @@ def main(config_path):
 
     config.data_loader.name = FLAGS.data
     logger.info("data used is {}".format(config.data_loader.name))
+
+    config.mode = FLAGS.mode
+    logger.info("mode is {}".format(config.mode))
 
     config.data_loader.window_size_body = FLAGS.window_size_body
     logger.info("window size body is {}".format(config.data_loader.window_size_body))

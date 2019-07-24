@@ -1,9 +1,9 @@
 import pandas as pd
 
-df_simpleNN = pd.read_csv('predictions_test_simpleNN.csv')
-df_GRU = pd.read_csv('predictions_test_GRU.csv')
-df_LSTM = pd.read_csv('predictions_test_LSTM.csv')
-df_LSTMBid = pd.read_csv('predictions_test_LSTMBid.csv')
+df_simpleNN = pd.read_csv('predictions_test_javasmall_simpleNN.csv')
+df_GRU = pd.read_csv('predictions_test_javasmall_GRU.csv')
+df_LSTM = pd.read_csv('predictions_test_javasmall_LSTM.csv')
+df_LSTMBid = pd.read_csv('predictions_test_javasmall_LSTMBid.csv')
 
 assert(df_simpleNN.shape[0] == df_GRU.shape[0] == df_LSTM.shape[0] == df_LSTMBid.shape[0])
 

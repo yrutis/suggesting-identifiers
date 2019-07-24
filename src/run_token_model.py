@@ -1,3 +1,4 @@
+import json
 import shutil
 import os
 import matplotlib as mpl
@@ -208,7 +209,9 @@ def main(config_path):
     tf.app.flags.DEFINE_string('model', config.name,
                                'must be a valid token model simpleNN/ GRU/ LSTM/ LSTMBid')
     tf.app.flags.DEFINE_string('data', config.data_loader.name,
-                               'must be ...')
+                               'must be either java-small-project-split or java-small')
+    tf.app.flags.DEFINE_string('mode', config.mode,
+                               'must be either train or eval')
     tf.app.flags.DEFINE_integer('window_size_body', config.data_loader.window_size_body, 'somewhere between 2 and 30')
     tf.app.flags.DEFINE_integer('window_size_params', config.data_loader.window_size_params, 'somewhere between 2 and 10')
     tf.app.flags.DEFINE_integer('epochs', config.trainer.num_epochs, 'somewhere between 1 and 50')
@@ -223,6 +226,9 @@ def main(config_path):
 
     config.data_loader.name = FLAGS.data
     logger.info("data used is {}".format(config.data_loader.name))
+
+    config.mode = FLAGS.mode
+    logger.info("mode is {}".format(config.mode))
 
     config.data_loader.window_size_body = FLAGS.window_size_body
     logger.info("window size body is {}".format(config.data_loader.window_size_body))
@@ -254,6 +260,10 @@ def main(config_path):
     report_folder = os.path.join(path_file.report_folder, 'reports-' + config.name + '-' + unique_folder_key)
 
     os.mkdir(report_folder)
+
+    # write in report folder
+    with open(os.path.join(report_folder, config.name + '.json'), 'w') as outfile:
+        json.dump(config, outfile, indent=4)
 
     # 1) train model
     train_model(config=config, report_folder=report_folder)
