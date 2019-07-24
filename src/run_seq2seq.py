@@ -58,7 +58,7 @@ def train_model(config, report_folder):
                                           config.name + '_model_window_size_body_' + str(config.data_loader.window_size_body)
                                           + '_params_' + str(config.data_loader.window_size_params) + '.h5')
 
-        logger.info("loading the model...")
+        logger.info("loading the model from {}".format(trained_model_path))
         trainer.load_trained_model(trained_model_path)
 
     return trainer
