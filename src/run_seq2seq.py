@@ -53,6 +53,9 @@ def train_model(config, report_folder):
         logger.info("start seq2seq training...")
         trainer.train(all_train, all_val, window_size, max_output_elemts, vocab_size, data_storage)
 
+        logger.info("saving the model...")
+        trainer.model.save(os.path.join(report_folder, "best_model.h5"))
+
     else:
         trained_model_path = os.path.join(os.path.join(path_file.model_folder, config.data_loader.name),
                                           config.name + '_model_window_size_body_' + str(config.data_loader.window_size_body)
