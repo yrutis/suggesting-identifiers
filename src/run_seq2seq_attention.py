@@ -63,11 +63,13 @@ def train_model(config, report_folder):
         trainer.train()
 
     else:
-        logger.info("load model from checkpoint...")
+
         checkpoint_dir = os.path.join(os.path.join(path_file.model_folder, config.data_loader.name),
                                           config.name + '_model_window_size_body_' + str(config.data_loader.window_size_body)
                                           + '_params_' + str(config.data_loader.window_size_params))
         checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
+
+        logger.info("load model from checkpoint dir {}".format(checkpoint_dir))
         checkpoint = tf.train.Checkpoint(optimizer=trainer.optimizer,
                                          encoder=encoder,
                                          decoder=decoder)
