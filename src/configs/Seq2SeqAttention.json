@@ -1,6 +1,6 @@
 {
     "name": "seq2seqAttention",
-    "mode": "train",
+    "mode": "eval",
     "data_loader": {
         "name": "Android-Universal-Image-Loader",
         "window_size_body": 8,

@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import keras
+import logging
 
 
 class DataGenerator(keras.utils.Sequence):
@@ -52,6 +53,10 @@ class DataGenerator(keras.utils.Sequence):
     def __data_generation(self, list_IDs_temp):
         'Generates data containing batch_size samples'  # X : (n_samples, *dim, n_channels)
         # Initialization
+        # get logger
+        logger = logging.getLogger(__name__)
+
+        logger.info("creating the batch tensors...")
 
         encoder_input_data = np.empty(
             (self.batch_size, self.input_dim),
@@ -67,7 +72,7 @@ class DataGenerator(keras.utils.Sequence):
         for i, ID in enumerate(list_IDs_temp):
 
             if ID % self.partition == 0:
-                #print("loaded new file...")
+                logger.info("loaded new file...")
                 self.current_partion_x1 = np.load(
                     os.path.join(self.data_folder, str(self.type) + 'X1-' + str(self.counter) + '.npy'))
                 self.current_partion_x2 = np.load(
