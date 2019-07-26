@@ -56,7 +56,7 @@ class DataGenerator(keras.utils.Sequence):
         # get logger
         logger = logging.getLogger(__name__)
 
-        logger.info("creating the batch tensors...")
+        #logger.info("creating the batch tensors...")
 
         encoder_input_data = np.empty(
             (self.batch_size, self.input_dim),
@@ -72,13 +72,29 @@ class DataGenerator(keras.utils.Sequence):
         for i, ID in enumerate(list_IDs_temp):
 
             if ID % self.partition == 0:
-                logger.info("loaded new file...")
+                current_partion_x1_name = os.path.join(self.data_folder, str(self.type) + 'X1-' + str(self.counter) + '.npy')
+                current_partion_x2_name = os.path.join(self.data_folder, str(self.type) + 'X2-' + str(self.counter) + '.npy')
+                current_partion_y_name = os.path.join(self.data_folder, str(self.type) + 'Y-' + str(self.counter) + '.npy')
+
+                logger.info("loading current_partion_x1 {}".format(current_partion_x1_name))
                 self.current_partion_x1 = np.load(
                     os.path.join(self.data_folder, str(self.type) + 'X1-' + str(self.counter) + '.npy'))
+                logger.info("{} bytes" .format(self.current_partion_x1.size * self.current_partion_x1.itemsize))
+
+
+                logger.info("loading current_partion_x2 {}".format(current_partion_x2_name))
                 self.current_partion_x2 = np.load(
                     os.path.join(self.data_folder, str(self.type) + 'X2-' + str(self.counter) + '.npy'))
+                logger.info("{} bytes" .format(self.current_partion_x2.size * self.current_partion_x2.itemsize))
+
+
+                logger.info("loading current_partion_y {}".format(current_partion_y_name))
                 self.current_partion_y = np.load(
                     os.path.join(self.data_folder, str(self.type) + 'Y-' + str(self.counter) + '.npy'))
+                logger.info("{} bytes" .format(self.current_partion_y.size * self.current_partion_y.itemsize))
+
+
+
                 self.counter += 1
 
             assert (self.current_partion_x1.shape[1] == self.input_dim)

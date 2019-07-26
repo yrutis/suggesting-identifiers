@@ -75,7 +75,11 @@ def train_model(config, report_folder):
                                          decoder=decoder)
 
         # restoring the latest checkpoint in checkpoint_dir
-        checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
+        latest_checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
+        #latest_checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
+        latest_checkpoint = os.path.join(checkpoint_dir, 'ckpt-1')
+        status = checkpoint.restore(latest_checkpoint)
+        status.assert_consumed()  # sanity checks.
 
 
     return trainer
