@@ -72,6 +72,10 @@ class DataGenerator(keras.utils.Sequence):
         for i, ID in enumerate(list_IDs_temp):
 
             if ID % self.partition == 0:
+                self.current_partion_x1 = None
+                self.current_partion_x2 = None
+                self.current_partion_y = None
+
                 current_partion_x1_name = os.path.join(self.data_folder, str(self.type) + 'X1-' + str(self.counter) + '.npy')
                 current_partion_x2_name = os.path.join(self.data_folder, str(self.type) + 'X2-' + str(self.counter) + '.npy')
                 current_partion_y_name = os.path.join(self.data_folder, str(self.type) + 'Y-' + str(self.counter) + '.npy')
