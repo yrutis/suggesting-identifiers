@@ -197,9 +197,9 @@ class Seq2SeqAttentionTrain(AbstractTrainSubtoken):
                                                                        batch_loss.numpy()))
                                                                        
 
-
             # saving (checkpoint) the model every 2 epochs
             if (epoch + 1) % 2 == 0:
+                logger.info("saving checkpoint...")
                 self.checkpoint.save(file_prefix=self.checkpoint_prefix)
 
             logger.info('Epoch {} Loss {:.4f} Val Loss {:.4f}'.format(epoch + 1,

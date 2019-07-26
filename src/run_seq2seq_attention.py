@@ -76,10 +76,8 @@ def train_model(config, report_folder):
 
         # restoring the latest checkpoint in checkpoint_dir
         latest_checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
-        #latest_checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
-        latest_checkpoint = os.path.join(checkpoint_dir, 'ckpt-1')
-        status = checkpoint.restore(latest_checkpoint)
-        status.assert_consumed()  # sanity checks.
+        checkpoint.restore(latest_checkpoint)
+        #status.assert_consumed()  # sanity checks.
 
 
     return trainer
