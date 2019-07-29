@@ -46,6 +46,12 @@ def main(config, report_folder=''):
         'partition' + str(partition) + '-training-params-' + str(window_size_params) + '-body-' + str(window_size_body)
         + '-name-' + str(window_size_name))
 
+    data_storage = os.path.join(os.path.join(os.path.join('scratch', 'yrutis'), filename),
+                                'partition' + str(partition) + '-training-params-' + str(
+                                    window_size_params) + '-body-' + str(window_size_body)
+                                + '-name-' + str(window_size_name))
+
+
 
     df_train = pd.read_json(training_processed_decoded_full_path, orient='records')
     df_val = pd.read_json(validation_processed_decoded_full_path, orient='records')
