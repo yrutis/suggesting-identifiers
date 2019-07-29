@@ -38,31 +38,39 @@ def train_model(config, report_folder):
                          windows_size=window_size,
                          config=config, report_folder=report_folder)
 
-    # build graph
-    model.build_model()
 
-
-    logger.info("create trainer...")
-    trainer = Seq2SeqTrain(model=model.model,
-                           encoder_model=model.encoder_model,
-                           decoder_model=model.decoder_model,
-                            config=config,
-                           report_folder=report_folder)
 
     if config.mode == 'train':
+        # build graph
+        model.build_model()
+
+        logger.info("create trainer...")
+        trainer = Seq2SeqTrain(model=model.model,
+                               encoder_model=model.encoder_model,
+                               decoder_model=model.decoder_model,
+                               config=config,
+                               report_folder=report_folder)
         logger.info("start seq2seq training...")
         trainer.train(all_train, all_val, window_size, max_output_elemts, vocab_size, data_storage)
 
         logger.info("saving the model...")
-        trainer.model.save(os.path.join(report_folder, "best_model.h5"))
+        #trainer.model.save(os.path.join(report_folder, "best_model.h5"))
+        trainer.model.save_weights(os.path.join(report_folder, "best_model_weights.h5"))
 
     else:
-        trained_model_path = os.path.join(os.path.join(path_file.model_folder, config.data_loader.name),
-                                          config.name + '_model_window_size_body_' + str(config.data_loader.window_size_body)
+        trained_model_weights_path = os.path.join(os.path.join(path_file.model_folder, config.data_loader.name),
+                                          config.name + '_weights_model_window_size_body_' + str(
+                                              config.data_loader.window_size_body)
                                           + '_params_' + str(config.data_loader.window_size_params) + '.h5')
 
-        logger.info("loading the model from {}".format(trained_model_path))
-        trainer.load_trained_model(trained_model_path)
+        logger.info("loading the model from {}".format(trained_model_weights_path))
+        model.load_model_weights(trained_model_weights_path)
+        logger.info("create trainer...")
+        trainer = Seq2SeqTrain(model=model.model,
+                               encoder_model=model.encoder_model,
+                               decoder_model=model.decoder_model,
+                               config=config,
+                               report_folder=report_folder)
 
     return trainer
 

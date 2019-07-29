@@ -1,6 +1,6 @@
 {
     "name": "seq2seq",
-    "mode": "train",
+    "mode": "eval",
     "data_loader": {
         "name": "Android-Universal-Image-Loader",
         "window_size_body": 25,
@@ -24,7 +24,7 @@
     },
     "trainer": {
         "name": "trainer.seq2seq",
-        "num_epochs": 2,
+        "num_epochs": 5,
         "batch_size": 8
     }
 }

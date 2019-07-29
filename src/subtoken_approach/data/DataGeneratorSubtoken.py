@@ -80,22 +80,22 @@ class DataGenerator(keras.utils.Sequence):
                 current_partion_x2_name = os.path.join(self.data_folder, str(self.type) + 'X2-' + str(self.counter) + '.npy')
                 current_partion_y_name = os.path.join(self.data_folder, str(self.type) + 'Y-' + str(self.counter) + '.npy')
 
-                logger.info("loading current_partion_x1 {}".format(current_partion_x1_name))
+                #logger.info("loading current_partion_x1 {}".format(current_partion_x1_name))
                 self.current_partion_x1 = np.load(
                     os.path.join(self.data_folder, str(self.type) + 'X1-' + str(self.counter) + '.npy'))
-                logger.info("{} bytes" .format(self.current_partion_x1.size * self.current_partion_x1.itemsize))
+                #logger.info("{} bytes" .format(self.current_partion_x1.size * self.current_partion_x1.itemsize))
 
 
-                logger.info("loading current_partion_x2 {}".format(current_partion_x2_name))
+                #logger.info("loading current_partion_x2 {}".format(current_partion_x2_name))
                 self.current_partion_x2 = np.load(
                     os.path.join(self.data_folder, str(self.type) + 'X2-' + str(self.counter) + '.npy'))
-                logger.info("{} bytes" .format(self.current_partion_x2.size * self.current_partion_x2.itemsize))
+                #logger.info("{} bytes" .format(self.current_partion_x2.size * self.current_partion_x2.itemsize))
 
 
-                logger.info("loading current_partion_y {}".format(current_partion_y_name))
+                #logger.info("loading current_partion_y {}".format(current_partion_y_name))
                 self.current_partion_y = np.load(
                     os.path.join(self.data_folder, str(self.type) + 'Y-' + str(self.counter) + '.npy'))
-                logger.info("{} bytes" .format(self.current_partion_y.size * self.current_partion_y.itemsize))
+                 #logger.info("{} bytes" .format(self.current_partion_y.size * self.current_partion_y.itemsize))
 
 
 

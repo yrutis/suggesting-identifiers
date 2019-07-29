@@ -92,6 +92,9 @@ class Seq2SeqTrain(AbstractTrainSubtoken):
         plt.legend()
         plt.savefig(os.path.join(self.report_folder, "loss_plot.png"))
 
+    def load_model_weights(self, model_weights):
+        self.model.load_weights(model_weights)
+
     def load_trained_model(self, trained_model_path):
         logger = logging.getLogger(__name__)
 
