@@ -46,10 +46,13 @@ def main(config, report_folder=''):
         'partition' + str(partition) + '-training-params-' + str(window_size_params) + '-body-' + str(window_size_body)
         + '-name-' + str(window_size_name))
 
-    data_storage = os.path.join(os.path.join(os.path.join('scratch', 'yrutis'), filename),
-                                'partition' + str(partition) + '-training-params-' + str(
-                                    window_size_params) + '-body-' + str(window_size_body)
-                                + '-name-' + str(window_size_name))
+
+
+    #the files tend to get large... hence I need to safe them in scratch/yrutis
+    #data_storage = os.path.join(os.path.join(os.path.join('scratch', 'yrutis'), filename),
+     #                           'partition' + str(partition) + '-training-params-' + str(
+      #                              window_size_params) + '-body-' + str(window_size_body)
+       #                         + '-name-' + str(window_size_name))
 
 
 
